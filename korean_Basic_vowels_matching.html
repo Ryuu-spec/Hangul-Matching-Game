@@ -253,6 +253,34 @@
 
         const TOTAL_PAIRS = 6;
 
+        // 한글 모음 → 발음용 한글 음절 매핑 (TTS가 잘 읽는 형태)
+        const vowelSound = {
+            'ㅏ': '아', 'ㅓ': '어', 'ㅗ': '오',
+            'ㅜ': '우', 'ㅡ': '으', 'ㅣ': '이',
+            'a': '아', 'eo': '어', 'o': '오',
+            'u': '우', 'eu': '으', 'i': '이'
+        };
+
+        // Web Speech API로 한국어 발음
+        function speakKorean(text) {
+            if (!window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(vowelSound[text] || text);
+            utter.lang = 'ko-KR';
+            utter.rate = 0.85;
+            utter.pitch = 1.1;
+            const voices = window.speechSynthesis.getVoices();
+            const koVoice = voices.find(v => v.lang === 'ko-KR' || v.lang.startsWith('ko'));
+            if (koVoice) utter.voice = koVoice;
+            window.speechSynthesis.speak(utter);
+        }
+
+        // 음성 목록 미리 로드 (비동기)
+        if (window.speechSynthesis) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+        }
+
         let selectedCards = [];
         let matchedPairs = 0;
         let startTime;
@@ -341,6 +369,11 @@
             if (card.classList.contains('matched') ||
                 card.classList.contains('selected') ||
                 isChecking || selectedCards.length >= 2) return;
+
+            // 한글 카드 클릭 시에만 발음 재생
+            if (card.classList.contains('hangul')) {
+                speakKorean(card.dataset.value);
+            }
 
             card.classList.add('selected');
             selectedCards.push(card);

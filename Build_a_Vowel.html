@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Build a Vowel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #fdf8f0;
+            color: #1a1a2e;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .universe-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bg-default { background: radial-gradient(circle at center, #fdf8f0, #f0e9dc); }
+        .bg-bright { background: linear-gradient(to bottom, #ffe8cc, #ffd4a8, #fdf8f0); }
+        .bg-dark { background: linear-gradient(to bottom, #e8eef5, #d4e0ec, #fdf8f0); }
+        .bg-neutral { background: linear-gradient(to bottom, #eef2e8, #dde8d4, #fdf8f0); }
+
+        .drop-zone {
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.03);
+            border: 2px dashed rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(5px);
+        }
+
+        .drop-zone.active {
+            background: rgba(0, 0, 0, 0.07);
+            border-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .element-card {
+            cursor: grab;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            touch-action: none;
+        }
+
+        .dragging { opacity: 0.5; transform: scale(0.8); }
+
+        #drag-icon {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            filter: drop-shadow(0 0 15px rgba(0,0,0,0.3));
+        }
+
+        .visual-layer {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            border-radius: 9999px;
+        }
+
+        .base-silhouette {
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            opacity: 0;
+            transform: scale(0.5);
+            position: absolute;
+        }
+
+        .base-silhouette.show {
+            opacity: 0.8;
+            transform: scale(1);
+            filter: drop-shadow(0 0 15px currentColor);
+        }
+
+        /* 중앙 정렬 보정 */
+        #visual-human { left: calc(50% - 6px); width: 12px; height: 70%; }
+        #visual-earth { top: calc(50% - 6px); width: 70%; height: 12px; }
+
+        #visual-dot {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #ef4444;
+            border-radius: 50%;
+            box-shadow: 0 0 24px rgba(239,68,68,0.9), 0 0 8px rgba(239,68,68,0.5);
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        @keyframes dotLand {
+            0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+            60%  { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes dotPulse {
+            0%, 100% { box-shadow: 0 0 24px rgba(239,68,68,0.9); }
+            50%       { box-shadow: 0 0 40px rgba(239,68,68,1), 0 0 60px rgba(239,68,68,0.4); }
+        }
+
+        .dot-land {
+            animation: dotLand 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+                       dotPulse 1s ease-in-out 0.7s infinite;
+        }
+
+        @keyframes fadeInVowel {
+            0%   { opacity: 0; transform: scale(0.6); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .vowel-appear {
+            animation: fadeInVowel 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .progress-dot.completed {
+            background-color: #f59e0b;
+            box-shadow: 0 0 15px #f59e0b;
+            color: #000 !important;
+            border-color: #fff;
+        }
+
+        .preview-text {
+            position: absolute;
+            font-size: 140px;
+            font-weight: 900;
+            color: rgba(0, 0, 0, 0.07);
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="universe" class="universe-bg bg-default"></div>
+    <div id="drag-icon"></div>
+
+    <div class="relative z-10 h-screen flex flex-col p-4">
+        <header class="text-center mb-4">
+            <h1 class="text-3xl font-black mb-1 tracking-tighter text-gray-800">Build a Vowel</h1>
+            <p class="text-gray-500 text-xs uppercase tracking-widest opacity-80">천지인 (Heaven · Earth · Human)</p>
+            
+            <div class="flex justify-center gap-4 mt-6">
+                <div class="element-card bg-black/5 p-3 rounded-3xl w-24 border border-black/10" data-type="heaven">
+                    <div class="w-10 h-10 bg-red-500 rounded-full mx-auto mb-2 shadow-[0_0_20px_rgba(239,68,68,0.5)]"></div>
+                    <span class="text-[10px] font-bold text-red-600">Heaven (ㆍ)</span>
+                </div>
+                <div class="element-card bg-black/5 p-3 rounded-3xl w-24 border border-black/10" data-type="earth">
+                    <div class="w-14 h-3 bg-yellow-400 rounded-full mx-auto mb-6 mt-4 shadow-[0_0_20px_rgba(250,204,21,0.6)]"></div>
+                    <span class="text-[10px] font-bold text-yellow-600">Earth (ㅡ)</span>
+                </div>
+                <div class="element-card bg-black/5 p-3 rounded-3xl w-24 border border-black/10" data-type="human">
+                    <div class="w-3 h-12 bg-green-500 rounded-full mx-auto mb-2 shadow-[0_0_20px_rgba(34,197,94,0.5)]"></div>
+                    <span class="text-[10px] font-bold text-green-600">Human (ㅣ)</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 flex flex-col items-center justify-center relative">
+            <div id="drop-zone" class="drop-zone w-80 h-80 rounded-full flex flex-col items-center justify-center relative mb-8">
+                
+                <div class="visual-layer" id="visual-container">
+                    <!-- 정중앙에 배치되는 실루엣 -->
+                    <div id="visual-human" class="base-silhouette bg-green-500 rounded-full"></div>
+                    <div id="visual-earth" class="base-silhouette bg-yellow-400 rounded-full"></div>
+                    <!-- 하늘(ㆍ) 점 -->
+                    <div id="visual-dot"></div>
+                </div>
+
+                <div id="preview-char" class="preview-text"></div>
+
+                <div id="recipe-hint" class="text-center text-black/20 transition-all duration-700">
+                    <i class="fa-solid fa-expand text-6xl mb-4"></i>
+                    <p class="text-[10px] font-black tracking-[0.3em]">DRAG HERE</p>
+                </div>
+                
+                <div id="result-display" class="hidden text-center w-full h-full flex flex-col items-center justify-center relative z-20">
+                    <div id="vowel-char" class="text-[160px] font-black leading-none mb-2 drop-shadow-[0_10px_30px_rgba(0,0,0,0.15)] text-gray-800"></div>
+                    <div id="vowel-desc" class="text-xs font-black text-gray-700 px-6 py-2 bg-black/10 rounded-full backdrop-blur-xl border border-black/10 uppercase tracking-tighter"></div>
+                </div>
+            </div>
+
+            <div id="status-msg" class="text-blue-600 font-bold text-sm h-6 text-center transition-opacity duration-300"></div>
+        </main>
+
+        <footer class="bg-white/80 backdrop-blur-2xl p-8 rounded-t-[50px] border-t border-black/10">
+            <div class="flex justify-between items-center max-w-md mx-auto mb-6">
+                <span class="text-[10px] font-black text-black/40 uppercase tracking-[0.2em]">Inventory</span>
+                <span id="progress-text" class="text-xs font-black text-orange-500">0 / 6</span>
+            </div>
+            <div class="flex justify-center gap-3" id="vowel-collection">
+                <div class="progress-dot w-11 h-11 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center font-black text-black/30 transition-all" data-vowel="ㅏ">ㅏ</div>
+                <div class="progress-dot w-11 h-11 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center font-black text-black/30 transition-all" data-vowel="ㅓ">ㅓ</div>
+                <div class="progress-dot w-11 h-11 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center font-black text-black/30 transition-all" data-vowel="ㅗ">ㅗ</div>
+                <div class="progress-dot w-11 h-11 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center font-black text-black/30 transition-all" data-vowel="ㅜ">ㅜ</div>
+                <div class="progress-dot w-11 h-11 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center font-black text-black/30 transition-all" data-vowel="ㅡ">ㅡ</div>
+                <div class="progress-dot w-11 h-11 rounded-2xl bg-black/5 border border-black/10 flex items-center justify-center font-black text-black/30 transition-all" data-vowel="ㅣ">ㅣ</div>
+            </div>
+            <button onclick="resetGame()" class="mt-8 w-full py-4 bg-black/5 hover:bg-black/10 text-black/40 rounded-3xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">Initialize Universe</button>
+        </footer>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const dragIcon = document.getElementById('drag-icon');
+        const universe = document.getElementById('universe');
+        const resultDisplay = document.getElementById('result-display');
+        const recipeHint = document.getElementById('recipe-hint');
+        const statusMsg = document.getElementById('status-msg');
+        const previewChar = document.getElementById('preview-char');
+        const visualContainer = document.getElementById('visual-container');
+        
+        const vHuman = document.getElementById('visual-human');
+        const vEarth = document.getElementById('visual-earth');
+        
+        let baseElement = null; 
+        let collectedVowels = new Set();
+        let isDragging = false;
+        let activeType = null;
+        let resultTimer = null;
+
+        const results = {
+            'ㅏ': { char: 'ㅏ', theme: 'bright', dotPos: { left: '67%', top: '50%' }, desc: 'Heaven shines to the RIGHT of Human' },
+            'ㅓ': { char: 'ㅓ', theme: 'dark',   dotPos: { left: '33%', top: '50%' }, desc: 'Heaven shines to the LEFT of Human' },
+            'ㅗ': { char: 'ㅗ', theme: 'bright', dotPos: { left: '50%', top: '28%' }, desc: 'Heaven rises ABOVE the Earth' },
+            'ㅜ': { char: 'ㅜ', theme: 'dark',   dotPos: { left: '50%', top: '72%' }, desc: 'Heaven falls BELOW the Earth' },
+            'ㅡ': { char: 'ㅡ', theme: 'neutral', dotPos: null, desc: 'The flat Earth' },
+            'ㅣ': { char: 'ㅣ', theme: 'neutral', dotPos: null, desc: 'A standing Human' }
+        };
+
+        document.querySelectorAll('.element-card').forEach(card => {
+            card.addEventListener('pointerdown', e => {
+                isDragging = true;
+                activeType = card.dataset.type;
+                card.classList.add('dragging');
+                dragIcon.innerHTML = card.querySelector('div').outerHTML;
+                dragIcon.style.display = 'block';
+                moveAt(e.pageX, e.pageY);
+            });
+        });
+
+        document.addEventListener('pointermove', e => {
+            if (!isDragging) return;
+            moveAt(e.pageX, e.pageY);
+            
+            const zoneRect = dropZone.getBoundingClientRect();
+            if (e.pageX > zoneRect.left && e.pageX < zoneRect.right && 
+                e.pageY > zoneRect.top && e.pageY < zoneRect.bottom) {
+                dropZone.classList.add('active');
+                
+                if (activeType === 'heaven' && baseElement) {
+                    const relX = (e.pageX - zoneRect.left) / zoneRect.width;
+                    const relY = (e.pageY - zoneRect.top) / zoneRect.height;
+                    if (baseElement === 'human') previewChar.innerText = relX > 0.5 ? 'ㅏ' : 'ㅓ';
+                    else if (baseElement === 'earth') previewChar.innerText = relY < 0.5 ? 'ㅗ' : 'ㅜ';
+                }
+            } else {
+                dropZone.classList.remove('active');
+                previewChar.innerText = '';
+            }
+        });
+
+        document.addEventListener('pointerup', e => {
+            if (!isDragging) return;
+            isDragging = false;
+            dragIcon.style.display = 'none';
+            document.querySelectorAll('.element-card').forEach(c => c.classList.remove('dragging'));
+            
+            const zoneRect = dropZone.getBoundingClientRect();
+            if (e.pageX > zoneRect.left && e.pageX < zoneRect.right && 
+                e.pageY > zoneRect.top && e.pageY < zoneRect.bottom) {
+                const relX = (e.pageX - zoneRect.left) / zoneRect.width;
+                const relY = (e.pageY - zoneRect.top) / zoneRect.height;
+                handleLogic(activeType, relX, relY);
+            }
+            dropZone.classList.remove('active');
+            previewChar.innerText = '';
+        });
+
+        function moveAt(x, y) {
+            dragIcon.style.left = x - dragIcon.offsetWidth / 2 + 'px';
+            dragIcon.style.top = y - dragIcon.offsetHeight / 2 + 'px';
+        }
+
+        function handleLogic(type, relX, relY) {
+            if (!resultDisplay.classList.contains('hidden')) return;
+
+            if (type === 'human') {
+                baseElement = 'human';
+                vHuman.classList.add('show');
+                vEarth.classList.remove('show');
+                statusMsg.innerText = 'Human (ㅣ) stands at the center.';
+                recipeHint.style.opacity = '0';
+                updateCollection('ㅣ');
+            } else if (type === 'earth') {
+                baseElement = 'earth';
+                vEarth.classList.add('show');
+                vHuman.classList.remove('show');
+                statusMsg.innerText = 'Earth (ㅡ) lies flat.';
+                recipeHint.style.opacity = '0';
+                updateCollection('ㅡ');
+            } else if (type === 'heaven') {
+                if (baseElement === 'human') {
+                    showResult(relX > 0.5 ? results['ㅏ'] : results['ㅓ']);
+                } else if (baseElement === 'earth') {
+                    showResult(relY < 0.5 ? results['ㅗ'] : results['ㅜ']);
+                } else {
+                    statusMsg.innerText = 'Place Human (ㅣ) or Earth (ㅡ) first!';
+                }
+            }
+        }
+
+        function showResult(result) {
+            if (resultTimer) clearTimeout(resultTimer);
+            universe.className = `universe-bg bg-${result.theme}`;
+            updateCollection(result.char);
+
+            if (!result.dotPos) {
+                // ㅡ, ㅣ: 기본 요소만 잠깐 보여준 후 글자 등장
+                resultTimer = setTimeout(() => {
+                    vHuman.classList.remove('show');
+                    vEarth.classList.remove('show');
+                    showVowel(result);
+                    resultTimer = setTimeout(clearSelection, 2500);
+                }, 800);
+                return;
+            }
+
+            // Phase 1: 하늘 점(ㆍ)이 위에서 목표 위치로 날아옴
+            const dot = document.getElementById('visual-dot');
+            dot.className = '';
+            dot.style.left = '50%';
+            dot.style.top = '5%';
+            dot.style.opacity = '0';
+
+            // 약간의 딜레이 후 목표 위치로 이동 + land 애니메이션
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    dot.style.transition = 'left 0.65s cubic-bezier(0.34, 1.2, 0.64, 1), top 0.65s cubic-bezier(0.34, 1.2, 0.64, 1)';
+                    dot.style.left = result.dotPos.left;
+                    dot.style.top = result.dotPos.top;
+                    dot.classList.add('dot-land');
+                });
+            });
+
+            // Phase 2: 조합 완성 → 글자 등장
+            resultTimer = setTimeout(() => {
+                dot.style.opacity = '0';
+                dot.style.transition = 'opacity 0.3s';
+                vHuman.classList.remove('show');
+                vEarth.classList.remove('show');
+                showVowel(result);
+                resultTimer = setTimeout(clearSelection, 2500);
+            }, 1800);
+        }
+
+        function showVowel(result) {
+            const vowelChar = document.getElementById('vowel-char');
+            const vowelDesc = document.getElementById('vowel-desc');
+            vowelChar.innerText = result.char;
+            vowelChar.className = 'text-[160px] font-black leading-none mb-2 drop-shadow-[0_10px_30px_rgba(0,0,0,0.15)] text-gray-800 vowel-appear';
+            vowelDesc.innerText = result.desc;
+            resultDisplay.classList.remove('hidden');
+        }
+
+        function updateCollection(char) {
+            if (!collectedVowels.has(char)) {
+                collectedVowels.add(char);
+                const dot = document.querySelector(`.progress-dot[data-vowel="${char}"]`);
+                if (dot) dot.classList.add('completed');
+                document.getElementById('progress-text').innerText = `${collectedVowels.size} / 6`;
+            }
+        }
+
+        function clearSelection() {
+            if (resultTimer) clearTimeout(resultTimer);
+            baseElement = null;
+            statusMsg.innerText = '';
+            resultDisplay.classList.add('hidden');
+            recipeHint.style.opacity = '1';
+            universe.className = 'universe-bg bg-default';
+            vHuman.classList.remove('show');
+            vEarth.classList.remove('show');
+            const dot = document.getElementById('visual-dot');
+            dot.className = '';
+            dot.style.opacity = '0';
+            dot.style.transition = 'none';
+        }
+
+        function resetGame() {
+            collectedVowels.clear();
+            document.querySelectorAll('.progress-dot').forEach(d => d.classList.remove('completed'));
+            document.getElementById('progress-text').innerText = '0 / 6';
+            clearSelection();
+        }
+    </script>
+</body>
+</html>

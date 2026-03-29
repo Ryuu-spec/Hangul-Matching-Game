@@ -55,62 +55,108 @@ const COMPOUND_MAP = {
   "ㅑ": ["ㅣ","ㅏ"], "ㅕ": ["ㅣ","ㅓ"], "ㅛ": ["ㅣ","ㅗ"], "ㅠ": ["ㅣ","ㅜ"],
   "ㅘ": ["ㅜ","ㅏ"], "ㅝ": ["ㅜ","ㅓ"], "ㅚ": ["ㅗ","ㅣ"], "ㅟ": ["ㅜ","ㅣ"], "ㅢ": ["ㅡ","ㅣ"],
 };
-// 천지인 시각화 데이터
 const VOWEL_ORIGIN = {
-  "ㅏ": { base: "human", dots: [[62,40]],       label: "Heaven shines RIGHT of Human" },
-  "ㅓ": { base: "human", dots: [[18,40]],       label: "Heaven shines LEFT of Human" },
-  "ㅗ": { base: "earth", dots: [[40,16]],       label: "Heaven rises ABOVE Earth" },
-  "ㅜ": { base: "earth", dots: [[40,64]],       label: "Heaven falls BELOW Earth" },
-  "ㅑ": { base: "human", dots: [[57,32],[57,48]], label: "Two heavens RIGHT of Human" },
-  "ㅕ": { base: "human", dots: [[23,32],[23,48]], label: "Two heavens LEFT of Human" },
-  "ㅛ": { base: "earth", dots: [[32,16],[48,16]], label: "Two heavens ABOVE Earth" },
-  "ㅠ": { base: "earth", dots: [[32,64],[48,64]], label: "Two heavens BELOW Earth" },
-  "ㅡ": { base: "earth", dots: [],              label: "The flat Earth" },
-  "ㅣ": { base: "human", dots: [],              label: "A standing Human" },
-  "ㅐ": { base: "human", dots: [[62,40]],       label: "Heaven RIGHT (variant of ㅏ)" },
-  "ㅔ": { base: "human", dots: [[18,40]],       label: "Heaven LEFT (variant of ㅓ)" },
+  "ㅏ": { base: "human", dots: [[66,40]],        label: "ㅣ  오른쪽에 점",  en: "Heaven RIGHT of Human" },
+  "ㅓ": { base: "human", dots: [[14,40]],        label: "ㅣ  왼쪽에 점",   en: "Heaven LEFT of Human"  },
+  "ㅗ": { base: "earth", dots: [[40,14]],        label: "ㅡ  위에 점",     en: "Heaven ABOVE Earth"    },
+  "ㅜ": { base: "earth", dots: [[40,66]],        label: "ㅡ  아래에 점",   en: "Heaven BELOW Earth"    },
+  "ㅑ": { base: "human", dots: [[62,30],[62,50]], label: "ㅣ  오른쪽에 점 두 개", en: "Two heavens RIGHT" },
+  "ㅕ": { base: "human", dots: [[18,30],[18,50]], label: "ㅣ  왼쪽에 점 두 개",  en: "Two heavens LEFT"  },
+  "ㅛ": { base: "earth", dots: [[30,14],[50,14]], label: "ㅡ  위에 점 두 개",   en: "Two heavens ABOVE"  },
+  "ㅠ": { base: "earth", dots: [[30,66],[50,66]], label: "ㅡ  아래에 점 두 개", en: "Two heavens BELOW"  },
+  "ㅡ": { base: "earth", dots: [],               label: "땅의 모양",           en: "The flat Earth"     },
+  "ㅣ": { base: "human", dots: [],               label: "서 있는 사람의 모양", en: "A standing Human"   },
+  "ㅐ": { base: "human", dots: [[66,40]],        label: "ㅣ  오른쪽에 점",  en: "Heaven RIGHT (ㅏ variant)" },
+  "ㅔ": { base: "human", dots: [[14,40]],        label: "ㅣ  왼쪽에 점",   en: "Heaven LEFT (ㅓ variant)"  },
 };
 
-function VowelOriginSVG({ vowel, color, isActive }) {
+function AnimatedVowelSVG({ vowel, isActive, animKey }) {
   const o = VOWEL_ORIGIN[vowel];
   if (!o) return null;
-  const bg = isActive ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.05)";
-  const borderColor = isActive ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.1)";
+
+  // animKey 바뀔 때마다 애니메이션 재시작을 위해 key prop 활용
+  const uid = `v_${vowel.charCodeAt(0)}_${animKey}`;
+
+  const baseDelay = 0;      // 기본 요소 등장
+  const dotDelay  = 0.55;   // 점 날아오는 타이밍
+
   return (
-    <div style={{ background: bg, border: "1px solid " + borderColor, borderRadius: 14, padding: "10px 12px", marginBottom: 12 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <svg width="80" height="80" viewBox="0 0 80 80" style={{ flexShrink: 0 }}>
-          {/* 배경 원 */}
-          <circle cx="40" cy="40" r="36" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
-          {/* Earth (ㅡ) - 노란 가로 바 */}
-          {(o.base === "earth" || (o.base === "human" && false)) && (
-            <rect x="14" y="37" width="52" height="6" rx="3" fill="#FBBF24" opacity="0.9"/>
-          )}
-          {/* Human (ㅣ) - 초록 세로 바 */}
-          {o.base === "human" && (
-            <rect x="37" y="14" width="6" height="52" rx="3" fill="#4ADE80" opacity="0.9"/>
-          )}
-          {/* Earth only */}
+    <div style={{
+      background: isActive ? "rgba(255,255,255,.12)" : "rgba(255,255,255,.05)",
+      border: `1px solid ${isActive ? "rgba(255,255,255,.25)" : "rgba(255,255,255,.1)"}`,
+      borderRadius: 14, padding: "12px 14px", marginBottom: 12,
+    }}>
+      <style>{`
+        @keyframes baseIn_${uid} {
+          0%   { opacity:0; transform:scaleX(0) }
+          60%  { opacity:1; transform:scaleX(1.1) }
+          100% { opacity:1; transform:scaleX(1) }
+        }
+        @keyframes humanIn_${uid} {
+          0%   { opacity:0; transform:scaleY(0) }
+          60%  { opacity:1; transform:scaleY(1.1) }
+          100% { opacity:1; transform:scaleY(1) }
+        }
+        @keyframes dotIn_${uid} {
+          0%   { opacity:0; r:2;  filter:drop-shadow(0 0 0px #EF4444) }
+          50%  { opacity:1; r:10; filter:drop-shadow(0 0 12px #EF4444) }
+          100% { opacity:1; r:7;  filter:drop-shadow(0 0 6px #EF4444) }
+        }
+        @keyframes dotPulse_${uid} {
+          0%,100% { filter:drop-shadow(0 0 4px rgba(239,68,68,.8)) }
+          50%     { filter:drop-shadow(0 0 14px rgba(239,68,68,1)) }
+        }
+        .base-earth-${uid} {
+          transform-origin: 40px 40px;
+          animation: baseIn_${uid} 0.5s ${baseDelay}s cubic-bezier(.34,1.56,.64,1) both;
+        }
+        .base-human-${uid} {
+          transform-origin: 40px 40px;
+          animation: humanIn_${uid} 0.5s ${baseDelay}s cubic-bezier(.34,1.56,.64,1) both;
+        }
+        .dot-${uid}-0 { animation: dotIn_${uid} 0.5s ${dotDelay}s cubic-bezier(.34,1.56,.64,1) both, dotPulse_${uid} 1.2s ${dotDelay + 0.5}s ease-in-out infinite; }
+        .dot-${uid}-1 { animation: dotIn_${uid} 0.5s ${dotDelay + 0.12}s cubic-bezier(.34,1.56,.64,1) both, dotPulse_${uid} 1.2s ${dotDelay + 0.62}s ease-in-out infinite; }
+      `}</style>
+
+      <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+        <svg key={uid} width="80" height="80" viewBox="0 0 80 80" style={{ flexShrink:0 }}>
+          <circle cx="40" cy="40" r="37" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+
+          {/* Earth bar */}
           {o.base === "earth" && (
-            <rect x="14" y="37" width="52" height="6" rx="3" fill="#FBBF24" opacity="0.9"/>
+            <rect className={`base-earth-${uid}`} x="12" y="37" width="56" height="6" rx="3"
+              fill="#FBBF24" opacity="0.95"/>
           )}
-          {/* Heaven dots (빨간 점) */}
+
+          {/* Human bar */}
+          {o.base === "human" && (
+            <rect className={`base-human-${uid}`} x="37" y="12" width="6" height="56" rx="3"
+              fill="#4ADE80" opacity="0.95"/>
+          )}
+
+          {/* Heaven dots */}
           {o.dots.map((d, i) => (
-            <circle key={i} cx={d[0]} cy={d[1]} r="7" fill="#EF4444"
-              style={{ filter: "drop-shadow(0 0 6px rgba(239,68,68,0.9))" }}/>
+            <circle key={i} className={`dot-${uid}-${i}`}
+              cx={d[0]} cy={d[1]} r="7" fill="#EF4444"/>
           ))}
-          {/* 결과 모음 글자 - 오른쪽 아래 작게 */}
-          <text x="40" y="44" textAnchor="middle" dominantBaseline="middle"
-            fontSize="28" fontWeight="900" fill="rgba(255,255,255,0.12)"
-            style={{ fontFamily: "sans-serif" }}>{vowel}</text>
         </svg>
+
         <div>
-          <div style={{ fontSize: 11, color: isActive ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.3)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>Formation</div>
-          <div style={{ fontSize: 13, color: isActive ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.6)", lineHeight: 1.5, fontWeight: 600 }}>{o.label}</div>
-          <div style={{ display: "flex", gap: 6, marginTop: 6, alignItems: "center" }}>
-            {o.base === "human" && <span style={{ fontSize: 11, color: "#4ADE80", fontWeight: 700 }}>🧍 Human (ㅣ)</span>}
-            {o.base === "earth" && <span style={{ fontSize: 11, color: "#FBBF24", fontWeight: 700 }}>🌍 Earth (ㅡ)</span>}
-            {o.dots.length > 0 && <span style={{ fontSize: 11, color: "#EF4444", fontWeight: 700 }}>+ ☀️ Heaven{o.dots.length > 1 ? " ×2" : ""}</span>}
+          <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6, flexWrap:"wrap" }}>
+            {o.base === "human" && (
+              <span style={{ fontSize:11, background:"rgba(74,222,128,.15)", color:"#4ADE80", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>🧍 ㅣ</span>
+            )}
+            {o.base === "earth" && (
+              <span style={{ fontSize:11, background:"rgba(251,191,36,.15)", color:"#FBBF24", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>🌍 ㅡ</span>
+            )}
+            {o.dots.length > 0 && (
+              <span style={{ fontSize:11, background:"rgba(239,68,68,.15)", color:"#EF4444", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>
+                ☀️ ·{o.dots.length > 1 ? "·" : ""}
+              </span>
+            )}
+          </div>
+          <div style={{ fontSize:13, color: isActive ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.65)", fontWeight:700, lineHeight:1.5 }}>
+            {o.label}
           </div>
         </div>
       </div>
@@ -129,6 +175,7 @@ function App() {
   const [activeCard, setActiveCard] = useState(null);
   const [stage, setStage]           = useState("input");
   const [dots, setDots]             = useState("");
+  const [animKeys, setAnimKeys]     = useState({});
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -308,7 +355,7 @@ Rules:
                 const parts = COMPOUND_MAP[item.koreanVowel];
 
                 return (
-                  <div key={i} onClick={() => setActiveCard(isActive ? null : i)} style={{
+                  <div key={i} onClick={() => { setActiveCard(isActive ? null : i); setAnimKeys(prev => ({...prev, [i]: (prev[i]||0)+1})); }} style={{
                     background: isActive ? `linear-gradient(145deg,${m.color}EE,${m.color}AA)` : "rgba(255,255,255,.055)",
                     border: `1.5px solid ${isActive ? m.color : "rgba(255,255,255,.1)"}`,
                     borderRadius: 22, padding: 18, cursor: "pointer",
@@ -333,8 +380,7 @@ Rules:
                       </div>
                     </div>
 
-                    {/* 천지인 시각화 */}
-                    <VowelOriginSVG vowel={item.koreanVowel} color={m.color} isActive={isActive} />
+                    <AnimatedVowelSVG vowel={item.koreanVowel} isActive={isActive} animKey={animKeys[i]||0} />
 
                     {/* compound decomposition */}
                     {item.isCompound && parts && (

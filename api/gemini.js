@@ -22,8 +22,9 @@ export default async function handler(req, res) {
     );
     const data = await r.json();
     if (!r.ok) return res.status(r.status).json({ error: JSON.stringify(data) });
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    return res.status(200).json({ text });
+    cconst raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+const text = raw.replace(/```json|```/g, "").trim();
+return res.status(200).json({ text });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

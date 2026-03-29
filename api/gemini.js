@@ -23,9 +23,6 @@ export default async function handler(req, res) {
           generationConfig: {
             maxOutputTokens: 8192,
             responseMimeType: "application/json"
-          },
-          thinkingConfig: {
-            thinkingBudget: 0
           }
         })
       }

@@ -55,12 +55,72 @@ const COMPOUND_MAP = {
   "ㅑ": ["ㅣ","ㅏ"], "ㅕ": ["ㅣ","ㅓ"], "ㅛ": ["ㅣ","ㅗ"], "ㅠ": ["ㅣ","ㅜ"],
   "ㅘ": ["ㅜ","ㅏ"], "ㅝ": ["ㅜ","ㅓ"], "ㅚ": ["ㅗ","ㅣ"], "ㅟ": ["ㅜ","ㅣ"], "ㅢ": ["ㅡ","ㅣ"],
 };
+// 천지인 시각화 데이터
+const VOWEL_ORIGIN = {
+  "ㅏ": { base: "human", dots: [[62,40]],       label: "Heaven shines RIGHT of Human" },
+  "ㅓ": { base: "human", dots: [[18,40]],       label: "Heaven shines LEFT of Human" },
+  "ㅗ": { base: "earth", dots: [[40,16]],       label: "Heaven rises ABOVE Earth" },
+  "ㅜ": { base: "earth", dots: [[40,64]],       label: "Heaven falls BELOW Earth" },
+  "ㅑ": { base: "human", dots: [[57,32],[57,48]], label: "Two heavens RIGHT of Human" },
+  "ㅕ": { base: "human", dots: [[23,32],[23,48]], label: "Two heavens LEFT of Human" },
+  "ㅛ": { base: "earth", dots: [[32,16],[48,16]], label: "Two heavens ABOVE Earth" },
+  "ㅠ": { base: "earth", dots: [[32,64],[48,64]], label: "Two heavens BELOW Earth" },
+  "ㅡ": { base: "earth", dots: [],              label: "The flat Earth" },
+  "ㅣ": { base: "human", dots: [],              label: "A standing Human" },
+  "ㅐ": { base: "human", dots: [[62,40]],       label: "Heaven RIGHT (variant of ㅏ)" },
+  "ㅔ": { base: "human", dots: [[18,40]],       label: "Heaven LEFT (variant of ㅓ)" },
+};
 
-const EXAMPLES = [
-  { name: "Ryan", flag: "🇺🇸" }, { name: "Juan", flag: "🇲🇽" },
-  { name: "Sofia", flag: "🇧🇷" }, { name: "Michael", flag: "🇬🇧" },
-  { name: "Nadia", flag: "🇷🇺" }, { name: "Lucas", flag: "🇫🇷" },
-];
+function VowelOriginSVG({ vowel, color, isActive }) {
+  const o = VOWEL_ORIGIN[vowel];
+  if (!o) return null;
+  const bg = isActive ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.05)";
+  const borderColor = isActive ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.1)";
+  return (
+    <div style={{ background: bg, border: "1px solid " + borderColor, borderRadius: 14, padding: "10px 12px", marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <svg width="80" height="80" viewBox="0 0 80 80" style={{ flexShrink: 0 }}>
+          {/* 배경 원 */}
+          <circle cx="40" cy="40" r="36" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+          {/* Earth (ㅡ) - 노란 가로 바 */}
+          {(o.base === "earth" || (o.base === "human" && false)) && (
+            <rect x="14" y="37" width="52" height="6" rx="3" fill="#FBBF24" opacity="0.9"/>
+          )}
+          {/* Human (ㅣ) - 초록 세로 바 */}
+          {o.base === "human" && (
+            <rect x="37" y="14" width="6" height="52" rx="3" fill="#4ADE80" opacity="0.9"/>
+          )}
+          {/* Earth only */}
+          {o.base === "earth" && (
+            <rect x="14" y="37" width="52" height="6" rx="3" fill="#FBBF24" opacity="0.9"/>
+          )}
+          {/* Heaven dots (빨간 점) */}
+          {o.dots.map((d, i) => (
+            <circle key={i} cx={d[0]} cy={d[1]} r="7" fill="#EF4444"
+              style={{ filter: "drop-shadow(0 0 6px rgba(239,68,68,0.9))" }}/>
+          ))}
+          {/* 결과 모음 글자 - 오른쪽 아래 작게 */}
+          <text x="40" y="44" textAnchor="middle" dominantBaseline="middle"
+            fontSize="28" fontWeight="900" fill="rgba(255,255,255,0.12)"
+            style={{ fontFamily: "sans-serif" }}>{vowel}</text>
+        </svg>
+        <div>
+          <div style={{ fontSize: 11, color: isActive ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.3)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>Formation</div>
+          <div style={{ fontSize: 13, color: isActive ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.6)", lineHeight: 1.5, fontWeight: 600 }}>{o.label}</div>
+          <div style={{ display: "flex", gap: 6, marginTop: 6, alignItems: "center" }}>
+            {o.base === "human" && <span style={{ fontSize: 11, color: "#4ADE80", fontWeight: 700 }}>🧍 Human (ㅣ)</span>}
+            {o.base === "earth" && <span style={{ fontSize: 11, color: "#FBBF24", fontWeight: 700 }}>🌍 Earth (ㅡ)</span>}
+            {o.dots.length > 0 && <span style={{ fontSize: 11, color: "#EF4444", fontWeight: 700 }}>+ ☀️ Heaven{o.dots.length > 1 ? " ×2" : ""}</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+const EXAMPLES = ["Ryan", "Juan", "Sofia", "Michael", "Nadia", "Lucas"];
 
 function App() {
   const [name, setName]             = useState("");
@@ -182,7 +242,7 @@ Rules:
             <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
               <span style={{ fontSize: 11, color: "rgba(255,255,255,.3)", fontWeight: 700, letterSpacing: 1 }}>예시:</span>
               {EXAMPLES.map(ex => (
-                <button key={ex.name} onClick={() => setName(ex.name)} style={{ padding: "5px 13px", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.13)", borderRadius: 20, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.55)", cursor: "pointer" }}>
+                <button key={ex} onClick={() => setName(ex)} style={{ padding: "5px 13px", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.13)", borderRadius: 20, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.55)", cursor: "pointer" }}>
                   {ex.flag} {ex.name}
                 </button>
               ))}
@@ -273,11 +333,8 @@ Rules:
                       </div>
                     </div>
 
-                    {/* formula display — always visible */}
-                    <div style={{ background: isActive ? "rgba(255,255,255,.15)" : "rgba(255,255,255,.05)", borderRadius: 12, padding: "10px 12px", marginBottom: 12 }}>
-                      <div style={{ fontSize: 20, fontWeight: 900, color: isActive ? "white" : m.color, letterSpacing: 2, marginBottom: 4, fontFamily: "monospace" }}>{m.formula}</div>
-                      <div style={{ fontSize: 12, color: isActive ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.55)", lineHeight: 1.5, fontWeight: 500 }}>{m.formulaDetail}</div>
-                    </div>
+                    {/* 천지인 시각화 */}
+                    <VowelOriginSVG vowel={item.koreanVowel} color={m.color} isActive={isActive} />
 
                     {/* compound decomposition */}
                     {item.isCompound && parts && (

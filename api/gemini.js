@@ -16,16 +16,16 @@ export default async function handler(req, res) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 1200 }
+          generationConfig: {
+            maxOutputTokens: 1200,
+            responseMimeType: "application/json"
+          }
         })
       }
     );
     const data = await r.json();
     if (!r.ok) return res.status(r.status).json({ error: JSON.stringify(data) });
-    let raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    // JSON 블록만 추출
-    const match = raw.match(/\{[\s\S]*\}/);
-    const text = match ? match[0] : raw;
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     return res.status(200).json({ text });
   } catch (err) {
     return res.status(500).json({ error: err.message });

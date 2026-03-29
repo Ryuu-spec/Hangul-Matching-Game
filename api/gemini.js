@@ -16,15 +16,15 @@ export default async function handler(req, res) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 1200, response_mime_type: "application/json" }
+          generationConfig: { maxOutputTokens: 1200 }
         })
       }
     );
     const data = await r.json();
     if (!r.ok) return res.status(r.status).json({ error: JSON.stringify(data) });
-    cconst raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-const text = raw.replace(/```json|```/g, "").trim();
-return res.status(200).json({ text });
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const text = raw.replace(/```json\n?|```\n?/g, "").trim();
+    return res.status(200).json({ text });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

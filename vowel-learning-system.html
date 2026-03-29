@@ -58,214 +58,188 @@ const COMPOUND_MAP = {
 // ── 천지인 (Heaven·Earth·Human) 모음 형성 데이터 ──
 // 이중모음은 base1+base2 방식으로 분해
 const CHEONJIIN = {
-  "ㅏ": { type:"single", base:"human", dots:[{x:66,y:40,from:"right"}],        label:"사람(ㅣ) 오른쪽에 하늘(·)" },
-  "ㅓ": { type:"single", base:"human", dots:[{x:14,y:40,from:"left"}],         label:"사람(ㅣ) 왼쪽에 하늘(·)" },
-  "ㅗ": { type:"single", base:"earth", dots:[{x:40,y:14,from:"top"}],          label:"땅(ㅡ) 위에 하늘(·)" },
-  "ㅜ": { type:"single", base:"earth", dots:[{x:40,y:66,from:"bottom"}],       label:"땅(ㅡ) 아래에 하늘(·)" },
-  "ㅑ": { type:"single", base:"human", dots:[{x:63,y:30,from:"right"},{x:63,y:50,from:"right"}], label:"사람(ㅣ) 오른쪽에 하늘 둘(··)" },
-  "ㅕ": { type:"single", base:"human", dots:[{x:17,y:30,from:"left"},{x:17,y:50,from:"left"}],  label:"사람(ㅣ) 왼쪽에 하늘 둘(··)" },
-  "ㅛ": { type:"single", base:"earth", dots:[{x:30,y:14,from:"top"},{x:50,y:14,from:"top"}],    label:"땅(ㅡ) 위에 하늘 둘(··)" },
-  "ㅠ": { type:"single", base:"earth", dots:[{x:30,y:66,from:"bottom"},{x:50,y:66,from:"bottom"}], label:"땅(ㅡ) 아래에 하늘 둘(··)" },
-  "ㅡ": { type:"single", base:"earth", dots:[],                                label:"땅의 모양" },
-  "ㅣ": { type:"single", base:"human", dots:[],                                label:"서 있는 사람의 모양" },
-  // 이중모음 → 두 기본 모음으로 분해 표시
-  "ㅐ": { type:"compound", parts:["ㅏ","ㅣ"], label:"ㅏ + ㅣ → ㅐ" },
-  "ㅔ": { type:"compound", parts:["ㅓ","ㅣ"], label:"ㅓ + ㅣ → ㅔ" },
-  "ㅘ": { type:"compound", parts:["ㅗ","ㅏ"], label:"ㅗ + ㅏ → ㅘ" },
-  "ㅝ": { type:"compound", parts:["ㅜ","ㅓ"], label:"ㅜ + ㅓ → ㅝ" },
-  "ㅚ": { type:"compound", parts:["ㅗ","ㅣ"], label:"ㅗ + ㅣ → ㅚ" },
-  "ㅟ": { type:"compound", parts:["ㅜ","ㅣ"], label:"ㅜ + ㅣ → ㅟ" },
-  "ㅢ": { type:"compound", parts:["ㅡ","ㅣ"], label:"ㅡ + ㅣ → ㅢ" },
-  "ㅑ_": { type:"compound", parts:["ㅣ","ㅏ"], label:"ㅣ + ㅏ (빠르게) → ㅑ" },
-  "ㅕ_": { type:"compound", parts:["ㅣ","ㅓ"], label:"ㅣ + ㅓ (빠르게) → ㅕ" },
-  "ㅛ_": { type:"compound", parts:["ㅣ","ㅗ"], label:"ㅣ + ㅗ (빠르게) → ㅛ" },
-  "ㅠ_": { type:"compound", parts:["ㅣ","ㅜ"], label:"ㅣ + ㅜ (빠르게) → ㅠ" },
+  "ㅏ": { base:"human", dots:[{left:"67%",top:"50%"}],              label:"사람(ㅣ) 오른쪽에 하늘(·)" },
+  "ㅓ": { base:"human", dots:[{left:"33%",top:"50%"}],              label:"사람(ㅣ) 왼쪽에 하늘(·)" },
+  "ㅗ": { base:"earth", dots:[{left:"50%",top:"28%"}],              label:"땅(ㅡ) 위에 하늘(·)" },
+  "ㅜ": { base:"earth", dots:[{left:"50%",top:"72%"}],              label:"땅(ㅡ) 아래에 하늘(·)" },
+  "ㅑ": { base:"human", dots:[{left:"67%",top:"38%"},{left:"67%",top:"62%"}], label:"사람(ㅣ) 오른쪽에 하늘 둘(··)" },
+  "ㅕ": { base:"human", dots:[{left:"33%",top:"38%"},{left:"33%",top:"62%"}], label:"사람(ㅣ) 왼쪽에 하늘 둘(··)" },
+  "ㅛ": { base:"earth", dots:[{left:"38%",top:"28%"},{left:"62%",top:"28%"}], label:"땅(ㅡ) 위에 하늘 둘(··)" },
+  "ㅠ": { base:"earth", dots:[{left:"38%",top:"72%"},{left:"62%",top:"72%"}], label:"땅(ㅡ) 아래에 하늘 둘(··)" },
+  "ㅡ": { base:"earth", dots:[], label:"땅의 모양" },
+  "ㅣ": { base:"human", dots:[], label:"서 있는 사람의 모양" },
+  "ㅐ": { compound:["ㅏ","ㅣ"], label:"ㅏ + ㅣ → ㅐ" },
+  "ㅔ": { compound:["ㅓ","ㅣ"], label:"ㅓ + ㅣ → ㅔ" },
+  "ㅘ": { compound:["ㅗ","ㅏ"], label:"ㅗ + ㅏ → ㅘ" },
+  "ㅝ": { compound:["ㅜ","ㅓ"], label:"ㅜ + ㅓ → ㅝ" },
+  "ㅚ": { compound:["ㅗ","ㅣ"], label:"ㅗ + ㅣ → ㅚ" },
+  "ㅟ": { compound:["ㅜ","ㅣ"], label:"ㅜ + ㅣ → ㅟ" },
+  "ㅢ": { compound:["ㅡ","ㅣ"], label:"ㅡ + ㅣ → ㅢ" },
 };
 
-// 점 출발 위치 계산 (원 바깥에서 날아옴)
-function getDotFrom(from) {
-  if (from === "right")  return {x:110, y:40};
-  if (from === "left")   return {x:-30, y:40};
-  if (from === "top")    return {x:40,  y:-30};
-  if (from === "bottom") return {x:40,  y:110};
-  return {x:40, y:-30};
-}
+// ── Build_a_Vowel 방식 자동 애니메이션 ──
+// div+position+CSS transition 으로 점이 실제로 날아옴
+function VowelAnim({ vowel, color, animKey, size=110 }) {
+  const { useState: uS, useEffect: uE, useRef: uR } = React;
+  const data = CHEONJIIN[vowel];
 
-// 기본 모음 단일 애니메이션 SVG
-function SingleVowelAnim({ data, vowel, color, animKey, size=96 }) {
-  const uid = `sv_${animKey}_${vowel.charCodeAt(0)}_${size}`;
-  const scale = size / 80;
+  // 이중모음 → 구성 모음들 나란히
+  if (!data || data.compound) {
+    const parts = data ? data.compound : [];
+    return (
+      <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+        {parts.map((p, pi) => {
+          const pm = VOWEL_META[p] || { color:"#888", roman:"?" };
+          return (
+            <div key={pi} style={{ display:"flex", alignItems:"center", gap:8 }}>
+              {pi > 0 && <span style={{ fontSize:20, fontWeight:900, color:"rgba(255,255,255,.45)" }}>+</span>}
+              <VowelAnim vowel={p} color={pm.color} animKey={animKey * 10 + pi} size={size}/>
+            </div>
+          );
+        })}
+        <span style={{ fontSize:20, fontWeight:900, color:"rgba(255,255,255,.45)" }}>→</span>
+        <div style={{ width:size*0.55, height:size*0.55, background:color, borderRadius:size*0.15,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:size*0.32, fontWeight:900, color:"white",
+          boxShadow:`0 4px 20px ${color}66` }}>{vowel}</div>
+      </div>
+    );
+  }
+
+  // 단일 모음 애니메이션 (Build_a_Vowel 방식)
+  const [phase, setPhase] = uS(0); // 0=기본, 1=base등장, 2=점이동, 3=결과
+  const dotRef = uR(null);
+  const timerRef = uR([]);
+
+  function clearTimers() { timerRef.current.forEach(clearTimeout); timerRef.current = []; }
+
+  uE(() => {
+    clearTimers();
+    setPhase(0);
+    const t1 = setTimeout(() => setPhase(1), 80);           // base 등장
+    const t2 = setTimeout(() => setPhase(2), 700);          // 점 시작위치
+    const t3 = setTimeout(() => setPhase(3), 780);          // 점 이동 (transition 시작)
+    const t4 = setTimeout(() => setPhase(4), 1800);         // 결과 글자
+    const t5 = setTimeout(() => setPhase(1), 3200);         // 루프: 다시
+    const t6 = setTimeout(() => setPhase(2), 3900);
+    const t7 = setTimeout(() => setPhase(3), 3980);
+    const t8 = setTimeout(() => setPhase(4), 4900);
+    const t9 = setTimeout(() => setPhase(1), 6200);
+    const t10= setTimeout(() => setPhase(2), 6900);
+    const t11= setTimeout(() => setPhase(3), 6980);
+    const t12= setTimeout(() => setPhase(4), 7900);
+    timerRef.current = [t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12];
+    return clearTimers;
+  }, [animKey, vowel]);
+
+  const showBase  = phase >= 1 && phase < 4;
+  const showDot   = phase >= 2 && phase < 4;
+  const dotMoved  = phase >= 3;
+  const showVowel = phase >= 4;
+
+  // 점 위치: phase2=원 위에서 시작, phase3=목표로 이동
+  const dotStartLeft = "50%", dotStartTop = "5%";
+  const targetPos = data.dots[0] || { left:"50%", top:"28%" };
 
   return (
     <div style={{ position:"relative", width:size, height:size, flexShrink:0 }}>
-      <style>{`
-        @keyframes earthGrow_${uid} {
-          0%  { transform:scaleX(0) translateX(-50%); opacity:0 }
-          70% { transform:scaleX(1.06) translateX(0); opacity:1 }
-          100%{ transform:scaleX(1) translateX(0); opacity:1 }
-        }
-        @keyframes humanGrow_${uid} {
-          0%  { transform:scaleY(0); opacity:0 }
-          70% { transform:scaleY(1.08); opacity:1 }
-          100%{ transform:scaleY(1); opacity:1 }
-        }
-        @keyframes dotFly0_${uid} {
-          0%   { transform:translate(var(--fx0),var(--fy0)) scale(0.3); opacity:0 }
-          50%  { opacity:1 }
-          80%  { transform:translate(0,0) scale(1.3); opacity:1 }
-          100% { transform:translate(0,0) scale(1); opacity:1 }
-        }
-        @keyframes dotFly1_${uid} {
-          0%   { transform:translate(var(--fx1),var(--fy1)) scale(0.3); opacity:0 }
-          50%  { opacity:1 }
-          80%  { transform:translate(0,0) scale(1.3); opacity:1 }
-          100% { transform:translate(0,0) scale(1); opacity:1 }
-        }
-        @keyframes dotPulse_${uid} {
-          0%,100%{ filter:drop-shadow(0 0 5px #EF4444) }
-          50%    { filter:drop-shadow(0 0 18px #EF4444) }
-        }
-        @keyframes vowelPop_${uid} {
-          0%  { opacity:0; transform:scale(0.3) }
-          65% { opacity:1; transform:scale(1.15) }
-          100%{ opacity:1; transform:scale(1) }
-        }
-        .earth-${uid} {
-          transform-origin: center center;
-          animation: earthGrow_${uid} 0.55s 0s cubic-bezier(.34,1.4,.64,1) both;
-        }
-        .human-${uid} {
-          transform-origin: center center;
-          animation: humanGrow_${uid} 0.55s 0s cubic-bezier(.34,1.4,.64,1) both;
-        }
-        .dot0-${uid} {
-          animation: dotFly0_${uid} 0.55s 0.62s cubic-bezier(.34,1.4,.64,1) both,
-                     dotPulse_${uid} 1.4s 1.2s ease-in-out infinite;
-        }
-        .dot1-${uid} {
-          animation: dotFly1_${uid} 0.55s 0.78s cubic-bezier(.34,1.4,.64,1) both,
-                     dotPulse_${uid} 1.4s 1.36s ease-in-out infinite;
-        }
-        .voweltext-${uid} {
-          transform-origin: center center;
-          animation: vowelPop_${uid} 0.5s ${data.dots.length > 0 ? 1.18 : 0.62}s cubic-bezier(.34,1.56,.64,1) both;
-        }
-      `}</style>
-      <svg key={uid} width={size} height={size} viewBox="0 0 80 80">
-        <circle cx="40" cy="40" r="37" fill="rgba(255,255,255,0.05)"
-          stroke="rgba(255,255,255,0.1)" strokeWidth="1.5"/>
+      {/* 원 배경 */}
+      <div style={{ position:"absolute", inset:0, borderRadius:"50%",
+        background:"rgba(255,255,255,0.05)", border:"1.5px solid rgba(255,255,255,0.1)" }}/>
 
-        {data.base === "earth" && (
-          <rect className={`earth-${uid}`}
-            x="13" y="37" width="54" height="6" rx="3" fill="#FBBF24" opacity="0.95"/>
-        )}
-        {data.base === "human" && (
-          <rect className={`human-${uid}`}
-            x="37" y="13" width="6" height="54" rx="3" fill="#4ADE80" opacity="0.95"/>
-        )}
-
-        {data.dots.map((d, i) => {
-          const from = getDotFrom(d.from);
-          const fx = (from.x - d.x).toFixed(1);
-          const fy = (from.y - d.y).toFixed(1);
-          return (
-            <circle key={i}
-              className={i===0 ? `dot0-${uid}` : `dot1-${uid}`}
-              style={{ ["--fx"+i]: `${fx}px`, ["--fy"+i]: `${fy}px` }}
-              cx={d.x} cy={d.y} r="7.5" fill="#EF4444"/>
-          );
-        })}
-
-        <text className={`voweltext-${uid}`}
-          x="40" y="44"
-          textAnchor="middle" dominantBaseline="middle"
-          fill={color + "DD"} fontWeight="900" fontFamily="sans-serif" fontSize="40">
-          {vowel}
-        </text>
-      </svg>
-    </div>
-  );
-}
-
-// 이중모음 분해 애니메이션
-function CompoundVowelAnim({ data, vowel, color, animKey, allMeta }) {
-  const uid = `cv_${animKey}_${vowel.charCodeAt(0)}`;
-  return (
-    <div>
-      <style>{`
-        @keyframes partIn_${uid}_0 { 0%{opacity:0;transform:translateX(-10px)} 100%{opacity:1;transform:none} }
-        @keyframes partIn_${uid}_1 { 0%{opacity:0;transform:translateX(-10px)} 100%{opacity:1;transform:none} }
-        @keyframes plusIn_${uid}   { 0%{opacity:0;transform:scale(0)}           100%{opacity:1;transform:none} }
-        @keyframes arrowIn_${uid}  { 0%{opacity:0;transform:scale(0)}           100%{opacity:1;transform:none} }
-        @keyframes resultIn_${uid} { 0%{opacity:0;transform:scale(0.5)}         100%{opacity:1;transform:scale(1)} }
-        .part-${uid}-0  { animation:partIn_${uid}_0 0.4s 0s   cubic-bezier(.34,1.4,.64,1) both }
-        .part-${uid}-1  { animation:partIn_${uid}_1 0.4s 0.25s cubic-bezier(.34,1.4,.64,1) both }
-        .plus-${uid}    { animation:plusIn_${uid}   0.3s 0.18s cubic-bezier(.34,1.4,.64,1) both }
-        .arrow-${uid}   { animation:arrowIn_${uid}  0.3s 0.5s  cubic-bezier(.34,1.4,.64,1) both }
-        .result-${uid}  { animation:resultIn_${uid} 0.5s 0.72s cubic-bezier(.34,1.56,.64,1) both }
-      `}</style>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, flexWrap:"wrap" }}>
-        {data.parts.map((p, i) => {
-          const pm = allMeta[p] || { color:"#888", roman:"?" };
-          return (
-            <div key={i} style={{ display:"flex", alignItems:"center", gap:6 }}>
-              {i > 0 && <span className={`plus-${uid}`} style={{ fontSize:18, fontWeight:900, color:"rgba(255,255,255,.5)" }}>+</span>}
-              <div className={`part-${uid}-${i}`} style={{ textAlign:"center" }}>
-                <div style={{ width:42, height:42, background:pm.color, borderRadius:12,
-                  display:"flex", alignItems:"center", justifyContent:"center",
-                  fontSize:20, fontWeight:900, color:"white",
-                  boxShadow:`0 4px 14px ${pm.color}66` }}>{p}</div>
-                <div style={{ fontSize:10, fontWeight:700, color:pm.color, marginTop:3 }}>/{pm.roman}/</div>
-              </div>
-            </div>
-          );
-        })}
-        <span className={`arrow-${uid}`} style={{ fontSize:20, color:"rgba(255,255,255,.4)", fontWeight:900 }}>→</span>
-        <div className={`result-${uid}`} style={{ textAlign:"center" }}>
-          <div style={{ width:50, height:50, background:color, borderRadius:14,
-            display:"flex", alignItems:"center", justifyContent:"center",
-            fontSize:26, fontWeight:900, color:"white",
-            boxShadow:`0 6px 22px ${color}66`,
-            animation:"glowPulse 2s 1.3s ease-in-out infinite" }}>{vowel}</div>
-          <div style={{ fontSize:11, fontWeight:700, color, marginTop:3 }}>{data.label.split("→")[1]?.trim() || vowel}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// 통합 컴포넌트
-function VowelFormationAnim({ vowel, color, isActive, animKey, allMeta }) {
-  const data = CHEONJIIN[vowel];
-  if (!data) return null;
-
-  const bg = isActive ? "rgba(255,255,255,.1)" : "rgba(255,255,255,.04)";
-  const border = isActive ? "rgba(255,255,255,.22)" : "rgba(255,255,255,.08)";
-
-  return (
-    <div style={{ background:bg, border:`1px solid ${border}`, borderRadius:14, padding:"12px 14px", marginBottom:12 }}>
-      {data.type === "single" ? (
-        <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-          <SingleVowelAnim data={data} vowel={vowel} color={color} animKey={animKey}/>
-          <div>
-            <div style={{ display:"flex", gap:6, marginBottom:6, flexWrap:"wrap" }}>
-              {data.base === "human" && <span style={{ fontSize:11, background:"rgba(74,222,128,.15)", color:"#4ADE80", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>🧍 ㅣ</span>}
-              {data.base === "earth" && <span style={{ fontSize:11, background:"rgba(251,191,36,.15)", color:"#FBBF24", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>🌍 ㅡ</span>}
-              {data.dots.length > 0 && <span style={{ fontSize:11, background:"rgba(239,68,68,.15)", color:"#EF4444", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>☀️ ·{data.dots.length>1?"·":""}</span>}
-            </div>
-            <div style={{ fontSize:13, color: isActive ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.65)", fontWeight:700, lineHeight:1.6 }}>{data.label}</div>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <div style={{ fontSize:11, color:"rgba(255,255,255,.4)", fontWeight:700, textTransform:"uppercase", letterSpacing:.8, marginBottom:10 }}>🔍 분해 · Decomposition</div>
-          <CompoundVowelAnim data={data} vowel={vowel} color={color} animKey={animKey} allMeta={allMeta}/>
-          <div style={{ fontSize:12, color:"rgba(255,255,255,.5)", marginTop:10, textAlign:"center" }}>{data.label}</div>
-        </div>
+      {/* Human (ㅣ) — 세로 막대 */}
+      {data.base === "human" && (
+        <div style={{
+          position:"absolute",
+          left:"calc(50% - 5px)", top:"17%",
+          width:10, height:"66%",
+          background:"#4ADE80", borderRadius:6,
+          boxShadow:"0 0 16px rgba(74,222,128,0.7)",
+          transform: showBase ? "scaleY(1)" : "scaleY(0)",
+          transformOrigin:"center center",
+          transition: showBase ? "transform 0.55s cubic-bezier(0.34,1.4,0.64,1)" : "none",
+          opacity: showBase ? 1 : 0,
+        }}/>
       )}
+
+      {/* Earth (ㅡ) — 가로 막대 */}
+      {data.base === "earth" && (
+        <div style={{
+          position:"absolute",
+          left:"17%", top:"calc(50% - 5px)",
+          width:"66%", height:10,
+          background:"#FBBF24", borderRadius:6,
+          boxShadow:"0 0 16px rgba(251,191,36,0.7)",
+          transform: showBase ? "scaleX(1)" : "scaleX(0)",
+          transformOrigin:"center center",
+          transition: showBase ? "transform 0.55s cubic-bezier(0.34,1.4,0.64,1)" : "none",
+          opacity: showBase ? 1 : 0,
+        }}/>
+      )}
+
+      {/* Heaven dot (·) — 바깥서 날아옴 */}
+      {data.dots.length > 0 && showDot && (
+        <div style={{
+          position:"absolute",
+          left: dotMoved ? targetPos.left : dotStartLeft,
+          top:  dotMoved ? targetPos.top  : dotStartTop,
+          transform:"translate(-50%,-50%)",
+          width:22, height:22,
+          background:"#EF4444", borderRadius:"50%",
+          boxShadow:"0 0 20px rgba(239,68,68,0.9)",
+          transition: dotMoved
+            ? "left 0.65s cubic-bezier(0.34,1.2,0.64,1), top 0.65s cubic-bezier(0.34,1.2,0.64,1)"
+            : "none",
+          animation:"dotLandAnim 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards",
+          zIndex:10,
+        }}/>
+      )}
+      {/* 점 2개 있는 경우 (ㅑ ㅕ ㅛ ㅠ) */}
+      {data.dots.length > 1 && showDot && (
+        <div style={{
+          position:"absolute",
+          left: dotMoved ? data.dots[1].left : dotStartLeft,
+          top:  dotMoved ? data.dots[1].top  : dotStartTop,
+          transform:"translate(-50%,-50%)",
+          width:22, height:22,
+          background:"#EF4444", borderRadius:"50%",
+          boxShadow:"0 0 20px rgba(239,68,68,0.9)",
+          transition: dotMoved
+            ? "left 0.7s 0.1s cubic-bezier(0.34,1.2,0.64,1), top 0.7s 0.1s cubic-bezier(0.34,1.2,0.64,1)"
+            : "none",
+          animation:"dotLandAnim 0.7s 0.1s cubic-bezier(0.34,1.56,0.64,1) forwards",
+          zIndex:10,
+        }}/>
+      )}
+
+      {/* 결과 모음 글자 */}
+      {showVowel && (
+        <div style={{
+          position:"absolute", inset:0,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:size*0.42, fontWeight:900, color:"white",
+          textShadow:`0 0 30px ${color}`,
+          animation:"vowelAppear 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards",
+          zIndex:20,
+        }}>{vowel}</div>
+      )}
+
+      <style>{`
+        @keyframes dotLandAnim {
+          0%   { transform:translate(-50%,-50%) scale(0.3); opacity:0 }
+          60%  { transform:translate(-50%,-50%) scale(1.4); opacity:1 }
+          100% { transform:translate(-50%,-50%) scale(1);   opacity:1 }
+        }
+        @keyframes vowelAppear {
+          0%   { opacity:0; transform:scale(0.5) }
+          65%  { opacity:1; transform:scale(1.15) }
+          100% { opacity:1; transform:scale(1) }
+        }
+      `}</style>
     </div>
   );
 }
+
 
 
 
@@ -458,34 +432,8 @@ Rules:
                           <div style={{ fontSize: 11, fontWeight: 700, color: m.color }}>/{m.roman}/</div>
                         </div>
                       </div>
-                      {/* 오른쪽: SVG 애니메이션만 바로 표시 */}
-                      {(() => {
-                        const d = CHEONJIIN[s.koreanVowel];
-                        if (!d) return null;
-                        if (d.type === "single") {
-                          return <SingleVowelAnim data={d} vowel={s.koreanVowel} color={m.color} animKey={i} size={96}/>;
-                        }
-                        // 이중모음: 두 구성 모음 SVG 나란히
-                        return (
-                          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                            {d.parts.map((p, pi) => {
-                              const pd = CHEONJIIN[p];
-                              const pm = VOWEL_META[p] || { color:"#888" };
-                              return (
-                                <div key={pi} style={{ display:"flex", alignItems:"center", gap:6 }}>
-                                  {pi > 0 && <span style={{ color:"rgba(255,255,255,.4)", fontSize:20, fontWeight:900 }}>+</span>}
-                                  {pd && pd.type === "single"
-                                    ? <SingleVowelAnim data={pd} vowel={p} color={pm.color} animKey={i*10+pi} size={80}/>
-                                    : <div style={{ width:80, height:80, background:pm.color, borderRadius:16, display:"flex", alignItems:"center", justifyContent:"center", fontSize:36, fontWeight:900, color:"white" }}>{p}</div>
-                                  }
-                                </div>
-                              );
-                            })}
-                            <span style={{ color:"rgba(255,255,255,.4)", fontSize:20, fontWeight:900 }}>→</span>
-                            <div style={{ width:54, height:54, background:m.color, borderRadius:14, display:"flex", alignItems:"center", justifyContent:"center", fontSize:28, fontWeight:900, color:"white", boxShadow:`0 4px 18px ${m.color}66` }}>{s.koreanVowel}</div>
-                          </div>
-                        );
-                      })()}
+                      {/* 오른쪽: 자동 애니메이션 */}
+                      <VowelAnim vowel={s.koreanVowel} color={m.color} animKey={i} size={110}/>
                     </div>
                   );
                 })}
@@ -528,13 +476,7 @@ Rules:
                       </div>
                     </div>
 
-                    <VowelFormationAnim
-                      vowel={item.koreanVowel}
-                      color={m.color}
-                      isActive={isActive}
-                      animKey={animKeys[i] || 0}
-                      allMeta={VOWEL_META}
-                    />
+                    <VowelAnim vowel={item.koreanVowel} color={m.color} animKey={animKeys[i]||0} size={110}/>
 
                     {/* compound decomposition */}
                     {item.isCompound && parts && (

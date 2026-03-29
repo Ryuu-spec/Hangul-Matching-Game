@@ -1,5 +1,4 @@
-module.exports = async (req, res) => {
-  // CORS 허용
+export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -11,18 +10,12 @@ module.exports = async (req, res) => {
 
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   if (!GEMINI_API_KEY) {
-    return res.status(500).json({ error: "GEMINI_API_KEY is not set in environment variables." });
+    return res.status(500).json({ error: "GEMINI_API_KEY not set" });
   }
 
-  // body 파싱 (문자열로 올 수도 있음)
-  let body = req.body;
-  if (typeof body === "string") {
-    try { body = JSON.parse(body); } catch (e) {}
-  }
-
-  const { prompt } = body || {};
+  const { prompt } = req.body || {};
   if (!prompt) {
-    return res.status(400).json({ error: "prompt is required." });
+    return res.status(400).json({ error: "prompt is required" });
   }
 
   try {
@@ -42,7 +35,6 @@ module.exports = async (req, res) => {
     );
 
     const data = await geminiRes.json();
-
     if (!geminiRes.ok) {
       return res.status(geminiRes.status).json({ error: JSON.stringify(data) });
     }
@@ -51,7 +43,6 @@ module.exports = async (req, res) => {
     return res.status(200).json({ text });
 
   } catch (err) {
-    console.error("Gemini proxy error:", err);
     return res.status(500).json({ error: err.message });
   }
-};
+}

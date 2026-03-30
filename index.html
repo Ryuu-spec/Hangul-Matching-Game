@@ -1,119 +1,727 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>AI 외래어 표기 & 천지인 학습기</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-    <style>
-        /* [디자인 원상복구] 선생님이 좋아하셨던 다크 모드 스타일 */
-        body { 
-            background: radial-gradient(circle at top right, #1e1b4b, #0f172a); 
-            color: white; font-family: 'Pretendard', sans-serif; 
-            display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh;
-        }
-        .container { width: 100%; max-width: 700px; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 35px;
-            margin-bottom: 25px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-        }
-        /* 입력창 및 선택창 스타일 복구 */
-        .controls { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
-        select, input { 
-            background: rgba(15, 23, 42, 0.8); 
-            border: 1px solid rgba(255, 255, 255, 0.2); 
-            color: white; padding: 15px; border-radius: 12px; font-size: 17px; 
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            color: white; border: none; padding: 18px; border-radius: 12px;
-            font-weight: bold; cursor: pointer; font-size: 18px; transition: transform 0.2s;
-        }
-        .btn-primary:hover { transform: scale(1.02); }
-        /* 천지인 시각화 영역 */
-        .vowel-circle {
-            width: 200px; height: 200px; border-radius: 50%;
-            border: 2px dashed #818cf8; margin: 30px auto;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 90px; background: rgba(99, 102, 241, 0.15);
-            box-shadow: 0 0 40px rgba(99, 102, 241, 0.2);
-        }
-        .info-panel { text-align: left; background: rgba(0,0,0,0.3); padding: 25px; border-radius: 18px; line-height: 1.7; }
-        .accent { color: #a78bfa; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Korean Vowel Learning · AI</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: linear-gradient(160deg, #0D0B1E 0%, #161438 55%, #1E1A3C 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      overflow-x: hidden;
+    }
+    @keyframes fadeUp    { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes cardIn    { 0%{opacity:0;transform:scale(.85)} 65%{transform:scale(1.04)} 100%{opacity:1;transform:scale(1)} }
+    @keyframes glowPulse { 0%,100%{box-shadow:0 0 14px rgba(167,139,250,.35)} 50%{box-shadow:0 0 32px rgba(167,139,250,.7)} }
+    @keyframes bounce    { 0%,80%,100%{transform:scale(.75);opacity:.4} 40%{transform:scale(1.2);opacity:1} }
+    input::placeholder   { color: rgba(255,255,255,0.22); }
+    input:focus          { outline: none; }
+    button               { font-family: inherit; }
+  </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="text/babel">
-        const { useState } = React;
+<div id="root"></div>
 
-        function App() {
-            const [country, setCountry] = useState("ENG"); // 국적 선택 상태 복구
-            const [name, setName] = useState("");
-            const [data, setData] = useState(null);
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
 
-            const handleSearch = () => {
-                if (!name) return;
-                // [분석 로직] 국어원 데이터 기반 결과 시뮬레이션
-                if (name.toLowerCase().includes("robert")) {
-                    setData({
-                        kor: "로버트",
-                        vowel: "ㅗ",
-                        lang: country === "ENG" ? "영어" : "기타",
-                        desc: "땅(ㅡ) 위에 태양(·)이 떠오른 'ㅗ'의 원리입니다.",
-                        rule: "국립국어원 규정: [o] 발음은 'ㅗ'로 적는 것이 원칙입니다."
-                    });
-                } else {
-                    alert("'Robert'를 입력해 보세요!");
-                }
-            };
+// 모음별 색상 + 로마자 + 기원 스토리
+const VOWEL_META = {
+  "ㅏ": { roman: "a",   color: "#FF6B6B", basic: true,  formula: "ㅣ + ·", formulaDetail: "ㅣ 오른쪽에 점" },
+  "ㅑ": { roman: "ya",  color: "#FF8E53", basic: false, formula: "ㅣ + ··", formulaDetail: "ㅣ 오른쪽에 점 두 개" },
+  "ㅓ": { roman: "eo",  color: "#4ECDC4", basic: true,  formula: "· + ㅣ", formulaDetail: "ㅣ 왼쪽에 점" },
+  "ㅕ": { roman: "yeo", color: "#45B7D1", basic: false, formula: "·· + ㅣ", formulaDetail: "ㅣ 왼쪽에 점 두 개" },
+  "ㅗ": { roman: "o",   color: "#96CEB4", basic: true,  formula: "ㅡ + ·", formulaDetail: "ㅡ 위에 점" },
+  "ㅛ": { roman: "yo",  color: "#52C97A", basic: false, formula: "ㅡ + ··", formulaDetail: "ㅡ 위에 점 두 개" },
+  "ㅜ": { roman: "u",   color: "#7B68EE", basic: true,  formula: "ㅡ + ·", formulaDetail: "ㅡ 아래에 점" },
+  "ㅠ": { roman: "yu",  color: "#9B59B6", basic: false, formula: "ㅡ + ··", formulaDetail: "ㅡ 아래에 점 두 개" },
+  "ㅡ": { roman: "eu",  color: "#95A5A6", basic: true,  formula: "ㅡ", formulaDetail: "평평한 땅의 모양" },
+  "ㅣ": { roman: "i",   color: "#F39C12", basic: true,  formula: "ㅣ", formulaDetail: "서 있는 사람의 모양" },
+  "ㅐ": { roman: "ae",  color: "#E74C3C", basic: true,  formula: "ㅣ + ·", formulaDetail: "ㅏ에서 변형된 소리" },
+  "ㅔ": { roman: "e",   color: "#27AE60", basic: true,  formula: "· + ㅣ", formulaDetail: "ㅓ에서 변형된 소리" },
+  "ㅘ": { roman: "wa",  color: "#E67E22", basic: false, formula: "ㅗ + ㅏ", formulaDetail: "두 모음이 합쳐진 소리" },
+  "ㅝ": { roman: "wo",  color: "#3498DB", basic: false, formula: "ㅜ + ㅓ", formulaDetail: "두 모음이 합쳐진 소리" },
+  "ㅚ": { roman: "oe",  color: "#1ABC9C", basic: false, formula: "ㅗ + ㅣ", formulaDetail: "두 모음이 합쳐진 소리" },
+  "ㅟ": { roman: "wi",  color: "#8E44AD", basic: false, formula: "ㅜ + ㅣ", formulaDetail: "두 모음이 합쳐진 소리" },
+  "ㅢ": { roman: "ui",  color: "#BDC3C7", basic: false, formula: "ㅡ + ㅣ", formulaDetail: "두 모음이 합쳐진 소리" },
+};
 
-            return (
-                <div className="container">
-                    <h1 style={{textAlign: 'center', marginBottom: '30px', fontSize: '32px'}}>한글 외래어 표기 학습기</h1>
-                    
-                    <div className="glass-card">
-                        <div className="controls">
-                            {/* [복구된 국적 선택 칸] */}
-                            <select value={country} onChange={(e) => setCountry(e.target.value)}>
-                                <option value="ENG">영어 (English)</option>
-                                <option value="GER">독일어 (German)</option>
-                                <option value="FRA">프랑스어 (French)</option>
-                                <option value="ESP">스페인어 (Spanish)</option>
-                            </select>
-                            <input 
-                                value={name} 
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder="외국어 이름을 입력하세요"
-                            />
-                            <button className="btn-primary" onClick={handleSearch}>분석 및 원리 보기</button>
-                        </div>
-                    </div>
+const COMPOUND_MAP = {
+  "ㅑ": ["ㅣ","ㅏ"], "ㅕ": ["ㅣ","ㅓ"], "ㅛ": ["ㅣ","ㅗ"], "ㅠ": ["ㅣ","ㅜ"],
+  "ㅘ": ["ㅜ","ㅏ"], "ㅝ": ["ㅜ","ㅓ"], "ㅚ": ["ㅗ","ㅣ"], "ㅟ": ["ㅜ","ㅣ"], "ㅢ": ["ㅡ","ㅣ"],
+};
+// ── 천지인 (Heaven·Earth·Human) 모음 형성 데이터 ──
+// 이중모음은 base1+base2 방식으로 분해
+const CHEONJIIN = {
+  "ㅏ": { type:"single", base:"human", dots:[{x:66,y:40,from:"right"}],        label:"사람(ㅣ) 오른쪽에 하늘(·)" },
+  "ㅓ": { type:"single", base:"human", dots:[{x:14,y:40,from:"left"}],         label:"사람(ㅣ) 왼쪽에 하늘(·)" },
+  "ㅗ": { type:"single", base:"earth", dots:[{x:40,y:14,from:"top"}],          label:"땅(ㅡ) 위에 하늘(·)" },
+  "ㅜ": { type:"single", base:"earth", dots:[{x:40,y:66,from:"bottom"}],       label:"땅(ㅡ) 아래에 하늘(·)" },
+  "ㅑ": { type:"single", base:"human", dots:[{x:63,y:30,from:"right"},{x:63,y:50,from:"right"}], label:"사람(ㅣ) 오른쪽에 하늘 둘(··)" },
+  "ㅕ": { type:"single", base:"human", dots:[{x:17,y:30,from:"left"},{x:17,y:50,from:"left"}],  label:"사람(ㅣ) 왼쪽에 하늘 둘(··)" },
+  "ㅛ": { type:"single", base:"earth", dots:[{x:30,y:14,from:"top"},{x:50,y:14,from:"top"}],    label:"땅(ㅡ) 위에 하늘 둘(··)" },
+  "ㅠ": { type:"single", base:"earth", dots:[{x:30,y:66,from:"bottom"},{x:50,y:66,from:"bottom"}], label:"땅(ㅡ) 아래에 하늘 둘(··)" },
+  "ㅡ": { type:"single", base:"earth", dots:[],                                label:"땅의 모양" },
+  "ㅣ": { type:"single", base:"human", dots:[],                                label:"서 있는 사람의 모양" },
+  // 이중모음 → 두 기본 모음으로 분해 표시
+  "ㅐ": { type:"compound", parts:["ㅏ","ㅣ"], label:"ㅏ + ㅣ → ㅐ" },
+  "ㅔ": { type:"compound", parts:["ㅓ","ㅣ"], label:"ㅓ + ㅣ → ㅔ" },
+  "ㅘ": { type:"compound", parts:["ㅗ","ㅏ"], label:"ㅗ + ㅏ → ㅘ" },
+  "ㅝ": { type:"compound", parts:["ㅜ","ㅓ"], label:"ㅜ + ㅓ → ㅝ" },
+  "ㅚ": { type:"compound", parts:["ㅗ","ㅣ"], label:"ㅗ + ㅣ → ㅚ" },
+  "ㅟ": { type:"compound", parts:["ㅜ","ㅣ"], label:"ㅜ + ㅣ → ㅟ" },
+  "ㅢ": { type:"compound", parts:["ㅡ","ㅣ"], label:"ㅡ + ㅣ → ㅢ" },
+  "ㅑ_": { type:"compound", parts:["ㅣ","ㅏ"], label:"ㅣ + ㅏ (빠르게) → ㅑ" },
+  "ㅕ_": { type:"compound", parts:["ㅣ","ㅓ"], label:"ㅣ + ㅓ (빠르게) → ㅕ" },
+  "ㅛ_": { type:"compound", parts:["ㅣ","ㅗ"], label:"ㅣ + ㅗ (빠르게) → ㅛ" },
+  "ㅠ_": { type:"compound", parts:["ㅣ","ㅜ"], label:"ㅣ + ㅜ (빠르게) → ㅠ" },
+};
 
-                    {data && (
-                        <div className="glass-card" style={{textAlign: 'center', animation: 'fadeIn 0.5s'}}>
-                            <h2 style={{fontSize: '50px', marginBottom: '10px'}}>{data.kor}</h2>
-                            <div className="vowel-circle">{data.vowel}</div>
-                            
-                            <div className="info-panel">
-                                <p><span className="accent">● 선택 국적:</span> {data.lang}</p>
-                                <p><span className="accent">● 천지인 원리:</span> {data.desc}</p>
-                                <p style={{marginTop: '15px', borderTop: '1px solid #444', paddingTop: '15px'}}>
-                                    <span className="accent">● 국어원 규정:</span> {data.rule}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
+// 점 출발 위치 계산 (원 바깥에서 날아옴)
+function getDotFrom(from) {
+  if (from === "right")  return {x:110, y:40};
+  if (from === "left")   return {x:-30, y:40};
+  if (from === "top")    return {x:40,  y:-30};
+  if (from === "bottom") return {x:40,  y:110};
+  return {x:40, y:-30};
+}
+
+// 기본 모음 단일 애니메이션 SVG — Build-a-Vowel 스타일 (천천히 자동 재생)
+function SingleVowelAnim({ data, vowel, color, animKey, size=96 }) {
+  const uid = `sv_${animKey}_${vowel.charCodeAt(0)}_${size}`;
+
+  // ㅣ, ㅡ 단독 — 정적 표시 (애니메이션 없음)
+  if (data.dots.length === 0) {
+    return (
+      <div style={{ position:"relative", width:size, height:size, flexShrink:0 }}>
+        <svg key={uid} width={size} height={size} viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="37" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5"/>
+          {data.base === "earth" && (
+            <rect x="13" y="37" width="54" height="6" rx="3" fill="#FBBF24" opacity="0.95"/>
+          )}
+          {data.base === "human" && (
+            <rect x="37" y="13" width="6" height="54" rx="3" fill="#4ADE80" opacity="0.95"/>
+          )}
+          <text x="40" y="44" textAnchor="middle" dominantBaseline="middle"
+            fill="white" fontWeight="900" fontFamily="sans-serif" fontSize="40">
+            {vowel}
+          </text>
+        </svg>
+      </div>
+    );
+  }
+
+  // 점이 있는 모음 (ㅏ ㅓ ㅗ ㅜ) — 느린 Build-a-Vowel 애니메이션
+  // Phase 1: base(ㅣ or ㅡ) 천천히 나타남 (0~0.8s)
+  // Phase 2: 하늘점(·) 바깥에서 날아옴 (0.9~1.8s)
+  // Phase 3: 점 pulse + 모음 글자 등장 (1.9~2.5s)
+  const dotDelay = 0.9;
+  const vowelDelay = 2.0;
+
+  return (
+    <div style={{ position:"relative", width:size, height:size, flexShrink:0 }}>
+      <style>{`
+        @keyframes baseGrow_${uid} {
+          0%  { opacity:0; transform: ${data.base==="earth" ? "scaleX(0)" : "scaleY(0)"}; }
+          60% { opacity:1; transform: ${data.base==="earth" ? "scaleX(1.06)" : "scaleY(1.06)"}; }
+          100%{ opacity:1; transform: ${data.base==="earth" ? "scaleX(1)" : "scaleY(1)"}; }
         }
-        ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-    </script>
+        @keyframes dotFly_${uid} {
+          0%   { transform:translate(var(--dfx),var(--dfy)) scale(0.2); opacity:0; }
+          40%  { opacity:1; }
+          75%  { transform:translate(0,0) scale(1.4); opacity:1; }
+          100% { transform:translate(0,0) scale(1); opacity:1; }
+        }
+        @keyframes dotPulse_${uid} {
+          0%,100%{ filter:drop-shadow(0 0 4px #EF4444); }
+          50%    { filter:drop-shadow(0 0 14px #EF4444); }
+        }
+        @keyframes vowelPop_${uid} {
+          0%  { opacity:0; transform:scale(0.3); }
+          65% { opacity:1; transform:scale(1.12); }
+          100%{ opacity:1; transform:scale(1); }
+        }
+        .base_${uid} {
+          transform-origin: center center;
+          animation: baseGrow_${uid} 0.75s 0s cubic-bezier(.34,1.4,.64,1) both;
+        }
+        .dot_${uid} {
+          animation: dotFly_${uid} 0.85s ${dotDelay}s cubic-bezier(.34,1.2,.64,1) both,
+                     dotPulse_${uid} 1.2s ${dotDelay+0.85}s ease-in-out infinite;
+        }
+        .voweltext_${uid} {
+          transform-origin: center center;
+          animation: vowelPop_${uid} 0.55s ${vowelDelay}s cubic-bezier(.34,1.56,.64,1) both;
+        }
+      `}</style>
+      <svg key={uid} width={size} height={size} viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="37" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5"/>
+
+        {data.base === "earth" && (
+          <rect className={`base_${uid}`} x="13" y="37" width="54" height="6" rx="3" fill="#FBBF24" opacity="0.95"/>
+        )}
+        {data.base === "human" && (
+          <rect className={`base_${uid}`} x="37" y="13" width="6" height="54" rx="3" fill="#4ADE80" opacity="0.95"/>
+        )}
+
+        {data.dots.map((d, i) => {
+          const fromMap = { right:{x:110,y:40}, left:{x:-30,y:40}, top:{x:40,y:-30}, bottom:{x:40,y:110} };
+          const from = fromMap[d.from] || {x:40,y:-30};
+          const fx = (from.x - d.x).toFixed(1);
+          const fy = (from.y - d.y).toFixed(1);
+          const delay = dotDelay + i * 0.25;
+          return (
+            <circle key={i}
+              style={{ ["--dfx"]: `${fx}px`, ["--dfy"]: `${fy}px`,
+                animation: `dotFly_${uid} 0.85s ${delay}s cubic-bezier(.34,1.2,.64,1) both, dotPulse_${uid} 1.2s ${delay+0.85}s ease-in-out infinite` }}
+              cx={d.x} cy={d.y} r="7.5" fill="#EF4444" opacity="0"/>
+          );
+        })}
+
+        <text className={`voweltext_${uid}`}
+          x="40" y="44" textAnchor="middle" dominantBaseline="middle"
+          fill="white" fontWeight="900" fontFamily="sans-serif" fontSize="40">
+          {vowel}
+        </text>
+      </svg>
+    </div>
+  );
+}
+
+// 이중모음 분해 애니메이션
+function CompoundVowelAnim({ data, vowel, color, animKey, allMeta }) {
+  const uid = `cv_${animKey}_${vowel.charCodeAt(0)}`;
+  return (
+    <div>
+      <style>{`
+        @keyframes partIn_${uid}_0 { 0%{opacity:0;transform:translateX(-10px)} 100%{opacity:1;transform:none} }
+        @keyframes partIn_${uid}_1 { 0%{opacity:0;transform:translateX(-10px)} 100%{opacity:1;transform:none} }
+        @keyframes plusIn_${uid}   { 0%{opacity:0;transform:scale(0)}           100%{opacity:1;transform:none} }
+        @keyframes arrowIn_${uid}  { 0%{opacity:0;transform:scale(0)}           100%{opacity:1;transform:none} }
+        @keyframes resultIn_${uid} { 0%{opacity:0;transform:scale(0.5)}         100%{opacity:1;transform:scale(1)} }
+        .part-${uid}-0  { animation:partIn_${uid}_0 0.4s 0s   cubic-bezier(.34,1.4,.64,1) both }
+        .part-${uid}-1  { animation:partIn_${uid}_1 0.4s 0.25s cubic-bezier(.34,1.4,.64,1) both }
+        .plus-${uid}    { animation:plusIn_${uid}   0.3s 0.18s cubic-bezier(.34,1.4,.64,1) both }
+        .arrow-${uid}   { animation:arrowIn_${uid}  0.3s 0.5s  cubic-bezier(.34,1.4,.64,1) both }
+        .result-${uid}  { animation:resultIn_${uid} 0.5s 0.72s cubic-bezier(.34,1.56,.64,1) both }
+      `}</style>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, flexWrap:"wrap" }}>
+        {data.parts.map((p, i) => {
+          const pm = allMeta[p] || { color:"#888", roman:"?" };
+          return (
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:6 }}>
+              {i > 0 && <span className={`plus-${uid}`} style={{ fontSize:18, fontWeight:900, color:"rgba(255,255,255,.5)" }}>+</span>}
+              <div className={`part-${uid}-${i}`} style={{ textAlign:"center" }}>
+                <div style={{ width:42, height:42, background:pm.color, borderRadius:12,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:20, fontWeight:900, color:"white",
+                  boxShadow:`0 4px 14px ${pm.color}66` }}>{p}</div>
+                <div style={{ fontSize:10, fontWeight:700, color:pm.color, marginTop:3 }}>/{pm.roman}/</div>
+              </div>
+            </div>
+          );
+        })}
+        <span className={`arrow-${uid}`} style={{ fontSize:20, color:"rgba(255,255,255,.4)", fontWeight:900 }}>→</span>
+        <div className={`result-${uid}`} style={{ textAlign:"center" }}>
+          <div style={{ width:50, height:50, background:color, borderRadius:14,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:26, fontWeight:900, color:"white",
+            boxShadow:`0 6px 22px ${color}66`,
+            animation:"glowPulse 2s 1.3s ease-in-out infinite" }}>{vowel}</div>
+          <div style={{ fontSize:11, fontWeight:700, color, marginTop:3 }}>{data.label.split("→")[1]?.trim() || vowel}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 통합 컴포넌트
+function VowelFormationAnim({ vowel, color, isActive, animKey, allMeta }) {
+  const data = CHEONJIIN[vowel];
+  if (!data) return null;
+
+  const bg = isActive ? "rgba(255,255,255,.1)" : "rgba(255,255,255,.04)";
+  const border = isActive ? "rgba(255,255,255,.22)" : "rgba(255,255,255,.08)";
+
+  return (
+    <div style={{ background:bg, border:`1px solid ${border}`, borderRadius:14, padding:"12px 14px", marginBottom:12 }}>
+      {data.type === "single" ? (
+        <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+          <SingleVowelAnim data={data} vowel={vowel} color={color} animKey={animKey}/>
+          <div>
+            <div style={{ display:"flex", gap:6, marginBottom:6, flexWrap:"wrap" }}>
+              {data.base === "human" && <span style={{ fontSize:11, background:"rgba(74,222,128,.15)", color:"#4ADE80", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>🧍 ㅣ</span>}
+              {data.base === "earth" && <span style={{ fontSize:11, background:"rgba(251,191,36,.15)", color:"#FBBF24", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>🌍 ㅡ</span>}
+              {data.dots.length > 0 && <span style={{ fontSize:11, background:"rgba(239,68,68,.15)", color:"#EF4444", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>☀️ ·{data.dots.length>1?"·":""}</span>}
+            </div>
+            <div style={{ fontSize:13, color: isActive ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.65)", fontWeight:700, lineHeight:1.6 }}>{data.label}</div>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div style={{ fontSize:11, color:"rgba(255,255,255,.4)", fontWeight:700, textTransform:"uppercase", letterSpacing:.8, marginBottom:10 }}>🔍 분해 · Decomposition</div>
+          <CompoundVowelAnim data={data} vowel={vowel} color={color} animKey={animKey} allMeta={allMeta}/>
+          <div style={{ fontSize:12, color:"rgba(255,255,255,.5)", marginTop:10, textAlign:"center" }}>{data.label}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+// ═══════════════════════════════════════════
+// VOWEL SEQUENCE — 천지인 순차 재생 컴포넌트
+// ═══════════════════════════════════════════
+const VOWEL_COLORS = {
+  "ㅏ":"#FF6B6B","ㅓ":"#4ECDC4","ㅗ":"#96CEB4","ㅜ":"#7B68EE",
+  "ㅡ":"#95A5A6","ㅣ":"#F39C12","ㅐ":"#E74C3C","ㅔ":"#27AE60",
+};
+
+function VowelSequenceStep({ syllable, koreanVowel, stepIdx, isActive, onDone }) {
+  const { useEffect, useRef, useState } = React;
+  const m = VOWEL_META[koreanVowel] || { color:"#888", roman:"?" };
+  const color = VOWEL_COLORS[koreanVowel] || m.color;
+  const d = CHEONJIIN[koreanVowel];
+  const [phase, setPhase] = useState(0);
+  // phase 0: show base, 1: dot flies, 2: vowel appears, 3: done
+
+  useEffect(() => {
+    if (!isActive) { setPhase(0); return; }
+    setPhase(0);
+    const t1 = setTimeout(() => setPhase(1), 900);
+    const t2 = setTimeout(() => setPhase(2), 2000);
+    const t3 = setTimeout(() => { setPhase(3); onDone && onDone(); }, 3200);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [isActive]);
+
+  const isHuman = d && d.base === "human";
+  const isEarth = d && d.base === "earth";
+  const hasDot  = d && d.dots && d.dots.length > 0;
+  const dotPos  = hasDot ? d.dots[0] : null;
+
+  // dot start position (from outside circle)
+  const dotFrom = dotPos ? {
+    right:  { sx:"130%", sy:"50%" },
+    left:   { sx:"-30%", sy:"50%" },
+    top:    { sx:"50%",  sy:"-30%" },
+    bottom: { sx:"50%",  sy:"130%" },
+  }[dotPos.from] : null;
+
+  const uid = `seq_${stepIdx}_${koreanVowel.charCodeAt(0)}`;
+
+  return (
+    <div style={{
+      display:"flex", flexDirection:"column", alignItems:"center",
+      opacity: isActive ? 1 : 0.28,
+      transition:"opacity .4s",
+    }}>
+      {/* syllable label */}
+      <div style={{ fontSize:13, fontWeight:700, color:"rgba(255,255,255,.5)", marginBottom:8 }}>
+        "{syllable}" →
+      </div>
+
+      {/* Big circle stage */}
+      <div style={{
+        width:200, height:200, borderRadius:"50%",
+        background:"rgba(255,255,255,.06)",
+        border:`2px solid ${isActive ? color+"66" : "rgba(255,255,255,.1)"}`,
+        position:"relative", overflow:"hidden",
+        boxShadow: isActive ? `0 0 40px ${color}33` : "none",
+        transition:"border-color .4s, box-shadow .4s",
+        display:"flex", alignItems:"center", justifyContent:"center",
+      }}>
+        <style>{`
+          @keyframes baseIn_${uid} {
+            0%  { opacity:0; transform:${isHuman?"scaleY(0)":"scaleX(0)"}; }
+            70% { opacity:1; transform:${isHuman?"scaleY(1.08)":"scaleX(1.08)"}; }
+            100%{ opacity:1; transform:scale(1); }
+          }
+          @keyframes dotFly_${uid} {
+            0%  { opacity:0; transform:translate(var(--sx),var(--sy)) scale(0.2); }
+            50% { opacity:1; }
+            80% { transform:translate(-50%,-50%) scale(1.4); opacity:1; }
+            100%{ transform:translate(-50%,-50%) scale(1); opacity:1; }
+          }
+          @keyframes dotGlow_${uid} {
+            0%,100%{ box-shadow:0 0 16px rgba(239,68,68,.9); }
+            50%    { box-shadow:0 0 32px rgba(239,68,68,1),0 0 50px rgba(239,68,68,.5); }
+          }
+          @keyframes vowelIn_${uid} {
+            0%  { opacity:0; transform:translate(-50%,-50%) scale(0.3); }
+            65% { opacity:1; transform:translate(-50%,-50%) scale(1.15); }
+            100%{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+          }
+        `}</style>
+
+        {/* Base — ㅣ or ㅡ — hides when vowel appears */}
+        {isActive && phase >= 0 && phase < 2 && (isHuman || isEarth) && (
+          <div style={{
+            position:"absolute",
+            ...(isHuman ? { left:"calc(50% - 5px)", top:"15%", width:10, height:"70%", background:"#4ADE80", borderRadius:5 }
+                        : { top:"calc(50% - 5px)", left:"15%", width:"70%", height:10, background:"#FBBF24", borderRadius:5 }),
+            transformOrigin:"center",
+            animation:`baseIn_${uid} 0.8s cubic-bezier(.34,1.4,.64,1) both`,
+            boxShadow: isHuman ? "0 0 20px rgba(74,222,128,.6)" : "0 0 20px rgba(251,191,36,.6)",
+            opacity: phase < 2 ? 1 : 0, transition:"opacity 0.3s",
+          }}/>
+        )}
+
+        {/* ㅣ alone — just human, no dot */}
+        {isActive && !hasDot && isHuman && phase >= 0 && (
+          <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
+            fontSize:72, fontWeight:900, color:"white",
+            animation:`vowelIn_${uid} 0.6s 0.9s cubic-bezier(.34,1.56,.64,1) both`,
+            opacity:0,
+          }}>{koreanVowel}</div>
+        )}
+
+        {/* ㅡ alone — just earth, no dot */}
+        {isActive && !hasDot && isEarth && phase >= 0 && (
+          <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
+            fontSize:72, fontWeight:900, color:"white",
+            animation:`vowelIn_${uid} 0.6s 0.9s cubic-bezier(.34,1.56,.64,1) both`,
+            opacity:0,
+          }}>{koreanVowel}</div>
+        )}
+
+        {/* Heaven dot flying in — hides when vowel appears */}
+        {isActive && hasDot && phase >= 1 && phase < 2 && dotFrom && (
+          <div style={{
+            position:"absolute",
+            left: `${dotPos.x / 80 * 100}%`,
+            top:  `${dotPos.y / 80 * 100}%`,
+            width:26, height:26,
+            background:"#EF4444", borderRadius:"50%",
+            transform:"translate(-50%,-50%)",
+            "--sx": `calc(${dotFrom.sx} - ${dotPos.x/80*100}%)`,
+            "--sy": `calc(${dotFrom.sy} - ${dotPos.y/80*100}%)`,
+            animation:`dotFly_${uid} 0.9s cubic-bezier(.34,1.2,.64,1) both, dotGlow_${uid} 1s 0.9s ease-in-out infinite`,
+          }}/>
+        )}
+
+        {/* Final vowel */}
+        {isActive && phase >= 2 && (
+          <div style={{
+            position:"absolute", top:"50%", left:"50%",
+            fontSize:88, fontWeight:900, color:"white",
+            textShadow:`0 0 40px ${color}CC, 0 0 80px ${color}55`,
+            animation:`vowelIn_${uid} 0.6s cubic-bezier(.34,1.56,.64,1) both`,
+            opacity:0, transform:"translate(-50%,-50%)",
+          }}>{koreanVowel}</div>
+        )}
+
+        {/* Not active placeholder */}
+        {!isActive && (
+          <div style={{ fontSize:64, fontWeight:900, color:"rgba(255,255,255,.15)" }}>{koreanVowel}</div>
+        )}
+      </div>
+
+      {/* Vowel label */}
+      <div style={{ marginTop:10, display:"flex", alignItems:"center", gap:8 }}>
+        <div style={{ width:36, height:36, background:color, borderRadius:10,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:18, fontWeight:900, color:"white",
+          boxShadow:`0 4px 14px ${color}55`,
+        }}>{koreanVowel}</div>
+        <div style={{ fontSize:16, fontWeight:900, color }}>/{m.roman}/</div>
+      </div>
+
+      {/* Principle label */}
+      {d && (
+        <div style={{ marginTop:6, fontSize:11, color:"rgba(255,255,255,.4)", fontWeight:600, textAlign:"center" }}>
+          {d.label || ""}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VowelSequence({ syllables, name }) {
+  const { useState, useEffect } = React;
+  const [step, setStep] = useState(0);
+  const [playing, setPlaying] = useState(true);
+
+  useEffect(() => { setStep(0); setPlaying(true); }, [syllables]);
+
+  function onStepDone() {
+    if (step < syllables.length - 1) {
+      setTimeout(() => setStep(s => s + 1), 600);
+    } else {
+      setPlaying(false);
+    }
+  }
+
+  return (
+    <div style={{ marginBottom:28 }}>
+      <div style={{ fontSize:11, color:"rgba(255,255,255,.38)", fontWeight:700,
+        letterSpacing:1.5, textTransform:"uppercase", marginBottom:18 }}>
+        ✦ {name}의 모음 — 천지인으로 만들어지는 원리
+      </div>
+
+      {/* Side by side: buttons LEFT, circle RIGHT */}
+      <div style={{ display:"flex", gap:20, alignItems:"flex-start", justifyContent:"center" }}>
+
+        {/* LEFT — vertical step buttons */}
+        <div style={{ display:"flex", flexDirection:"column", gap:10, paddingTop:8, flexShrink:0 }}>
+          {syllables.map((s, i) => {
+            const color = VOWEL_COLORS[s.koreanVowel] || "#888";
+            return (
+              <button key={i} onClick={() => { setStep(i); setPlaying(true); }}
+                style={{
+                  padding:"10px 18px", borderRadius:14, border:"none", cursor:"pointer",
+                  background: i===step ? color : "rgba(255,255,255,.08)",
+                  color: i===step ? "white" : "rgba(255,255,255,.45)",
+                  fontWeight:900, fontSize:17,
+                  fontFamily:"'Noto Serif KR', serif",
+                  transition:"all .2s",
+                  boxShadow: i===step ? `0 4px 16px ${color}55` : "none",
+                  textAlign:"left", minWidth:110,
+                  letterSpacing:1,
+                }}>
+                <span style={{ fontSize:13, opacity:.7, fontFamily:"'Noto Sans KR',sans-serif", fontWeight:600 }}>{s.syllable}</span>
+                <br/>
+                <span style={{ fontSize:22 }}>{s.koreanVowel}</span>
+                <span style={{ fontSize:12, marginLeft:6, opacity:.7, fontFamily:"'Noto Sans KR',sans-serif" }}>/{(VOWEL_META[s.koreanVowel]||{roman:"?"}).roman}/</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* RIGHT — big animation circle */}
+        <VowelSequenceStep
+          key={`${step}-${syllables[step]?.koreanVowel}`}
+          syllable={syllables[step]?.syllable || ""}
+          koreanVowel={syllables[step]?.koreanVowel || "ㅏ"}
+          stepIdx={step}
+          isActive={true}
+          onDone={onStepDone}
+        />
+      </div>
+
+      {/* Replay / all done */}
+      <div style={{ textAlign:"center", marginTop:18 }}>
+        {!playing ? (
+          <button onClick={() => { setStep(0); setPlaying(true); }}
+            style={{ padding:"8px 22px", borderRadius:20, border:"1.5px solid rgba(255,255,255,.2)",
+              background:"transparent", color:"rgba(255,255,255,.6)", fontWeight:700, fontSize:13, cursor:"pointer" }}>
+            ↩ 다시 보기
+          </button>
+        ) : (
+          <div style={{ fontSize:11, color:"rgba(255,255,255,.25)", fontWeight:600 }}>
+            자동 재생 중 {step+1} / {syllables.length}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+const EXAMPLES = ["Ryan", "Juan", "Sofia", "Michael", "Nadia", "Lucas"];
+
+function App() {
+  const [name, setName]             = useState("");
+  const [isLoading, setIsLoading]   = useState(false);
+  const [result, setResult]         = useState(null);
+  const [activeCard, setActiveCard] = useState(null);
+  const [stage, setStage]           = useState("input");
+  const [dots, setDots]             = useState("");
+  const [animKeys, setAnimKeys]     = useState({});
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (!isLoading) return;
+    const id = setInterval(() => setDots(d => d.length >= 3 ? "" : d + "."), 380);
+    return () => clearInterval(id);
+  }, [isLoading]);
+
+  async function analyze() {
+    if (!name.trim()) return;
+    setIsLoading(true);
+    try {
+      const prompt = `You are a Korean language teacher for absolute beginners.
+The learner's name is: "${name.trim()}"
+
+Analyze the name phonetically and map each vowel sound to the closest Korean vowel (모음).
+Available Korean vowels: ㅏ ㅑ ㅓ ㅕ ㅗ ㅛ ㅜ ㅠ ㅡ ㅣ ㅐ ㅔ ㅘ ㅝ ㅚ ㅟ ㅢ
+
+Rules:
+- Split by syllable SOUND (not spelling). E.g. "Ryan" → ["Ry" /ya/ → ㅑ, "an" /a/ → ㅏ]
+- For compound vowels (ㅑ ㅕ ㅛ ㅠ ㅘ ㅝ ㅚ ㅟ ㅢ), set isCompound: true
+- IMPORTANT: Each syllable must have a DIFFERENT koreanVowel — never repeat the same vowel twice
+- Write greeting in English, keep it warm and short (1 sentence)
+- Return ONLY pure JSON, no markdown
+
+{
+  "greeting": "short warm English welcome",
+  "syllables": [
+    {
+      "syllable": "Ry",
+      "vowelSound": "ya",
+      "koreanVowel": "ㅑ",
+      "isCompound": true,
+      "tip": "one simple English pronunciation tip, no examples"
+    }
+  ]
+}`;
+
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "API error");
+      const raw = data.text.trim().replace(/```json\n?|```\n?/g, "").trim();
+      const parsed = JSON.parse(raw);
+      setResult(parsed);
+      setStage("result");
+      setActiveCard(null);
+      setAnimKeys({});
+    } catch (e) {
+      console.error(e);
+      alert("분석 실패. 다시 시도해주세요.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function reset() {
+    setStage("input"); setResult(null); setActiveCard(null); setName("");
+    setTimeout(() => inputRef.current && inputRef.current.focus(), 100);
+  }
+
+  const wrap = { position: "relative", zIndex: 1, maxWidth: 680, margin: "0 auto", padding: "44px 20px 88px" };
+
+  return (
+    <div style={{ minHeight: "100vh", overflowX: "hidden" }}>
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
+        <div style={{ position: "absolute", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%)", top: -100, left: -100 }} />
+        <div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(96,165,250,0.05) 0%, transparent 70%)", bottom: 0, right: -80 }} />
+      </div>
+
+      <div style={wrap}>
+        {/* HEADER */}
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(167,139,250,0.12)", backdropFilter: "blur(12px)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 30, padding: "7px 18px", marginBottom: 18 }}>
+            <span style={{ fontSize: 16 }}>🇰🇷</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>Korean Vowel · AI Learning</span>
+          </div>
+          <h1 style={{ fontSize: "clamp(24px,5.5vw,38px)", fontWeight: 900, color: "white", margin: "0 0 10px", lineHeight: 1.2 }}>
+            내 이름 속의{" "}
+            <span style={{ background: "linear-gradient(135deg,#A78BFA 0%,#60A5FA 60%,#34D399 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>한국어 모음</span>
+            을 찾아봐요
+          </h1>
+          <p style={{ color: "rgba(255,255,255,0.42)", fontSize: 14 }}>이름을 입력하면 AI가 한글 모음으로 변환해줘요</p>
+        </div>
+
+        {/* INPUT */}
+        {stage === "input" && (
+          <div style={{ background: "rgba(255,255,255,0.055)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 28, padding: "34px 30px", animation: "fadeUp .45s both" }}>
+            <label style={{ display: "block", fontWeight: 700, fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 10, letterSpacing: 1.5, textTransform: "uppercase" }}>이름 (알파벳)</label>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <input
+                ref={inputRef} value={name}
+                onChange={e => setName(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && !isLoading && name.trim() && analyze()}
+                placeholder="e.g. Ryan · Sofia · Lucas"
+                style={{ flex: 1, minWidth: 200, padding: "15px 18px", fontSize: 22, fontWeight: 700, letterSpacing: 3, background: "rgba(255,255,255,0.07)", border: "2px solid rgba(255,255,255,0.12)", borderRadius: 14, color: "white" }}
+              />
+              <button onClick={analyze} disabled={isLoading || !name.trim()} style={{
+                padding: "15px 24px", fontSize: 14, fontWeight: 800,
+                background: (isLoading || !name.trim()) ? "rgba(255,255,255,0.08)" : "linear-gradient(135deg,#A78BFA,#60A5FA)",
+                color: (isLoading || !name.trim()) ? "rgba(255,255,255,.28)" : "white",
+                border: "none", borderRadius: 14, cursor: (isLoading || !name.trim()) ? "not-allowed" : "pointer",
+                boxShadow: (isLoading || !name.trim()) ? "none" : "0 4px 22px rgba(167,139,250,.38)", whiteSpace: "nowrap",
+              }}>
+                {isLoading ? `분석 중${dots}` : "✦ 분석하기"}
+              </button>
+            </div>
+
+            <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,.3)", fontWeight: 700, letterSpacing: 1 }}>예시:</span>
+              {EXAMPLES.map(ex => (
+                <button key={ex} onClick={() => setName(ex)} style={{ padding: "5px 13px", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.13)", borderRadius: 20, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.55)", cursor: "pointer" }}>
+                  {ex.flag} {ex.name}
+                </button>
+              ))}
+            </div>
+
+            {isLoading && (
+              <div style={{ marginTop: 28, textAlign: "center" }}>
+                <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 12 }}>
+                  {["ㅏ","ㅗ","ㅣ","ㅜ"].map((v, i) => {
+                    const m = VOWEL_META[v];
+                    return <div key={v} style={{ width: 38, height: 38, background: m.color, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 900, color: "white", animation: `bounce .9s ${i*.18}s infinite` }}>{v}</div>;
+                  })}
+                </div>
+                <p style={{ color: "rgba(255,255,255,.4)", fontSize: 13 }}>AI가 모음을 분석하고 있어요…</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* RESULT */}
+        {stage === "result" && result && (
+          <div>
+            {/* 개인화 모음 코드 멘트 */}
+            <div style={{ background: "linear-gradient(135deg,rgba(167,139,250,.18),rgba(96,165,250,.13))", border: "1px solid rgba(167,139,250,.35)", borderRadius: 22, padding: "20px 24px", marginBottom: 22, animation: "fadeUp .5s both" }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,.45)", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>✦ 나의 모음 코드</div>
+              <p style={{ color: "white", fontSize: 17, fontWeight: 800, lineHeight: 1.7, marginBottom: 10 }}>
+                {name.trim()}, 당신의 이름엔{" "}
+                {result.syllables.map((s,i) => (
+                  <span key={i}>
+                    {i > 0 && (i === result.syllables.length-1 ? <span style={{color:"rgba(255,255,255,.6)"}}> 와 </span> : <span style={{color:"rgba(255,255,255,.6)"}}>, </span>)}
+                    <span style={{ color: VOWEL_META[s.koreanVowel]?.color || "#fff", textShadow:`0 0 20px ${VOWEL_META[s.koreanVowel]?.color || "#fff"}` }}>
+                      '{s.koreanVowel}'
+                    </span>
+                  </span>
+                ))}
+                <span style={{color:"rgba(255,255,255,.9)"}}> 가 숨어있네요!</span>
+              </p>
+              <p style={{ color: "rgba(255,255,255,.6)", fontSize: 13, fontWeight: 500, lineHeight: 1.6 }}>{result.greeting}</p>
+            </div>
+
+            {/* 순차 재생 — 천지인 애니메이션 */}
+            <VowelSequence syllables={result.syllables} name={name.trim()} />
+
+            {/* Basic vowel reference */}
+            <div style={{ marginTop: 30, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "18px 22px", animation: "fadeUp .5s .35s both" }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 14 }}>🗂 기본 모음 · Basic Korean Vowels</div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {Object.entries(VOWEL_META).filter(([,m]) => m.basic).map(([v, m]) => {
+                  const used = result.syllables.some(s => s.koreanVowel === v);
+                  return (
+                    <div key={v} style={{ textAlign: "center", opacity: used ? 1 : 0.3 }}>
+                      <div style={{ width: 38, height: 38, background: m.color, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 900, color: "white", margin: "0 auto 3px", boxShadow: used ? `0 2px 10px ${m.color}55` : "none", outline: used ? `2.5px solid ${m.color}` : "none", outlineOffset: 2 }}>{v}</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: m.color }}>/{m.roman}/</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,.2)", marginTop: 10 }}>✦ 밝게 표시된 모음 = 내 이름에 있는 모음</div>
+            </div>
+
+            <div style={{ textAlign: "center", marginTop: 36 }}>
+              <button onClick={reset} style={{ padding: "14px 38px", fontSize: 14, fontWeight: 800, background: "transparent", color: "rgba(255,255,255,.6)", border: "1.5px solid rgba(255,255,255,.18)", borderRadius: 50, cursor: "pointer" }}>
+                ↩ 다른 이름 해보기
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
 </body>
 </html>

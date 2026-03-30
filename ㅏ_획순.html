@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>한글 '아' 획순 애니메이션</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -12,26 +12,46 @@
             --accent-color: #ef4444;
         }
 
-        body {
-            background-color: #ffffff;
+        /* 스크롤 방지 및 화면 꽉 채우기 */
+        html, body {
             margin: 0;
             padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
         }
 
-        /* 반응형 컨테이너: 화면 너비에 맞춰 유연하게 변하며, 잘림 방지를 위해 overflow 허용 */
-        .drawing-container-wrapper {
-            width: 90%;
-            max-width: 400px;
-            margin: 0 auto;
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100vh;
+            padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom) 1rem;
+            box-sizing: border-box;
+            gap: 2vh; /* 요소 간 간격을 화면 높이에 비례하게 설정 */
+        }
+
+        /* 캔버스 영역: 너비와 높이 중 작은 쪽을 기준으로 크기 결정 (스크롤 방지 핵심) */
+        .canvas-area {
             position: relative;
+            width: min(80vw, 70vh, 400px);
+            aspect-ratio: 1 / 1;
+            flex-shrink: 0;
         }
 
         .drawing-container {
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            aspect-ratio: 1 / 1; /* 정사각형 비율 유지 */
+            height: 100%;
             background-color: white;
             border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
         }
 
         .grid-line {
@@ -53,14 +73,13 @@
             z-index: 0;
         }
 
-        /* 잘림 방지의 핵심: SVG 영역을 박스보다 넓게 잡거나 overflow:visible 설정 */
         svg {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: visible; /* 박스 밖의 숫자 라벨 표시 */
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            overflow: visible;
         }
 
         .stroke {
@@ -74,9 +93,7 @@
         }
 
         @keyframes draw {
-            to {
-                stroke-dashoffset: 0;
-            }
+            to { stroke-dashoffset: 0; }
         }
 
         .animate-stroke-1 {
@@ -110,42 +127,41 @@
             70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
         }
+
+        /* Replay 버튼 크기도 화면 높이에 따라 약간 조절 */
+        #replayBtn {
+            padding: 0.75rem 2.5rem;
+            font-size: 1.125rem;
+            flex-shrink: 0;
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen font-sans p-4">
+<body>
 
-    <div class="flex flex-col items-center gap-12 w-full max-w-lg">
+    <div class="app-container">
         <!-- Replay 버튼 -->
-        <button id="replayBtn" onclick="playAnimation()" class="px-12 py-3 bg-indigo-600 text-white font-bold rounded-full hover:bg-indigo-700 transition-all shadow-md active:scale-95 text-lg">
+        <button id="replayBtn" onclick="playAnimation()" class="bg-indigo-600 text-white font-bold rounded-full hover:bg-indigo-700 transition-all shadow-md active:scale-95 z-10">
             Replay
         </button>
 
-        <div class="drawing-container-wrapper">
+        <!-- 글자 애니메이션 영역 -->
+        <div class="canvas-area">
             <div class="drawing-container">
-                <!-- 배경 그리드 -->
                 <div class="grid-line grid-v"></div>
                 <div class="grid-line grid-h"></div>
-                
-                <!-- 자음 자리 가이드 -->
                 <div class="consonant-guide flex items-center justify-center">
                     <span class="text-slate-200 text-[10px] sm:text-xs font-bold uppercase tracking-tighter">ㅇ</span>
                 </div>
-                
-                <!-- viewBox 범위를 확장하여 숫자가 그려질 안전 여백(-40) 확보 -->
-                <svg viewBox="-40 -40 380 380">
-                    <!-- 가이드 잔상 -->
-                    <path d="M185 50 L185 250" stroke="#f8fafc" stroke-width="24" fill="none" stroke-linecap="butt" />
-                    <path d="M185 150 L255 150" stroke="#f8fafc" stroke-width="24" fill="none" stroke-linecap="butt" />
-
-                    <!-- 애니메이션 획 -->
-                    <path id="stroke1" class="stroke" d="M185 50 L185 250" />
-                    <path id="stroke2" class="stroke" d="M185 150 L255 150" />
-
-                    <!-- 획순 숫자 (확장된 좌표계에 맞춰 위치 조정) -->
-                    <text x="185" y="25" text-anchor="middle" id="label1" class="label-text">1</text>
-                    <text x="285" y="160" id="label2" class="label-text">2</text>
-                </svg>
             </div>
+            
+            <svg viewBox="-40 -40 380 380">
+                <path d="M185 50 L185 250" stroke="#f8fafc" stroke-width="24" fill="none" stroke-linecap="butt" />
+                <path d="M185 150 L255 150" stroke="#f8fafc" stroke-width="24" fill="none" stroke-linecap="butt" />
+                <path id="stroke1" class="stroke" d="M185 50 L185 250" />
+                <path id="stroke2" class="stroke" d="M185 150 L255 150" />
+                <text x="185" y="20" text-anchor="middle" id="label1" class="label-text">1</text>
+                <text x="295" y="160" id="label2" class="label-text">2</text>
+            </svg>
         </div>
     </div>
 
@@ -176,7 +192,9 @@
             }, 2000);
         }
 
-        window.onload = playAnimation;
+        window.onload = function() {
+            playAnimation();
+        }
     </script>
 </body>
 </html>

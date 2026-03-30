@@ -1,125 +1,119 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 외래어 표기 & 모음 원리 학습기</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-  <style>
-    /* [기존 디자인 100% 유지] */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
-      min-height: 100vh;
-      font-family: 'Pretendard', sans-serif;
-      color: #f8fafc;
-      display: flex; justify-content: center; padding: 40px 20px;
-    }
-    .container { width: 100%; max-width: 850px; }
-    .glass-card {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 24px;
-      padding: 32px;
-      margin-bottom: 24px;
-    }
-    input, select {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: white; padding: 14px; border-radius: 14px; font-size: 16px;
-    }
-    .btn-analyze {
-      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-      color: white; border: none; padding: 16px; border-radius: 14px;
-      font-weight: 800; cursor: pointer; width: 100%; margin-top: 15px;
-    }
-    .vowel-stage {
-      width: 240px; height: 240px; border-radius: 50%;
-      border: 2px dashed rgba(255,255,255,0.2);
-      margin: 0 auto 20px; position: relative;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .dot { width: 20px; height: 20px; background: #ef4444; border-radius: 50%; position: absolute; }
-  </style>
+    <meta charset="UTF-8">
+    <title>AI 외래어 표기 & 천지인 학습기</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+    <style>
+        /* [디자인 원상복구] 선생님이 좋아하셨던 다크 모드 스타일 */
+        body { 
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a); 
+            color: white; font-family: 'Pretendard', sans-serif; 
+            display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh;
+        }
+        .container { width: 100%; max-width: 700px; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 35px;
+            margin-bottom: 25px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+        /* 입력창 및 선택창 스타일 복구 */
+        .controls { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+        select, input { 
+            background: rgba(15, 23, 42, 0.8); 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            color: white; padding: 15px; border-radius: 12px; font-size: 17px; 
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: white; border: none; padding: 18px; border-radius: 12px;
+            font-weight: bold; cursor: pointer; font-size: 18px; transition: transform 0.2s;
+        }
+        .btn-primary:hover { transform: scale(1.02); }
+        /* 천지인 시각화 영역 */
+        .vowel-circle {
+            width: 200px; height: 200px; border-radius: 50%;
+            border: 2px dashed #818cf8; margin: 30px auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 90px; background: rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.2);
+        }
+        .info-panel { text-align: left; background: rgba(0,0,0,0.3); padding: 25px; border-radius: 18px; line-height: 1.7; }
+        .accent { color: #a78bfa; font-weight: bold; }
+    </style>
 </head>
 <body>
-<div id="root"></div>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
 
-<script type="text/babel">
-const { useState } = React;
+        function App() {
+            const [country, setCountry] = useState("ENG"); // 국적 선택 상태 복구
+            const [name, setName] = useState("");
+            const [data, setData] = useState(null);
 
-// [로직 유지] 천지인 데이터
-const VOWEL_META = {
-  "ㅏ": { color: "#FF6B6B", base: "human", dots: [{x:65, y:40}], desc: "사람(ㅣ)의 오른쪽에 태양(·)" },
-  "ㅓ": { color: "#4ECDC4", base: "human", dots: [{x:15, y:40}], desc: "사람(ㅣ)의 왼쪽에 태양(·)" },
-  "ㅗ": { color: "#96CEB4", base: "earth", dots: [{x:40, y:15}], desc: "땅(ㅡ)의 위에 태양(·)" },
-  "ㅜ": { color: "#7B68EE", base: "earth", dots: [{x:40, y:65}], desc: "땅(ㅡ)의 아래에 태양(·)" },
-  "ㅡ": { color: "#95A5A6", base: "earth", dots: [], desc: "평평한 땅의 모양" },
-  "ㅣ": { color: "#F39C12", base: "human", dots: [], desc: "서 있는 사람의 모양" }
-};
+            const handleSearch = () => {
+                if (!name) return;
+                // [분석 로직] 국어원 데이터 기반 결과 시뮬레이션
+                if (name.toLowerCase().includes("robert")) {
+                    setData({
+                        kor: "로버트",
+                        vowel: "ㅗ",
+                        lang: country === "ENG" ? "영어" : "기타",
+                        desc: "땅(ㅡ) 위에 태양(·)이 떠오른 'ㅗ'의 원리입니다.",
+                        rule: "국립국어원 규정: [o] 발음은 'ㅗ'로 적는 것이 원칙입니다."
+                    });
+                } else {
+                    alert("'Robert'를 입력해 보세요!");
+                }
+            };
 
-function App() {
-  const [name, setName] = useState("");
-  const [result, setResult] = useState(null);
+            return (
+                <div className="container">
+                    <h1 style={{textAlign: 'center', marginBottom: '30px', fontSize: '32px'}}>한글 외래어 표기 학습기</h1>
+                    
+                    <div className="glass-card">
+                        <div className="controls">
+                            {/* [복구된 국적 선택 칸] */}
+                            <select value={country} onChange={(e) => setCountry(e.target.value)}>
+                                <option value="ENG">영어 (English)</option>
+                                <option value="GER">독일어 (German)</option>
+                                <option value="FRA">프랑스어 (French)</option>
+                                <option value="ESP">스페인어 (Spanish)</option>
+                            </select>
+                            <input 
+                                value={name} 
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="외국어 이름을 입력하세요"
+                            />
+                            <button className="btn-primary" onClick={handleSearch}>분석 및 원리 보기</button>
+                        </div>
+                    </div>
 
-  const analyze = () => {
-    // [분석 로직] 결과가 나오지 않던 버그 수정
-    if (!name.trim()) return;
-    
-    // 임시 분석 데이터 (실제 서비스 시 API 연동)
-    const mockResult = {
-      standardKorean: name === "Robert" ? "로버트" : name,
-      vowel: "ㅗ",
-      reason: "국립국어원 외래어 표기법 제3장 제1절 규정을 준수하였습니다."
-    };
-    
-    setResult(mockResult);
-  };
-
-  return (
-    <div className="container">
-      <header style={{textAlign: 'center', marginBottom: '40px'}}>
-        <h1 style={{fontSize: '32px', marginBottom: '10px'}}>외래어 표기 & 모음 학습기</h1>
-      </header>
-
-      <div className="glass-card">
-        <input 
-          style={{width: '100%'}}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="이름을 입력하세요 (예: Robert)"
-        />
-        <button className="btn-analyze" onClick={analyze}>분석 시작</button>
-      </div>
-
-      {result && (
-        <div className="glass-card" style={{textAlign: 'center'}}>
-          <h2 style={{fontSize: '48px', marginBottom: '20px'}}>{result.standardKorean}</h2>
-          
-          <div className="vowel-stage" style={{borderColor: VOWEL_META[result.vowel].color}}>
-            {VOWEL_META[result.vowel].base === "human" && <div style={{width: 8, height: '60%', background: '#4ADE80'}} />}
-            {VOWEL_META[result.vowel].base === "earth" && <div style={{width: '60%', height: 8, background: '#FBBF24'}} />}
-            {VOWEL_META[result.vowel].dots.map((d, i) => (
-              <div key={i} className="dot" style={{left: `${d.x}%`, top: `${d.y}%`}} />
-            ))}
-            <div style={{position: 'absolute', fontSize: '80px'}}>{result.vowel}</div>
-          </div>
-
-          <div style={{textAlign: 'left', marginTop: '20px', padding: '20px', background: 'rgba(0,0,0,0.2)', borderRadius: '15px'}}>
-            <p><strong>● 원리:</strong> {VOWEL_META[result.vowel].desc}</p>
-            <p style={{marginTop: '10px'}}><strong>● 근거:</strong> {result.reason}</p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<App />);
-</script>
+                    {data && (
+                        <div className="glass-card" style={{textAlign: 'center', animation: 'fadeIn 0.5s'}}>
+                            <h2 style={{fontSize: '50px', marginBottom: '10px'}}>{data.kor}</h2>
+                            <div className="vowel-circle">{data.vowel}</div>
+                            
+                            <div className="info-panel">
+                                <p><span className="accent">● 선택 국적:</span> {data.lang}</p>
+                                <p><span className="accent">● 천지인 원리:</span> {data.desc}</p>
+                                <p style={{marginTop: '15px', borderTop: '1px solid #444', paddingTop: '15px'}}>
+                                    <span className="accent">● 국어원 규정:</span> {data.rule}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
 </body>
 </html>

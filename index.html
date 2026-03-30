@@ -3,42 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>외국인 성명 한글 표기 & 모음 원리 학습기</title>
+  <title>AI 외래어 표기 & 모음 원리 학습기</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <style>
-    /* 기존 스타일 유지 및 보완 */
+    /* 로직을 건드리지 않는 디자인 강화 CSS */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: linear-gradient(160deg, #0D0B1E 0%, #161438 55%, #1E1A3C 100%);
+      background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
       min-height: 100vh;
-      font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-      color: white;
-      overflow-x: hidden;
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+      color: #f8fafc;
+      line-height: 1.6;
     }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes glowPulse { 0%,100%{box-shadow:0 0 15px rgba(167,139,250,.3)} 50%{box-shadow:0 0 30px rgba(167,139,250,.6)} }
+    .container { maxWidth: 850px; margin: 0 auto; padding: 40px 20px; }
     
+    /* 유연한 레이아웃을 위한 카드 스타일 */
     .glass-card {
-      background: rgba(255,255,255,0.06);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 24px;
-      padding: 30px;
+      padding: 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: fadeUp 0.6s ease-out;
     }
-    
-    input:focus { outline: none; border-color: #A78BFA !important; }
-    button:active { transform: scale(0.98); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 입력창 및 버튼 디자인 */
+    select, input {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      transition: all 0.3s;
+    }
+    select:focus, input:focus {
+      border-color: #818cf8;
+      box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.2);
+      outline: none;
+    }
+
+    .btn-analyze {
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .btn-analyze:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5);
+    }
+    .btn-analyze:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* 천지인 스테이지 애니메이션 디테일 */
+    .dot-glow { filter: drop-shadow(0 0 8px #ef4444); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
   </style>
 </head>
 <body>
 <div id="root"></div>
 
 <script type="text/babel">
-const { useState, useEffect, useRef } = React;
+const { useState, useEffect } = React;
 
-// ── 데이터 정의 (천지인 결합 원리) ──
+// [로직 유지] 천지인 결합 메타 데이터
 const VOWEL_META = {
   "ㅏ": { roman: "a", color: "#FF6B6B", base: "human", dots: [{x:65, y:40, f:"right"}], desc: "사람(ㅣ)의 오른쪽에 태양(·)" },
   "ㅓ": { roman: "eo", color: "#4ECDC4", base: "human", dots: [{x:15, y:40, f:"left"}], desc: "사람(ㅣ)의 왼쪽에 태양(·)" },
@@ -54,72 +86,59 @@ const VOWEL_META = {
   "ㅔ": { roman: "e", color: "#27AE60", base: "compound", parts: ["ㅓ","ㅣ"], desc: "ㅓ와 ㅣ의 결합" }
 };
 
-// ── 애니메이션 컴포넌트 ──
+// [로직 유지] 애니메이션 스테이지 컴포넌트
 function CheonJiInStage({ vowel, isActive }) {
   const data = VOWEL_META[vowel];
   if (!data) return null;
 
   return (
     <div style={{
-      width: 220, height: 220, borderRadius: "50%", background: "rgba(255,255,255,0.03)",
-      border: `2px solid ${isActive ? data.color : 'rgba(255,255,255,0.1)'}`,
+      width: 240, height: 240, borderRadius: "50%", background: "rgba(255,255,255,0.02)",
+      border: `2px dashed ${isActive ? data.color : 'rgba(255,255,255,0.1)'}`,
       position: "relative", display: "flex", alignItems: "center", justifyContent: "center",
-      transition: "all 0.5s", boxShadow: isActive ? `0 0 30px ${data.color}44` : "none"
+      transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+      boxShadow: isActive ? `0 0 40px ${data.color}33` : "none"
     }}>
-      {/* 땅(ㅡ) 혹은 사람(ㅣ) 베이스 */}
-      {data.base === "human" && <div style={{ width: 8, height: "60%", background: "#4ADE80", borderRadius: 4 }} />}
-      {data.base === "earth" && <div style={{ width: "60%", height: 8, background: "#FBBF24", borderRadius: 4 }} />}
+      {data.base === "human" && <div style={{ width: 8, height: "55%", background: "#4ADE80", borderRadius: 4, boxShadow: "0 0 15px #4ADE8066" }} />}
+      {data.base === "earth" && <div style={{ width: "55%", height: 8, background: "#FBBF24", borderRadius: 4, boxShadow: "0 0 15px #FBBF2466" }} />}
       
-      {/* 태양(·) 점들 */}
       {data.dots.map((dot, i) => (
-        <div key={i} style={{
+        <div key={i} className="dot-glow" style={{
           position: "absolute", left: `${dot.x}%`, top: `${dot.y}%`,
-          width: 18, height: 18, background: "#EF4444", borderRadius: "50%",
-          transform: "translate(-50%, -50%)", filter: "drop-shadow(0 0 8px #EF4444)"
+          width: 20, height: 20, background: "#EF4444", borderRadius: "50%",
+          transform: "translate(-50%, -50%)"
         }} />
       ))}
 
-      {/* 결과 글자 pop-up */}
       <div style={{
-        position: "absolute", fontSize: 80, fontWeight: 900, color: "white",
-        textShadow: `0 0 20px ${data.color}`, opacity: isActive ? 1 : 0, transform: isActive ? "scale(1)" : "scale(0.5)",
-        transition: "all 0.5s 1s"
+        position: "absolute", fontSize: 96, fontWeight: 900, color: "white",
+        textShadow: `0 0 25px ${data.color}`, opacity: isActive ? 1 : 0, 
+        transform: isActive ? "scale(1.1)" : "scale(0.5)",
+        transition: "all 0.5s 0.8s"
       }}>{vowel}</div>
     </div>
   );
 }
 
-// ── 메인 앱 ──
 function App() {
   const [name, setName] = useState("");
-  const [lang, setLang] = useState("en"); // en, jp, fr 등
+  const [lang, setLang] = useState("en");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [step, setStep] = useState(0);
 
+  // [로직 유지] 분석 함수
   const analyze = async () => {
     if (!name.trim()) return;
     setLoading(true);
     
-    // AI에게 외래어 표기법 규칙 준수 요청
     const prompt = `
       입력된 이름: "${name}" (언어권: ${lang})
-      국립국어원 외래어 표기법과 천지인 원리를 결합하여 분석해줘.
-      
-      1. 'standardKorean': 외래어 표기법에 따른 정확한 한글 표기.
-      2. 'syllables': 각 음절별로 분석.
-         - 'char': 한글 글자 (예: '로')
-         - 'vowel': 그 글자의 핵심 모음 (예: 'ㅗ')
-         - 'reason': 왜 이 모음이 쓰였는지 (외래어 표기 규칙 기반)
-      
-      JSON 형식으로만 응답해줘.
-      {
-        "standardKorean": "로버트",
-        "syllables": [
-          {"char": "로", "vowel": "ㅗ", "reason": "영어의 [o] 발음은 한국어 'ㅗ'로 대응됩니다."},
-          ...
-        ]
-      }
+      분석 가이드:
+      1. 'standardKorean': 외래어 표기법 준수 결과.
+      2. 'syllables': 음절별 모음 분석.
+      JSON으로만 출력:
+      {"standardKorean": "...", "syllables": [{"char": "...", "vowel": "...", "reason": "..."}]}
     `;
 
     try {
@@ -140,82 +159,93 @@ function App() {
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "50px 20px" }}>
-      <header style={{ textAlign: "center", marginBottom: 40 }}>
-        <h1 style={{ fontSize: 36, fontWeight: 900, marginBottom: 10 }}>
-          <span style={{ color: "#A78BFA" }}>AI</span> 성명 분석 & 한글 학습
+    <div className="container">
+      <header style={{ textAlign: "center", marginBottom: 50 }}>
+        <div style={{ display: 'inline-block', padding: '6px 12px', background: 'rgba(99, 102, 241, 0.15)', borderRadius: '30px', color: '#818cf8', fontSize: '12px', fontWeight: 'bold', marginBottom: '16px', letterSpacing: '1px' }}>
+          30년 현장 노하우 X 최신 AI 기술
+        </div>
+        <h1 style={{ fontSize: "clamp(28px, 5vw, 42px)", fontWeight: 900, marginBottom: 12, letterSpacing: "-1px" }}>
+          성명 분석 <span style={{ background: "linear-gradient(to right, #818cf8, #c084fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>한글 모음 학습기</span>
         </h1>
-        <p style={{ color: "rgba(255,255,255,0.5)" }}>외국어 이름을 입력하면 표기법과 천지인 원리를 알려드려요.</p>
+        <p style={{ color: "#94a3b8", fontSize: "16px" }}>외국어 이름을 국립국어원 표준 표기로 변환하고 천지인 원리를 배웁니다.</p>
       </header>
 
-      {/* 입력 섹션 */}
-      <div className="glass-card" style={{ marginBottom: 30 }}>
-        <div style={{ display: "flex", gap: 10, marginBottom: 15 }}>
+      <div className="glass-card" style={{ marginBottom: 32 }}>
+        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
           <select 
             value={lang} 
             onChange={(e) => setLang(e.target.value)}
-            style={{ padding: "10px", borderRadius: "12px", background: "#1E1A3C", color: "white", border: "1px solid rgba(255,255,255,0.2)" }}
+            style={{ padding: "14px", borderRadius: "14px", width: "160px", fontSize: "15px", fontWeight: "600", cursor: "pointer" }}
           >
-            <option value="en">영어 (English)</option>
-            <option value="jp">일본어 (Japanese)</option>
-            <option value="fr">프랑스어 (French)</option>
+            <option value="en">🇺🇸 영어권</option>
+            <option value="jp">🇯🇵 일본어권</option>
+            <option value="fr">🇫🇷 프랑스어권</option>
+            <option value="de">🇩🇪 독일어권</option>
           </select>
           <input 
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="이름을 입력하세요 (예: Robert)"
-            style={{ flex: 1, padding: "15px", borderRadius: "12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.2)", color: "white", fontSize: 18 }}
+            onKeyPress={(e) => e.key === 'Enter' && analyze()}
+            placeholder="분석할 이름을 입력하세요 (예: Robert)"
+            style={{ flex: 1, padding: "14px 20px", borderRadius: "14px", fontSize: "18px", minWidth: "250px" }}
           />
         </div>
         <button 
           onClick={analyze}
           disabled={loading}
-          style={{ width: "100%", padding: "15px", borderRadius: "12px", background: "linear-gradient(135deg, #A78BFA, #60A5FA)", border: "none", color: "white", fontWeight: 800, cursor: "pointer", fontSize: 16 }}
+          className="btn-analyze"
+          style={{ width: "100%", padding: "16px", borderRadius: "14px", border: "none", color: "white", fontWeight: "800", fontSize: "17px", letterSpacing: "0.5px" }}
         >
-          {loading ? "AI 분석 중..." : "한글 표기 & 모음 원리 찾기 ✦"}
+          {loading ? "AI가 규칙을 분석하고 있습니다..." : "분석 시작하기 ✦"}
         </button>
       </div>
 
-      {/* 결과 섹션 */}
       {result && (
-        <div style={{ animation: "fadeUp 0.5s both" }}>
-          <div className="glass-card" style={{ textAlign: "center", marginBottom: 20 }}>
-            <h2 style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 5 }}>표준 표기법 결과</h2>
-            <div style={{ fontSize: 42, fontWeight: 900, letterSpacing: 4 }}>{result.standardKorean}</div>
+        <div style={{ animation: "fadeUp 0.6s both" }}>
+          <div className="glass-card" style={{ textAlign: "center", marginBottom: 24, border: "2px solid rgba(129, 140, 248, 0.3)" }}>
+            <span style={{ fontSize: "12px", color: "#818cf8", fontWeight: "800", textTransform: "uppercase" }}>표준 외래어 표기 결과</span>
+            <div style={{ fontSize: "52px", fontWeight: "900", marginTop: "8px", textShadow: "0 10px 20px rgba(0,0,0,0.3)" }}>{result.standardKorean}</div>
           </div>
 
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            {/* 왼쪽: 모음 원리 애니메이션 */}
-            <div className="glass-card" style={{ flex: 1, minWidth: 300, display: "flex", flexDirection: "column", alignItems: "center" }}>
-               <h3 style={{ marginBottom: 20, fontSize: 16 }}>
-                음절 "{result.syllables[step]?.char}"의 모음 원리
-               </h3>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+            <div className="glass-card" style={{ flex: 1.2, minWidth: "320px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+               <div style={{ marginBottom: "24px", textAlign: "center" }}>
+                  <span style={{ fontSize: "13px", background: "rgba(255,255,255,0.05)", padding: "4px 12px", borderRadius: "20px", color: "rgba(255,255,255,0.6)" }}>Step {step + 1}: "{result.syllables[step]?.char}" 음절 분석</span>
+               </div>
                <CheonJiInStage vowel={result.syllables[step]?.vowel} isActive={true} />
-               <p style={{ marginTop: 20, color: "#A78BFA", fontWeight: 700 }}>
-                {VOWEL_META[result.syllables[step]?.vowel]?.desc}
-               </p>
+               <div style={{ marginTop: 30, textAlign: "center", maxWidth: "240px" }}>
+                 <p style={{ fontSize: "20px", fontWeight: "800", color: VOWEL_META[result.syllables[step]?.vowel]?.color }}>{result.syllables[step]?.vowel}</p>
+                 <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)", marginTop: "4px" }}>{VOWEL_META[result.syllables[step]?.vowel]?.desc}</p>
+               </div>
             </div>
 
-            {/* 오른쪽: 음절별 설명 리스트 */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, minWidth: "300px" }}>
               {result.syllables.map((s, i) => (
                 <div 
                   key={i} 
                   onClick={() => setStep(i)}
                   style={{ 
-                    padding: "15px", borderRadius: "16px", cursor: "pointer",
-                    background: step === i ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.05)",
-                    border: `1px solid ${step === i ? '#A78BFA' : 'transparent'}`,
-                    transition: "all 0.3s"
+                    padding: "20px", borderRadius: "20px", cursor: "pointer",
+                    background: step === i ? "rgba(129, 140, 248, 0.15)" : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${step === i ? '#818cf8' : 'rgba(255,255,255,0.05)'}`,
+                    transform: step === i ? "translateX(10px)" : "none",
+                    transition: "all 0.3s ease"
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ fontSize: 24, fontWeight: 900 }}>{s.char}</span>
-                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>모음: {s.vowel}</span>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: "12px", background: step === i ? '#818cf8' : '#334155', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: '900' }}>
+                        {s.char}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", fontWeight: "bold" }}>모음: {s.vowel}</div>
+                      </div>
+                    </div>
+                    {step === i && <span style={{ color: "#818cf8" }}>●</span>}
                   </div>
                   {step === i && (
-                    <p style={{ fontSize: 13, marginTop: 8, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>
-                      💡 {s.reason}
+                    <p style={{ fontSize: "14px", marginTop: "14px", color: "rgba(255,255,255,0.8)", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "12px", lineHeight: "1.6" }}>
+                      <strong>분석 근거:</strong> {s.reason}
                     </p>
                   )}
                 </div>

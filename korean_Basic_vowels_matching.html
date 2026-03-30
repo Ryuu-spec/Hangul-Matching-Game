@@ -355,8 +355,11 @@
                 card.classList.contains('selected') ||
                 isChecking || selectedCards.length >= 2) return;
 
-            // 한글 카드 클릭 시에만 발음 재생
-            if (card.classList.contains('hangul')) {
+            // 양쪽 카드 클릭 시 발음 재생
+            // 로마자 카드: pair(한글)로 소리, 한글 카드: value로 소리
+            if (card.classList.contains('romaji')) {
+                speakKorean(card.dataset.pair);
+            } else {
                 speakKorean(card.dataset.value);
             }
 

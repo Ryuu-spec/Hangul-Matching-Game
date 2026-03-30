@@ -12,7 +12,7 @@
             --accent-color: #ef4444;
         }
 
-        /* 스크롤 방지 및 화면 꽉 채우기 */
+        /* 스크롤 방지 및 전체 레이아웃 */
         html, body {
             margin: 0;
             padding: 0;
@@ -20,6 +20,7 @@
             height: 100%;
             overflow: hidden;
             background-color: #ffffff;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .app-container {
@@ -31,13 +32,13 @@
             height: 100vh;
             padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom) 1rem;
             box-sizing: border-box;
-            gap: 3vh;
+            gap: 4vh;
         }
 
-        /* 캔버스 영역: 너비와 높이 중 작은 쪽을 기준으로 크기 결정 */
+        /* 캔버스 영역: 반응형 비율 유지 */
         .canvas-area {
             position: relative;
-            width: min(80vw, 65vh, 400px);
+            width: min(80vw, 60vh, 400px);
             aspect-ratio: 1 / 1;
             flex-shrink: 0;
         }
@@ -50,7 +51,7 @@
             height: 100%;
             background-color: white;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             box-sizing: border-box;
         }
 
@@ -75,10 +76,10 @@
 
         svg {
             position: absolute;
-            top: -10%;
-            left: -10%;
-            width: 120%;
-            height: 120%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             overflow: visible;
         }
 
@@ -93,6 +94,7 @@
         }
 
         @keyframes draw {
+            from { stroke-dashoffset: 600; }
             to { stroke-dashoffset: 0; }
         }
 
@@ -128,12 +130,13 @@
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
         }
 
-        /* Replay 버튼: 화면 크기에 맞춰 가변적으로 변하도록 수정 */
+        /* 반응형 버튼 */
         #replayBtn {
-            /* clamp(최소값, 가변값, 최대값)을 사용하여 버튼도 반응형으로 설정 */
-            padding: clamp(0.5rem, 2vh, 1rem) clamp(1.5rem, 5vw, 3rem);
-            font-size: clamp(0.9rem, 2.5vh, 1.25rem);
+            padding: clamp(0.6rem, 2.5vh, 1rem) clamp(2rem, 8vw, 3.5rem);
+            font-size: clamp(1rem, 2.8vh, 1.3rem);
             flex-shrink: 0;
+            cursor: pointer;
+            user-select: none;
         }
     </style>
 </head>
@@ -155,41 +158,43 @@
                 </div>
             </div>
             
-            <svg viewBox="-40 -40 380 380">
-                <!-- 가이드 잔상 (연하게) -->
-                <path d="M185 50 L185 250" stroke="#f8fafc" stroke-width="24" fill="none" stroke-linecap="butt" />
-                <path d="M185 150 L255 150" stroke="#f8fafc" stroke-width="24" fill="none" stroke-linecap="butt" />
+            <svg id="animationSvg" viewBox="0 0 300 300">
+                <!-- 가이드 잔상 -->
+                <path d="M185 50 L185 250" stroke="#f8fafc" stroke-width="24" fill="none" />
+                <path d="M185 150 L255 150" stroke="#f8fafc" stroke-width="24" fill="none" />
                 
                 <!-- 실제 애니메이션 획 -->
                 <path id="stroke1" class="stroke" d="M185 50 L185 250" />
                 <path id="stroke2" class="stroke" d="M185 150 L255 150" />
                 
-                <!-- 획순 숫자 -->
-                <text x="185" y="20" text-anchor="middle" id="label1" class="label-text">1</text>
-                <text x="295" y="160" id="label2" class="label-text">2</text>
+                <!-- 획순 숫자 (위치 최적화) -->
+                <text x="185" y="30" text-anchor="middle" id="label1" class="label-text">1</text>
+                <!-- 숫자 2가 획과 겹치지 않게 오른쪽으로 더 이동 (x: 235 -> 275, y: 140 -> 145) -->
+                <text x="275" y="145" text-anchor="middle" id="label2" class="label-text">2</text>
             </svg>
         </div>
     </div>
 
     <script>
         function playAnimation() {
-            const s1 = document.getElementById('stroke1');
-            const s2 = document.getElementById('stroke2');
-            const l1 = document.getElementById('label1');
-            const l2 = document.getElementById('label2');
+            const svg = document.getElementById('animationSvg');
             const btn = document.getElementById('replayBtn');
+            
+            // 기존 애니메이션 요소들을 제거하고 다시 생성하여 "완전 리셋"
+            const newSvg = svg.cloneNode(true);
+            svg.parentNode.replaceChild(newSvg, svg);
 
-            // 애니메이션 상태 초기화
-            s1.classList.remove('animate-stroke-1');
-            s2.classList.remove('animate-stroke-2');
-            l1.classList.remove('show-label');
-            l2.classList.remove('show-label');
+            const s1 = newSvg.getElementById('stroke1');
+            const s2 = newSvg.getElementById('stroke2');
+            const l1 = newSvg.getElementById('label1');
+            const l2 = newSvg.getElementById('label2');
+
+            // 버튼 펄스 효과 제거
             btn.classList.remove('btn-pulse');
 
-            // 브라우저가 변경 사항을 인지하도록 강제 리플로우
+            // 강제 리플로우 및 애니메이션 클래스 추가
             void s1.offsetWidth;
 
-            // 애니메이션 적용
             s1.classList.add('animate-stroke-1');
             s2.classList.add('animate-stroke-2');
             
@@ -197,16 +202,15 @@
             setTimeout(() => l1.classList.add('show-label'), 100);
             setTimeout(() => l2.classList.add('show-label'), 950);
             
-            // 애니메이션 종료 후 버튼 강조
+            // 애니메이션 종료 시점에 버튼 강조
             setTimeout(() => {
                 btn.classList.add('btn-pulse');
             }, 2000);
         }
 
-        // DOM 콘텐츠가 준비되면 즉시 실행
+        // 초기 자동 실행
         document.addEventListener('DOMContentLoaded', () => {
-            // 약간의 지연을 주어 브라우저 렌더링이 안정된 후 자동 재생
-            setTimeout(playAnimation, 300);
+            setTimeout(playAnimation, 500);
         });
     </script>
 </body>

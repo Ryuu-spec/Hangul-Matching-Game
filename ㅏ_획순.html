@@ -8,39 +8,43 @@
     <style>
         :root {
             --stroke-color: #000000;
-            --grid-color: #e5e7eb;
-            --guide-color: #f8fafc;
+            --grid-color: #f1f5f9; /* 배경이 흰색이므로 그리드를 더 연하게 */
             --accent-color: #ef4444;
         }
 
-        /* 반응형 컨테이너: 최대 400px, 모바일에서는 너비의 90% */
+        /* 전체 배경을 흰색으로 변경 */
+        body {
+            background-color: #ffffff;
+        }
+
         .drawing-container {
             position: relative;
-            width: 90vw;
-            height: 90vw;
+            width: 85vw;
+            height: 85vw;
             max-width: 400px;
             max-height: 400px;
             background-color: white;
-            border: 2px solid #9ca3af;
+            border: 1px solid #e2e8f0; /* 테두리를 조금 더 연하게 */
             margin: 0 auto;
         }
 
         .grid-line {
             position: absolute;
             background-color: var(--grid-color);
+            z-index: 0;
         }
         .grid-v { width: 1px; height: 100%; left: 50%; }
         .grid-h { height: 1px; width: 100%; top: 50%; }
         
-        /* 자음 가이드 위치도 비율로 조정 */
         .consonant-guide {
             position: absolute;
             width: 25%;
             height: 25%;
-            border: 2px dashed #d1d5db;
+            border: 1.5px dashed #e2e8f0;
             border-radius: 50%;
             left: 15%;
-            top: 37%;
+            top: 37.5%;
+            z-index: 0;
         }
 
         svg {
@@ -49,6 +53,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            overflow: visible;
         }
 
         .stroke {
@@ -80,7 +85,7 @@
             font-family: sans-serif;
             font-weight: bold;
             fill: var(--accent-color);
-            font-size: 24px;
+            font-size: 26px;
             opacity: 0;
             transition: opacity 0.3s;
         }
@@ -100,37 +105,36 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 flex flex-col items-center justify-center min-h-screen font-sans p-4">
+<body class="flex flex-col items-center justify-center min-h-screen font-sans p-4">
 
-    <div class="flex flex-col items-center gap-6 w-full max-w-lg">
-        <!-- 버튼 텍스트를 Replay로 변경 -->
-        <button id="replayBtn" onclick="playAnimation()" class="px-12 py-3 bg-indigo-600 text-white font-bold rounded-full hover:bg-indigo-700 transition-all shadow-lg active:scale-95 text-lg">
+    <div class="flex flex-col items-center gap-10 w-full max-w-lg">
+        <!-- Replay 버튼 -->
+        <button id="replayBtn" onclick="playAnimation()" class="px-12 py-3 bg-indigo-600 text-white font-bold rounded-full hover:bg-indigo-700 transition-all shadow-md active:scale-95 text-lg">
             Replay
         </button>
 
-        <div class="drawing-container shadow-2xl rounded-md overflow-hidden bg-white">
+        <div class="drawing-container bg-white">
             <!-- 배경 그리드 -->
             <div class="grid-line grid-v"></div>
             <div class="grid-line grid-h"></div>
             
             <!-- 자음 자리 가이드 -->
             <div class="consonant-guide flex items-center justify-center">
-                <span class="text-gray-300 text-[10px] sm:text-xs font-bold uppercase tracking-tighter">ㅇ</span>
+                <span class="text-slate-200 text-[10px] sm:text-xs font-bold uppercase tracking-tighter">ㅇ</span>
             </div>
             
-            <!-- viewBox를 통해 내부 좌표계 유지 (반응형 대응) -->
             <svg viewBox="0 0 300 300">
                 <!-- 가이드 잔상 -->
-                <path d="M185 50 L185 250" stroke="#f1f5f9" stroke-width="24" fill="none" stroke-linecap="butt" />
-                <path d="M185 150 L255 150" stroke="#f1f5f9" stroke-width="24" fill="none" stroke-linecap="butt" />
+                <path d="M185 50 L185 250" stroke="#f8fafc" stroke-width="24" fill="none" stroke-linecap="butt" />
+                <path d="M185 150 L255 150" stroke="#f8fafc" stroke-width="24" fill="none" stroke-linecap="butt" />
 
                 <!-- 애니메이션 획 -->
                 <path id="stroke1" class="stroke" d="M185 50 L185 250" />
                 <path id="stroke2" class="stroke" d="M185 150 L255 150" />
 
-                <!-- 획순 숫자 (반응형에서도 고정 좌표 유지) -->
-                <text x="175" y="30" id="label1" class="label-text">1</text>
-                <text x="275" y="157" id="label2" class="label-text">2</text>
+                <!-- 획순 숫자 -->
+                <text x="172" y="35" id="label1" class="label-text">1</text>
+                <text x="265" y="140" id="label2" class="label-text">2</text>
             </svg>
         </div>
     </div>

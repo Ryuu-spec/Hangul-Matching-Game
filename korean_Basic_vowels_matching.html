@@ -68,7 +68,7 @@
 
         .game-board {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 24px;
             padding: 0 10px;
         }
@@ -231,27 +231,23 @@
 
     <script>
         /*
-         * 한글 기본 모음 6개 ↔ 로마자 발음 매칭
-         * ㅣ-i / ㅡ-eu / ㅏ-a / ㅓ-eo / ㅜ-u / ㅗ-o
+         * 한글 기본 모음 4개 ↔ 로마자 발음 매칭
+         * ㅏ-a / ㅓ-eo / ㅗ-o / ㅜ-u
          */
         const cardsTemplate = [
-            // 로마자 카드 6장
+            // 로마자 카드 4장
             { type: 'romaji', value: 'a',  pair: 'ㅏ' },
             { type: 'romaji', value: 'eo', pair: 'ㅓ' },
             { type: 'romaji', value: 'o',  pair: 'ㅗ' },
             { type: 'romaji', value: 'u',  pair: 'ㅜ' },
-            { type: 'romaji', value: 'eu', pair: 'ㅡ' },
-            { type: 'romaji', value: 'i',  pair: 'ㅣ' },
-            // 한글 카드 6장
+            // 한글 카드 4장
             { type: 'hangul', value: 'ㅏ', pair: 'a',  color: '#e05a3a' },
             { type: 'hangul', value: 'ㅓ', pair: 'eo', color: '#c46ec4' },
             { type: 'hangul', value: 'ㅗ', pair: 'o',  color: '#e08030' },
             { type: 'hangul', value: 'ㅜ', pair: 'u',  color: '#3a9abf' },
-            { type: 'hangul', value: 'ㅡ', pair: 'eu', color: '#4aab7a' },
-            { type: 'hangul', value: 'ㅣ', pair: 'i',  color: '#8a6bbf' },
         ];
 
-        const TOTAL_PAIRS = 6;
+        const TOTAL_PAIRS = 4;
 
         // MP3 내장 오디오 맵 (한글 모음 → base64 MP3)
         const audioMap = {

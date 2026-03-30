@@ -359,8 +359,8 @@ function VowelSequenceStep({ syllable, koreanVowel, stepIdx, isActive, onDone })
           }
         `}</style>
 
-        {/* Base — ㅣ or ㅡ */}
-        {isActive && phase >= 0 && (isHuman || isEarth) && (
+        {/* Base — ㅣ or ㅡ — hides when vowel appears */}
+        {isActive && phase >= 0 && phase < 2 && (isHuman || isEarth) && (
           <div style={{
             position:"absolute",
             ...(isHuman ? { left:"calc(50% - 5px)", top:"15%", width:10, height:"70%", background:"#4ADE80", borderRadius:5 }
@@ -368,6 +368,7 @@ function VowelSequenceStep({ syllable, koreanVowel, stepIdx, isActive, onDone })
             transformOrigin:"center",
             animation:`baseIn_${uid} 0.8s cubic-bezier(.34,1.4,.64,1) both`,
             boxShadow: isHuman ? "0 0 20px rgba(74,222,128,.6)" : "0 0 20px rgba(251,191,36,.6)",
+            opacity: phase < 2 ? 1 : 0, transition:"opacity 0.3s",
           }}/>
         )}
 
@@ -389,8 +390,8 @@ function VowelSequenceStep({ syllable, koreanVowel, stepIdx, isActive, onDone })
           }}>{koreanVowel}</div>
         )}
 
-        {/* Heaven dot flying in */}
-        {isActive && hasDot && phase >= 1 && dotFrom && (
+        {/* Heaven dot flying in — hides when vowel appears */}
+        {isActive && hasDot && phase >= 1 && phase < 2 && dotFrom && (
           <div style={{
             position:"absolute",
             left: `${dotPos.x / 80 * 100}%`,
@@ -463,27 +464,36 @@ function VowelSequence({ syllables, name }) {
         ✦ {name}의 모음 — 천지인으로 만들어지는 원리
       </div>
 
-      {/* Step indicators */}
-      <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
-        {syllables.map((s, i) => {
-          const color = VOWEL_COLORS[s.koreanVowel] || "#888";
-          return (
-            <button key={i} onClick={() => { setStep(i); setPlaying(true); }}
-              style={{
-                padding:"5px 14px", borderRadius:20, border:"none", cursor:"pointer",
-                background: i===step ? color : "rgba(255,255,255,.08)",
-                color: i===step ? "white" : "rgba(255,255,255,.4)",
-                fontWeight:700, fontSize:13, transition:"all .2s",
-                boxShadow: i===step ? `0 4px 14px ${color}55` : "none",
-              }}>
-              {s.syllable} → {s.koreanVowel}
-            </button>
-          );
-        })}
-      </div>
+      {/* Side by side: buttons LEFT, circle RIGHT */}
+      <div style={{ display:"flex", gap:20, alignItems:"flex-start", justifyContent:"center" }}>
 
-      {/* Big animation stage */}
-      <div style={{ display:"flex", justifyContent:"center" }}>
+        {/* LEFT — vertical step buttons */}
+        <div style={{ display:"flex", flexDirection:"column", gap:10, paddingTop:8, flexShrink:0 }}>
+          {syllables.map((s, i) => {
+            const color = VOWEL_COLORS[s.koreanVowel] || "#888";
+            return (
+              <button key={i} onClick={() => { setStep(i); setPlaying(true); }}
+                style={{
+                  padding:"10px 18px", borderRadius:14, border:"none", cursor:"pointer",
+                  background: i===step ? color : "rgba(255,255,255,.08)",
+                  color: i===step ? "white" : "rgba(255,255,255,.45)",
+                  fontWeight:900, fontSize:17,
+                  fontFamily:"'Noto Serif KR', serif",
+                  transition:"all .2s",
+                  boxShadow: i===step ? `0 4px 16px ${color}55` : "none",
+                  textAlign:"left", minWidth:110,
+                  letterSpacing:1,
+                }}>
+                <span style={{ fontSize:13, opacity:.7, fontFamily:"'Noto Sans KR',sans-serif", fontWeight:600 }}>{s.syllable}</span>
+                <br/>
+                <span style={{ fontSize:22 }}>{s.koreanVowel}</span>
+                <span style={{ fontSize:12, marginLeft:6, opacity:.7, fontFamily:"'Noto Sans KR',sans-serif" }}>/{(VOWEL_META[s.koreanVowel]||{roman:"?"}).roman}/</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* RIGHT — big animation circle */}
         <VowelSequenceStep
           key={`${step}-${syllables[step]?.koreanVowel}`}
           syllable={syllables[step]?.syllable || ""}

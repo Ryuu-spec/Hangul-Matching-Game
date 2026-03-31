@@ -8,7 +8,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;font-family:'Noto Sans KR',sans-serif;overflow:hidden;}
-body{display:flex;flex-direction:column;align-items:center;max-width:520px;margin:0 auto;background:#FFF8F2;}
+body{display:flex;flex-direction:column;align-items:center;width:100%;background:#FFF8F2;}
 
 /* ── START SCREEN ── */
 #screen-start{
@@ -17,18 +17,19 @@ body{display:flex;flex-direction:column;align-items:center;max-width:520px;margi
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;padding:32px 28px;
 }
+#screen-start > *{max-width:600px;width:100%;}
 
 .start-eyebrow{font-size:10px;font-weight:700;letter-spacing:3px;color:#B8A8A0;text-transform:uppercase;margin-bottom:14px;position:relative;}
-.start-title{font-size:clamp(28px,6vw,40px);font-weight:900;color:#1A1A2E;line-height:1.15;font-family:'Noto Serif KR',serif;margin-bottom:8px;position:relative;}
+.start-title{font-size:clamp(32px,5vw,52px);font-weight:900;color:#1A1A2E;line-height:1.15;font-family:'Noto Serif KR',serif;margin-bottom:8px;position:relative;}
 .start-title span{color:#F5C518;}
 .start-desc{font-size:13px;color:#9B8880;font-weight:500;line-height:1.7;margin-bottom:24px;position:relative;}
 .start-chips{display:flex;gap:10px;justify-content:center;margin-bottom:32px;position:relative;}
 .start-chip{
-  width:clamp(52px,11vw,66px);height:clamp(56px,12vw,70px);border-radius:14px;
+  width:clamp(62px,9vw,88px);height:clamp(66px,10vw,92px);border-radius:14px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   border:2px solid transparent;
 }
-.start-chip span.kr{font-family:'Noto Serif KR',serif;font-size:clamp(22px,5vw,30px);font-weight:900;line-height:1;}
+.start-chip span.kr{font-family:'Noto Serif KR',serif;font-size:clamp(26px,4vw,38px);font-weight:900;line-height:1;}
 .start-chip span.en{font-size:10px;font-weight:700;}
 .sc-a{background:#FFF0EB;border-color:#F0A080;}.sc-a .kr{color:#C0714A;}.sc-a .en{color:#C0714A;}
 .sc-eo{background:#EBF3FF;border-color:#90B8F0;}.sc-eo .kr{color:#2D6EC0;}.sc-eo .en{color:#2D6EC0;}
@@ -44,7 +45,7 @@ body{display:flex;flex-direction:column;align-items:center;max-width:520px;margi
 .start-hint{font-size:11px;color:#B8A8A0;margin-top:12px;font-weight:500;position:relative;}
 
 /* ── GAME WRAPPER ── */
-#game-wrap{width:100%;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+#game-wrap{width:100%;max-width:700px;margin:0 auto;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
 
 /* ── HEADER ── */
 .g-header{
@@ -190,7 +191,7 @@ body{display:flex;flex-direction:column;align-items:center;max-width:520px;margi
 <!-- ── START SCREEN ── -->
 <div id="screen-start">
   <div class="start-eyebrow">Hangul Vowel Hunt</div>
-  <div class="start-title">숨은 모음<br><span>찾기</span></div>
+  <div class="start-title">숨은 모음 <span>찾기</span></div>
   <div class="start-desc">모음 칩을 글자 위에 드래그해서 놓아보세요!<br>Drag the vowel chips onto the matching characters.</div>
   <div class="start-chips">
     <div class="start-chip sc-a"><span class="kr">ㅏ</span><span class="en">ah</span></div>

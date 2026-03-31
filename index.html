@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Korean Vowel Learning · AI</title>
+  <title>외래어 한글 모음 분석기</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
@@ -12,16 +12,24 @@
     body {
       background: linear-gradient(160deg, #0D0B1E 0%, #161438 55%, #1E1A3C 100%);
       min-height: 100vh;
-      font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      font-family: 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
       overflow-x: hidden;
     }
-    @keyframes fadeUp    { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes cardIn    { 0%{opacity:0;transform:scale(.85)} 65%{transform:scale(1.04)} 100%{opacity:1;transform:scale(1)} }
+    @keyframes fadeUp    { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+    @keyframes cardIn    { 0%{opacity:0;transform:scale(.88)} 65%{transform:scale(1.03)} 100%{opacity:1;transform:scale(1)} }
     @keyframes glowPulse { 0%,100%{box-shadow:0 0 14px rgba(167,139,250,.35)} 50%{box-shadow:0 0 32px rgba(167,139,250,.7)} }
     @keyframes bounce    { 0%,80%,100%{transform:scale(.75);opacity:.4} 40%{transform:scale(1.2);opacity:1} }
-    input::placeholder   { color: rgba(255,255,255,0.22); }
-    input:focus          { outline: none; }
-    button               { font-family: inherit; }
+    @keyframes shimmer   { 0%{background-position:-200% center} 100%{background-position:200% center} }
+    @keyframes slideIn   { from{opacity:0;transform:translateX(-12px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes popIn     { 0%{opacity:0;transform:scale(0.4)} 70%{transform:scale(1.08)} 100%{opacity:1;transform:scale(1)} }
+    input::placeholder { color: rgba(255,255,255,0.22); }
+    input:focus { outline: none; }
+    button { font-family: inherit; cursor: pointer; }
+    select { font-family: inherit; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); }
+    ::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.3); border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -30,698 +38,808 @@
 <script type="text/babel">
 const { useState, useEffect, useRef } = React;
 
-// 모음별 색상 + 로마자 + 기원 스토리
-const VOWEL_META = {
-  "ㅏ": { roman: "a",   color: "#FF6B6B", basic: true,  formula: "ㅣ + ·", formulaDetail: "ㅣ 오른쪽에 점" },
-  "ㅑ": { roman: "ya",  color: "#FF8E53", basic: false, formula: "ㅣ + ··", formulaDetail: "ㅣ 오른쪽에 점 두 개" },
-  "ㅓ": { roman: "eo",  color: "#4ECDC4", basic: true,  formula: "· + ㅣ", formulaDetail: "ㅣ 왼쪽에 점" },
-  "ㅕ": { roman: "yeo", color: "#45B7D1", basic: false, formula: "·· + ㅣ", formulaDetail: "ㅣ 왼쪽에 점 두 개" },
-  "ㅗ": { roman: "o",   color: "#96CEB4", basic: true,  formula: "ㅡ + ·", formulaDetail: "ㅡ 위에 점" },
-  "ㅛ": { roman: "yo",  color: "#52C97A", basic: false, formula: "ㅡ + ··", formulaDetail: "ㅡ 위에 점 두 개" },
-  "ㅜ": { roman: "u",   color: "#7B68EE", basic: true,  formula: "ㅡ + ·", formulaDetail: "ㅡ 아래에 점" },
-  "ㅠ": { roman: "yu",  color: "#9B59B6", basic: false, formula: "ㅡ + ··", formulaDetail: "ㅡ 아래에 점 두 개" },
-  "ㅡ": { roman: "eu",  color: "#95A5A6", basic: true,  formula: "ㅡ", formulaDetail: "평평한 땅의 모양" },
-  "ㅣ": { roman: "i",   color: "#F39C12", basic: true,  formula: "ㅣ", formulaDetail: "서 있는 사람의 모양" },
-  "ㅐ": { roman: "ae",  color: "#E74C3C", basic: true,  formula: "ㅣ + ·", formulaDetail: "ㅏ에서 변형된 소리" },
-  "ㅔ": { roman: "e",   color: "#27AE60", basic: true,  formula: "· + ㅣ", formulaDetail: "ㅓ에서 변형된 소리" },
-  "ㅘ": { roman: "wa",  color: "#E67E22", basic: false, formula: "ㅗ + ㅏ", formulaDetail: "두 모음이 합쳐진 소리" },
-  "ㅝ": { roman: "wo",  color: "#3498DB", basic: false, formula: "ㅜ + ㅓ", formulaDetail: "두 모음이 합쳐진 소리" },
-  "ㅚ": { roman: "oe",  color: "#1ABC9C", basic: false, formula: "ㅗ + ㅣ", formulaDetail: "두 모음이 합쳐진 소리" },
-  "ㅟ": { roman: "wi",  color: "#8E44AD", basic: false, formula: "ㅜ + ㅣ", formulaDetail: "두 모음이 합쳐진 소리" },
-  "ㅢ": { roman: "ui",  color: "#BDC3C7", basic: false, formula: "ㅡ + ㅣ", formulaDetail: "두 모음이 합쳐진 소리" },
-};
-
-const COMPOUND_MAP = {
-  "ㅑ": ["ㅣ","ㅏ"], "ㅕ": ["ㅣ","ㅓ"], "ㅛ": ["ㅣ","ㅗ"], "ㅠ": ["ㅣ","ㅜ"],
-  "ㅘ": ["ㅜ","ㅏ"], "ㅝ": ["ㅜ","ㅓ"], "ㅚ": ["ㅗ","ㅣ"], "ㅟ": ["ㅜ","ㅣ"], "ㅢ": ["ㅡ","ㅣ"],
-};
-// ── 천지인 (Heaven·Earth·Human) 모음 형성 데이터 ──
-// 이중모음은 base1+base2 방식으로 분해
-const CHEONJIIN = {
-  "ㅏ": { type:"single", base:"human", dots:[{x:66,y:40,from:"right"}],        label:"사람(ㅣ) 오른쪽에 하늘(·)" },
-  "ㅓ": { type:"single", base:"human", dots:[{x:14,y:40,from:"left"}],         label:"사람(ㅣ) 왼쪽에 하늘(·)" },
-  "ㅗ": { type:"single", base:"earth", dots:[{x:40,y:14,from:"top"}],          label:"땅(ㅡ) 위에 하늘(·)" },
-  "ㅜ": { type:"single", base:"earth", dots:[{x:40,y:66,from:"bottom"}],       label:"땅(ㅡ) 아래에 하늘(·)" },
-  "ㅑ": { type:"single", base:"human", dots:[{x:63,y:30,from:"right"},{x:63,y:50,from:"right"}], label:"사람(ㅣ) 오른쪽에 하늘 둘(··)" },
-  "ㅕ": { type:"single", base:"human", dots:[{x:17,y:30,from:"left"},{x:17,y:50,from:"left"}],  label:"사람(ㅣ) 왼쪽에 하늘 둘(··)" },
-  "ㅛ": { type:"single", base:"earth", dots:[{x:30,y:14,from:"top"},{x:50,y:14,from:"top"}],    label:"땅(ㅡ) 위에 하늘 둘(··)" },
-  "ㅠ": { type:"single", base:"earth", dots:[{x:30,y:66,from:"bottom"},{x:50,y:66,from:"bottom"}], label:"땅(ㅡ) 아래에 하늘 둘(··)" },
-  "ㅡ": { type:"single", base:"earth", dots:[],                                label:"땅의 모양" },
-  "ㅣ": { type:"single", base:"human", dots:[],                                label:"서 있는 사람의 모양" },
-  // 이중모음 → 두 기본 모음으로 분해 표시
-  "ㅐ": { type:"compound", parts:["ㅏ","ㅣ"], label:"ㅏ + ㅣ → ㅐ" },
-  "ㅔ": { type:"compound", parts:["ㅓ","ㅣ"], label:"ㅓ + ㅣ → ㅔ" },
-  "ㅘ": { type:"compound", parts:["ㅗ","ㅏ"], label:"ㅗ + ㅏ → ㅘ" },
-  "ㅝ": { type:"compound", parts:["ㅜ","ㅓ"], label:"ㅜ + ㅓ → ㅝ" },
-  "ㅚ": { type:"compound", parts:["ㅗ","ㅣ"], label:"ㅗ + ㅣ → ㅚ" },
-  "ㅟ": { type:"compound", parts:["ㅜ","ㅣ"], label:"ㅜ + ㅣ → ㅟ" },
-  "ㅢ": { type:"compound", parts:["ㅡ","ㅣ"], label:"ㅡ + ㅣ → ㅢ" },
-  "ㅑ_": { type:"compound", parts:["ㅣ","ㅏ"], label:"ㅣ + ㅏ (빠르게) → ㅑ" },
-  "ㅕ_": { type:"compound", parts:["ㅣ","ㅓ"], label:"ㅣ + ㅓ (빠르게) → ㅕ" },
-  "ㅛ_": { type:"compound", parts:["ㅣ","ㅗ"], label:"ㅣ + ㅗ (빠르게) → ㅛ" },
-  "ㅠ_": { type:"compound", parts:["ㅣ","ㅜ"], label:"ㅣ + ㅜ (빠르게) → ㅠ" },
-};
-
-// 점 출발 위치 계산 (원 바깥에서 날아옴)
-function getDotFrom(from) {
-  if (from === "right")  return {x:110, y:40};
-  if (from === "left")   return {x:-30, y:40};
-  if (from === "top")    return {x:40,  y:-30};
-  if (from === "bottom") return {x:40,  y:110};
-  return {x:40, y:-30};
-}
-
-// 기본 모음 단일 애니메이션 SVG — Build-a-Vowel 스타일 (천천히 자동 재생)
-function SingleVowelAnim({ data, vowel, color, animKey, size=96 }) {
-  const uid = `sv_${animKey}_${vowel.charCodeAt(0)}_${size}`;
-
-  // ㅣ, ㅡ 단독 — 정적 표시 (애니메이션 없음)
-  if (data.dots.length === 0) {
-    return (
-      <div style={{ position:"relative", width:size, height:size, flexShrink:0 }}>
-        <svg key={uid} width={size} height={size} viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="37" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5"/>
-          {data.base === "earth" && (
-            <rect x="13" y="37" width="54" height="6" rx="3" fill="#FBBF24" opacity="0.95"/>
-          )}
-          {data.base === "human" && (
-            <rect x="37" y="13" width="6" height="54" rx="3" fill="#4ADE80" opacity="0.95"/>
-          )}
-          <text x="40" y="44" textAnchor="middle" dominantBaseline="middle"
-            fill="white" fontWeight="900" fontFamily="sans-serif" fontSize="40">
-            {vowel}
-          </text>
-        </svg>
-      </div>
-    );
-  }
-
-  // 점이 있는 모음 (ㅏ ㅓ ㅗ ㅜ) — 느린 Build-a-Vowel 애니메이션
-  // Phase 1: base(ㅣ or ㅡ) 천천히 나타남 (0~0.8s)
-  // Phase 2: 하늘점(·) 바깥에서 날아옴 (0.9~1.8s)
-  // Phase 3: 점 pulse + 모음 글자 등장 (1.9~2.5s)
-  const dotDelay = 0.9;
-  const vowelDelay = 2.0;
-
-  return (
-    <div style={{ position:"relative", width:size, height:size, flexShrink:0 }}>
-      <style>{`
-        @keyframes baseGrow_${uid} {
-          0%  { opacity:0; transform: ${data.base==="earth" ? "scaleX(0)" : "scaleY(0)"}; }
-          60% { opacity:1; transform: ${data.base==="earth" ? "scaleX(1.06)" : "scaleY(1.06)"}; }
-          100%{ opacity:1; transform: ${data.base==="earth" ? "scaleX(1)" : "scaleY(1)"}; }
-        }
-        @keyframes dotFly_${uid} {
-          0%   { transform:translate(var(--dfx),var(--dfy)) scale(0.2); opacity:0; }
-          40%  { opacity:1; }
-          75%  { transform:translate(0,0) scale(1.4); opacity:1; }
-          100% { transform:translate(0,0) scale(1); opacity:1; }
-        }
-        @keyframes dotPulse_${uid} {
-          0%,100%{ filter:drop-shadow(0 0 4px #EF4444); }
-          50%    { filter:drop-shadow(0 0 14px #EF4444); }
-        }
-        @keyframes vowelPop_${uid} {
-          0%  { opacity:0; transform:scale(0.3); }
-          65% { opacity:1; transform:scale(1.12); }
-          100%{ opacity:1; transform:scale(1); }
-        }
-        .base_${uid} {
-          transform-origin: center center;
-          animation: baseGrow_${uid} 0.75s 0s cubic-bezier(.34,1.4,.64,1) both;
-        }
-        .dot_${uid} {
-          animation: dotFly_${uid} 0.85s ${dotDelay}s cubic-bezier(.34,1.2,.64,1) both,
-                     dotPulse_${uid} 1.2s ${dotDelay+0.85}s ease-in-out infinite;
-        }
-        .voweltext_${uid} {
-          transform-origin: center center;
-          animation: vowelPop_${uid} 0.55s ${vowelDelay}s cubic-bezier(.34,1.56,.64,1) both;
-        }
-      `}</style>
-      <svg key={uid} width={size} height={size} viewBox="0 0 80 80">
-        <circle cx="40" cy="40" r="37" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5"/>
-
-        {data.base === "earth" && (
-          <rect className={`base_${uid}`} x="13" y="37" width="54" height="6" rx="3" fill="#FBBF24" opacity="0.95"/>
-        )}
-        {data.base === "human" && (
-          <rect className={`base_${uid}`} x="37" y="13" width="6" height="54" rx="3" fill="#4ADE80" opacity="0.95"/>
-        )}
-
-        {data.dots.map((d, i) => {
-          const fromMap = { right:{x:110,y:40}, left:{x:-30,y:40}, top:{x:40,y:-30}, bottom:{x:40,y:110} };
-          const from = fromMap[d.from] || {x:40,y:-30};
-          const fx = (from.x - d.x).toFixed(1);
-          const fy = (from.y - d.y).toFixed(1);
-          const delay = dotDelay + i * 0.25;
-          return (
-            <circle key={i}
-              style={{ ["--dfx"]: `${fx}px`, ["--dfy"]: `${fy}px`,
-                animation: `dotFly_${uid} 0.85s ${delay}s cubic-bezier(.34,1.2,.64,1) both, dotPulse_${uid} 1.2s ${delay+0.85}s ease-in-out infinite` }}
-              cx={d.x} cy={d.y} r="7.5" fill="#EF4444" opacity="0"/>
-          );
-        })}
-
-        <text className={`voweltext_${uid}`}
-          x="40" y="44" textAnchor="middle" dominantBaseline="middle"
-          fill="white" fontWeight="900" fontFamily="sans-serif" fontSize="40">
-          {vowel}
-        </text>
-      </svg>
-    </div>
-  );
-}
-
-// 이중모음 분해 애니메이션
-function CompoundVowelAnim({ data, vowel, color, animKey, allMeta }) {
-  const uid = `cv_${animKey}_${vowel.charCodeAt(0)}`;
-  return (
-    <div>
-      <style>{`
-        @keyframes partIn_${uid}_0 { 0%{opacity:0;transform:translateX(-10px)} 100%{opacity:1;transform:none} }
-        @keyframes partIn_${uid}_1 { 0%{opacity:0;transform:translateX(-10px)} 100%{opacity:1;transform:none} }
-        @keyframes plusIn_${uid}   { 0%{opacity:0;transform:scale(0)}           100%{opacity:1;transform:none} }
-        @keyframes arrowIn_${uid}  { 0%{opacity:0;transform:scale(0)}           100%{opacity:1;transform:none} }
-        @keyframes resultIn_${uid} { 0%{opacity:0;transform:scale(0.5)}         100%{opacity:1;transform:scale(1)} }
-        .part-${uid}-0  { animation:partIn_${uid}_0 0.4s 0s   cubic-bezier(.34,1.4,.64,1) both }
-        .part-${uid}-1  { animation:partIn_${uid}_1 0.4s 0.25s cubic-bezier(.34,1.4,.64,1) both }
-        .plus-${uid}    { animation:plusIn_${uid}   0.3s 0.18s cubic-bezier(.34,1.4,.64,1) both }
-        .arrow-${uid}   { animation:arrowIn_${uid}  0.3s 0.5s  cubic-bezier(.34,1.4,.64,1) both }
-        .result-${uid}  { animation:resultIn_${uid} 0.5s 0.72s cubic-bezier(.34,1.56,.64,1) both }
-      `}</style>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, flexWrap:"wrap" }}>
-        {data.parts.map((p, i) => {
-          const pm = allMeta[p] || { color:"#888", roman:"?" };
-          return (
-            <div key={i} style={{ display:"flex", alignItems:"center", gap:6 }}>
-              {i > 0 && <span className={`plus-${uid}`} style={{ fontSize:18, fontWeight:900, color:"rgba(255,255,255,.5)" }}>+</span>}
-              <div className={`part-${uid}-${i}`} style={{ textAlign:"center" }}>
-                <div style={{ width:42, height:42, background:pm.color, borderRadius:12,
-                  display:"flex", alignItems:"center", justifyContent:"center",
-                  fontSize:20, fontWeight:900, color:"white",
-                  boxShadow:`0 4px 14px ${pm.color}66` }}>{p}</div>
-                <div style={{ fontSize:10, fontWeight:700, color:pm.color, marginTop:3 }}>/{pm.roman}/</div>
-              </div>
-            </div>
-          );
-        })}
-        <span className={`arrow-${uid}`} style={{ fontSize:20, color:"rgba(255,255,255,.4)", fontWeight:900 }}>→</span>
-        <div className={`result-${uid}`} style={{ textAlign:"center" }}>
-          <div style={{ width:50, height:50, background:color, borderRadius:14,
-            display:"flex", alignItems:"center", justifyContent:"center",
-            fontSize:26, fontWeight:900, color:"white",
-            boxShadow:`0 6px 22px ${color}66`,
-            animation:"glowPulse 2s 1.3s ease-in-out infinite" }}>{vowel}</div>
-          <div style={{ fontSize:11, fontWeight:700, color, marginTop:3 }}>{data.label.split("→")[1]?.trim() || vowel}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// 통합 컴포넌트
-function VowelFormationAnim({ vowel, color, isActive, animKey, allMeta }) {
-  const data = CHEONJIIN[vowel];
-  if (!data) return null;
-
-  const bg = isActive ? "rgba(255,255,255,.1)" : "rgba(255,255,255,.04)";
-  const border = isActive ? "rgba(255,255,255,.22)" : "rgba(255,255,255,.08)";
-
-  return (
-    <div style={{ background:bg, border:`1px solid ${border}`, borderRadius:14, padding:"12px 14px", marginBottom:12 }}>
-      {data.type === "single" ? (
-        <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-          <SingleVowelAnim data={data} vowel={vowel} color={color} animKey={animKey}/>
-          <div>
-            <div style={{ display:"flex", gap:6, marginBottom:6, flexWrap:"wrap" }}>
-              {data.base === "human" && <span style={{ fontSize:11, background:"rgba(74,222,128,.15)", color:"#4ADE80", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>🧍 ㅣ</span>}
-              {data.base === "earth" && <span style={{ fontSize:11, background:"rgba(251,191,36,.15)", color:"#FBBF24", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>🌍 ㅡ</span>}
-              {data.dots.length > 0 && <span style={{ fontSize:11, background:"rgba(239,68,68,.15)", color:"#EF4444", padding:"2px 8px", borderRadius:20, fontWeight:700 }}>☀️ ·{data.dots.length>1?"·":""}</span>}
-            </div>
-            <div style={{ fontSize:13, color: isActive ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.65)", fontWeight:700, lineHeight:1.6 }}>{data.label}</div>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <div style={{ fontSize:11, color:"rgba(255,255,255,.4)", fontWeight:700, textTransform:"uppercase", letterSpacing:.8, marginBottom:10 }}>🔍 분해 · Decomposition</div>
-          <CompoundVowelAnim data={data} vowel={vowel} color={color} animKey={animKey} allMeta={allMeta}/>
-          <div style={{ fontSize:12, color:"rgba(255,255,255,.5)", marginTop:10, textAlign:"center" }}>{data.label}</div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-
-// ═══════════════════════════════════════════
-// VOWEL SEQUENCE — 천지인 순차 재생 컴포넌트
-// ═══════════════════════════════════════════
+/* ── 모음 메타 ── */
 const VOWEL_COLORS = {
-  "ㅏ":"#FF6B6B","ㅓ":"#4ECDC4","ㅗ":"#96CEB4","ㅜ":"#7B68EE",
+  "ㅏ":"#FF6B6B","ㅑ":"#FF8E53","ㅓ":"#4ECDC4","ㅕ":"#45B7D1",
+  "ㅗ":"#96CEB4","ㅛ":"#52C97A","ㅜ":"#7B68EE","ㅠ":"#9B59B6",
   "ㅡ":"#95A5A6","ㅣ":"#F39C12","ㅐ":"#E74C3C","ㅔ":"#27AE60",
+  "ㅘ":"#E67E22","ㅝ":"#3498DB","ㅚ":"#1ABC9C","ㅟ":"#8E44AD","ㅢ":"#BDC3C7",
+};
+const VOWEL_ROMAN = {
+  "ㅏ":"a","ㅑ":"ya","ㅓ":"eo","ㅕ":"yeo","ㅗ":"o","ㅛ":"yo",
+  "ㅜ":"u","ㅠ":"yu","ㅡ":"eu","ㅣ":"i","ㅐ":"ae","ㅔ":"e",
+  "ㅘ":"wa","ㅝ":"wo","ㅚ":"oe","ㅟ":"wi","ㅢ":"ui",
 };
 
-function VowelSequenceStep({ syllable, koreanVowel, stepIdx, isActive, onDone }) {
-  const { useEffect, useRef, useState } = React;
-  const m = VOWEL_META[koreanVowel] || { color:"#888", roman:"?" };
-  const color = VOWEL_COLORS[koreanVowel] || m.color;
-  const d = CHEONJIIN[koreanVowel];
-  const [phase, setPhase] = useState(0);
-  // phase 0: show base, 1: dot flies, 2: vowel appears, 3: done
+/* ── 언어별 설정 ── */
+const LANG_CONFIG = {
+  en: {
+    name: "영어",
+    flag: "🇬🇧",
+    color: "#60A5FA",
+    rule: "외래어 표기법 제3장 제1절 (영어)",
+    ruleRef: "문화체육관광부 고시 제2017-14호",
+    keyRules: [
+      { symbol: "[f]", arrow: "→", result: "ㅍ", example: "coffee → 커피" },
+      { symbol: "[v]", arrow: "→", result: "ㅂ", example: "vitamin → 비타민" },
+      { symbol: "[θ]", arrow: "→", result: "ㅅ", example: "theater → 시어터" },
+      { symbol: "[r]", arrow: "→", result: "ㄹ/르", example: "Ryan → 라이언" },
+      { symbol: "장음", arrow: "→", result: "표기 안 함", example: "team → 팀" },
+    ],
+    systemPrompt: `You are a Korean loanword transcription expert. Apply 외래어 표기법 제3장 제1절 (영어 표기법) rules:
+- [f] → ㅍ (f is aspirated bilabial, not ㅎ): coffee → 커피, cafe → 카페
+- [v] → ㅂ: vitamin → 비타민
+- [θ] (voiceless) → ㅅ: theater → 시어터
+- [ð] (voiced) → ㄷ: the → 더
+- Short vowels: [æ] → 애, [ʌ] → 어, [ɒ] → 오, [ɪ] → 이, [ε] → 에, [ʊ] → 우
+- Long vowels: [iː] → 이, [uː] → 우 (no length marker in Korean)
+- Diphthongs: [eɪ] → 에이, [oʊ] → 오, [aɪ] → 아이, [aʊ] → 아우, [ɔɪ] → 오이
+- [r]: before vowel → ㄹ; elsewhere → 르 or silent
+- Syllable-final [p][t][k] → ㅂ·ㅅ·ㄱ 받침
+- [ŋ] → ㅇ 받침, [n] → ㄴ 받침, [m] → ㅁ 받침
+- [dʒ] → 지, [tʃ] → 치, [ʃ] → 시, [ʒ] → 지`,
+  },
+  ja: {
+    name: "일본어",
+    flag: "🇯🇵",
+    color: "#F87171",
+    rule: "외래어 표기법 제2장 제5절 (일본어)",
+    ruleRef: "문화체육관광부 고시 제2017-14호",
+    keyRules: [
+      { symbol: "장음(ー)", arrow: "→", result: "생략", example: "トーキョー → 도쿄" },
+      { symbol: "つ", arrow: "→", result: "쓰", example: "つ → 쓰" },
+      { symbol: "し", arrow: "→", result: "시", example: "し → 시" },
+      { symbol: "ッ(촉음)", arrow: "→", result: "받침", example: "サッカー → 사카" },
+      { symbol: "ン", arrow: "→", result: "ㄴ 받침", example: "ホンダ → 혼다" },
+    ],
+    systemPrompt: `You are a Korean loanword transcription expert. Apply 외래어 표기법 제2장 제5절 (일본어 표기법) rules:
+- Long vowel (ー, vowel doubling) → OMIT (장음 생략): トーキョー → 도쿄, オーサカ → 오사카
+- つ → 쓰, し → 시 (NOT 씨), ち → 지, す → 스, ふ → 후
+- ッ (小っ, 촉음) → next consonant as 받침: サッカー → 사카
+- ン → ㄴ 받침 (자음 앞/어말): ホンダ → 혼다
+- は行: は→하, ひ→히, ふ→후, へ→헤, ほ→호
+- ら行: ら→라, り→리, る→루, れ→레, ろ→로 (but initial ら行 → 나/니/누/네/노 in Sino-Japanese)
+- が行(voiced): が→가, ぎ→기, ぐ→구, げ→게, ご→고
+- For Romaji input: apply same rules after converting to Kana first`,
+  },
+  de: {
+    name: "독일어",
+    flag: "🇩🇪",
+    color: "#FBBF24",
+    rule: "외래어 표기법 제3장 제2절 (독일어)",
+    ruleRef: "문화체육관광부 고시 제2017-14호",
+    keyRules: [
+      { symbol: "v/w", arrow: "→", result: "ㅂ", example: "Wolf → 볼프" },
+      { symbol: "ch [x]", arrow: "→", result: "흐", example: "Bach → 바흐" },
+      { symbol: "sch", arrow: "→", result: "슈", example: "Schiller → 실러" },
+      { symbol: "ü/ö/ä", arrow: "→", result: "위/외/에", example: "Müller → 뮐러" },
+      { symbol: "어말 -e", arrow: "→", result: "에", example: "Goethe → 괴테" },
+    ],
+    systemPrompt: `You are a Korean loanword transcription expert. Apply 외래어 표기법 제3장 제2절 (독일어 표기법) rules:
+- v → ㅂ (NOT ㅍ, unlike English): Vogel → 포겔, but f → ㅍ: Frankfurt → 프랑크푸르트
+- w → ㅂ: Wolf → 볼프, Wagner → 바그너
+- ch after a/o/u → 흐 [x]: Bach → 바흐, Doch → 도흐
+- ch after i/e/ä/ü/ö → 히 [ç]: Milch → 밀히, Licht → 리히트
+- sch → 슈: Schiller → 실러, Schuh → 슈
+- tsch → 치: Deutsch → 도이치
+- Umlauts: ü → 위, ö → 외, ä → 에
+- Diphthongs: ei/ai → 아이, au → 아우, eu/äu → 오이, ie → 이
+- z/tz → 츠, qu → 크ㅂ
+- r (uvular) before vowel → ㄹ; elsewhere → 르
+- Syllable-final b → ㅂ (devoiced), d → ㅅ, g → ㄱ
+- sp- (word initial) → 슈ㅍ, st- (word initial) → 슈트`,
+  },
+  fr: {
+    name: "프랑스어",
+    flag: "🇫🇷",
+    color: "#34D399",
+    rule: "외래어 표기법 제3장 제3절 (프랑스어)",
+    ruleRef: "문화체육관광부 고시 제2017-14호",
+    keyRules: [
+      { symbol: "어말 자음", arrow: "→", result: "묵음", example: "Paris → 파리 (-s 묵음)" },
+      { symbol: "an/en", arrow: "→", result: "앙", example: "France → 프랑스" },
+      { symbol: "in/ain", arrow: "→", result: "앵", example: "Martin → 마르탱" },
+      { symbol: "eau/au", arrow: "→", result: "오", example: "Bordeaux → 보르도" },
+      { symbol: "ou", arrow: "→", result: "우", example: "Toulouse → 툴루즈" },
+    ],
+    systemPrompt: `You are a Korean loanword transcription expert. Apply 외래어 표기법 제3장 제3절 (프랑스어 표기법) rules:
+- Word-final consonants are SILENT (묵음): s, t, x, d, p, z, nt, nt at word-end → not transcribed
+  Example: Paris → 파리 (not 파리스), Bordeaux → 보르도 (not 보르도x)
+- Nasal vowels (비모음):
+  - an/am/en/em → 앙: France → 프랑스, enfant → 앙팡
+  - in/im/ain/aim/ein → 앵: Martin → 마르탱, saint → 생
+  - on/om → 옹: Montmartre → 몽마르트르
+  - un/um → 앵 (same as in)
+- Vowel combos: eau/au → 오, ou → 우, oi → 와, eu/oeu → 외, ai/ei → 에
+- r (uvular [ʁ]) → before vowel: ㄹ; word-final: 르; consonant cluster: 르
+- gn → 뉴: Champagne → 샹파뉴
+- ill after vowel → 이유 or 이: Marseille → 마르세이유
+- qu → ㅋ (u silent): Quentin → 캉탱
+- c before e/i → 스; c elsewhere → ㅋ
+- g before e/i → 주; g elsewhere → 그
+- ch → 슈 (French ch): champagne → 샹파뉴`,
+  },
+};
 
-  useEffect(() => {
-    if (!isActive) { setPhase(0); return; }
-    setPhase(0);
-    const t1 = setTimeout(() => setPhase(1), 900);
-    const t2 = setTimeout(() => setPhase(2), 2000);
-    const t3 = setTimeout(() => { setPhase(3); onDone && onDone(); }, 3200);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [isActive]);
+/* ══════════════════════════════════════════════════════════════
+   KCISA 외래어 표기법 API — /api/kcisa Vercel 프록시 경유
+   (브라우저 CORS 우회 · serviceKey는 Vercel 환경변수 KCISA_SERVICE_KEY)
+   원본 endpoint: https://api.kcisa.kr/openapi/service/rest/meta6/getKRAG0401
+   파라미터: serviceKey, keyword, numOfRows, pageNo
+   응답 JSON: response.body.items.item[].title / .language / .description
+   메시지코드: 0000=정상, F2013=서비스주소호출실패, 9999=서비스점검중
+══════════════════════════════════════════════════════════════ */
 
-  const isHuman = d && d.base === "human";
-  const isEarth = d && d.base === "earth";
-  const hasDot  = d && d.dots && d.dots.length > 0;
-  const dotPos  = hasDot ? d.dots[0] : null;
+async function fetchKCISA(query) {
+  if (!query || !query.trim()) return { found: false };
 
-  // dot start position (from outside circle)
-  const dotFrom = dotPos ? {
-    right:  { sx:"130%", sy:"50%" },
-    left:   { sx:"-30%", sy:"50%" },
-    top:    { sx:"50%",  sy:"-30%" },
-    bottom: { sx:"50%",  sy:"130%" },
-  }[dotPos.from] : null;
+  const params = new URLSearchParams({ keyword: query.trim() });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 6000);
 
-  const uid = `seq_${stepIdx}_${koreanVowel.charCodeAt(0)}`;
+  try {
+    const res = await fetch(`/api/kcisa?${params.toString()}`, {
+      method : "GET",
+      headers: { "accept": "application/json" },
+      signal : controller.signal,
+    });
+    clearTimeout(timeout);
 
-  return (
-    <div style={{
-      display:"flex", flexDirection:"column", alignItems:"center",
-      opacity: isActive ? 1 : 0.28,
-      transition:"opacity .4s",
-    }}>
-      {/* syllable label */}
-      <div style={{ fontSize:13, fontWeight:700, color:"rgba(255,255,255,.5)", marginBottom:8 }}>
-        "{syllable}" →
-      </div>
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return { found: false, error: true, detail: err.error || `HTTP ${res.status}` };
+    }
 
-      {/* Big circle stage */}
-      <div style={{
-        width:200, height:200, borderRadius:"50%",
-        background:"rgba(255,255,255,.06)",
-        border:`2px solid ${isActive ? color+"66" : "rgba(255,255,255,.1)"}`,
-        position:"relative", overflow:"hidden",
-        boxShadow: isActive ? `0 0 40px ${color}33` : "none",
-        transition:"border-color .4s, box-shadow .4s",
-        display:"flex", alignItems:"center", justifyContent:"center",
-      }}>
-        <style>{`
-          @keyframes baseIn_${uid} {
-            0%  { opacity:0; transform:${isHuman?"scaleY(0)":"scaleX(0)"}; }
-            70% { opacity:1; transform:${isHuman?"scaleY(1.08)":"scaleX(1.08)"}; }
-            100%{ opacity:1; transform:scale(1); }
-          }
-          @keyframes dotFly_${uid} {
-            0%  { opacity:0; transform:translate(var(--sx),var(--sy)) scale(0.2); }
-            50% { opacity:1; }
-            80% { transform:translate(-50%,-50%) scale(1.4); opacity:1; }
-            100%{ transform:translate(-50%,-50%) scale(1); opacity:1; }
-          }
-          @keyframes dotGlow_${uid} {
-            0%,100%{ box-shadow:0 0 16px rgba(239,68,68,.9); }
-            50%    { box-shadow:0 0 32px rgba(239,68,68,1),0 0 50px rgba(239,68,68,.5); }
-          }
-          @keyframes vowelIn_${uid} {
-            0%  { opacity:0; transform:translate(-50%,-50%) scale(0.3); }
-            65% { opacity:1; transform:translate(-50%,-50%) scale(1.15); }
-            100%{ opacity:1; transform:translate(-50%,-50%) scale(1); }
-          }
-        `}</style>
+    const json = await res.json();
 
-        {/* Base — ㅣ or ㅡ — hides when vowel appears */}
-        {isActive && phase >= 0 && phase < 2 && (isHuman || isEarth) && (
-          <div style={{
-            position:"absolute",
-            ...(isHuman ? { left:"calc(50% - 5px)", top:"15%", width:10, height:"70%", background:"#4ADE80", borderRadius:5 }
-                        : { top:"calc(50% - 5px)", left:"15%", width:"70%", height:10, background:"#FBBF24", borderRadius:5 }),
-            transformOrigin:"center",
-            animation:`baseIn_${uid} 0.8s cubic-bezier(.34,1.4,.64,1) both`,
-            boxShadow: isHuman ? "0 0 20px rgba(74,222,128,.6)" : "0 0 20px rgba(251,191,36,.6)",
-            opacity: phase < 2 ? 1 : 0, transition:"opacity 0.3s",
-          }}/>
-        )}
+    // 메시지 코드 확인 (0000 = 정상)
+    const msgCode = json?.response?.header?.resultCode
+                 || json?.response?.header?.code
+                 || "0000";
+    if (msgCode !== "0000" && msgCode !== 0) {
+      return { found: false, error: true, code: msgCode };
+    }
 
-        {/* ㅣ alone — just human, no dot */}
-        {isActive && !hasDot && isHuman && phase >= 0 && (
-          <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
-            fontSize:72, fontWeight:900, color:"white",
-            animation:`vowelIn_${uid} 0.6s 0.9s cubic-bezier(.34,1.56,.64,1) both`,
-            opacity:0,
-          }}>{koreanVowel}</div>
-        )}
+    // items 추출
+    const items = json?.response?.body?.items?.item;
+    if (!items) return { found: false };
+    const list = Array.isArray(items) ? items : [items];
 
-        {/* ㅡ alone — just earth, no dot */}
-        {isActive && !hasDot && isEarth && phase >= 0 && (
-          <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
-            fontSize:72, fontWeight:900, color:"white",
-            animation:`vowelIn_${uid} 0.6s 0.9s cubic-bezier(.34,1.56,.64,1) both`,
-            opacity:0,
-          }}>{koreanVowel}</div>
-        )}
+    // 입력어와 가장 유사한 항목 우선 선택
+    const inputLower = query.toLowerCase().replace(/\s/g, "");
+    const exactMatch = list.find(item => {
+      const raw = (item.title || "").toLowerCase().replace(/\s/g, "");
+      return raw === inputLower || raw.startsWith(inputLower);
+    });
+    const hit = exactMatch || list[0];
+    if (!hit) return { found: false };
 
-        {/* Heaven dot flying in — hides when vowel appears */}
-        {isActive && hasDot && phase >= 1 && phase < 2 && dotFrom && (
-          <div style={{
-            position:"absolute",
-            left: `${dotPos.x / 80 * 100}%`,
-            top:  `${dotPos.y / 80 * 100}%`,
-            width:26, height:26,
-            background:"#EF4444", borderRadius:"50%",
-            transform:"translate(-50%,-50%)",
-            "--sx": `calc(${dotFrom.sx} - ${dotPos.x/80*100}%)`,
-            "--sy": `calc(${dotFrom.sy} - ${dotPos.y/80*100}%)`,
-            animation:`dotFly_${uid} 0.9s cubic-bezier(.34,1.2,.64,1) both, dotGlow_${uid} 1s 0.9s ease-in-out infinite`,
-          }}/>
-        )}
+    // title에서 한글 부분 추출: "Paris(파리)" → "파리" / "파리" 단독도 처리
+    const rawTitle       = hit.title || "";
+    const bracketKorean  = rawTitle.match(/\(([가-힣\s]+)\)/);
+    const allKorean      = rawTitle.match(/^[가-힣\s]+$/);
+    const koreanWord     = bracketKorean ? bracketKorean[1].trim()
+                         : allKorean     ? rawTitle.trim()
+                         : null;
 
-        {/* Final vowel */}
-        {isActive && phase >= 2 && (
-          <div style={{
-            position:"absolute", top:"50%", left:"50%",
-            fontSize:88, fontWeight:900, color:"white",
-            textShadow:`0 0 40px ${color}CC, 0 0 80px ${color}55`,
-            animation:`vowelIn_${uid} 0.6s cubic-bezier(.34,1.56,.64,1) both`,
-            opacity:0, transform:"translate(-50%,-50%)",
-          }}>{koreanVowel}</div>
-        )}
+    return {
+      found      : !!koreanWord,
+      word       : koreanWord || rawTitle,
+      title      : rawTitle,
+      language   : hit.language   || "",
+      description: hit.description || "",
+      allItems   : list,
+    };
 
-        {/* Not active placeholder */}
-        {!isActive && (
-          <div style={{ fontSize:64, fontWeight:900, color:"rgba(255,255,255,.15)" }}>{koreanVowel}</div>
-        )}
-      </div>
-
-      {/* Vowel label */}
-      <div style={{ marginTop:10, display:"flex", alignItems:"center", gap:8 }}>
-        <div style={{ width:36, height:36, background:color, borderRadius:10,
-          display:"flex", alignItems:"center", justifyContent:"center",
-          fontSize:18, fontWeight:900, color:"white",
-          boxShadow:`0 4px 14px ${color}55`,
-        }}>{koreanVowel}</div>
-        <div style={{ fontSize:16, fontWeight:900, color }}>/{m.roman}/</div>
-      </div>
-
-      {/* Principle label */}
-      {d && (
-        <div style={{ marginTop:6, fontSize:11, color:"rgba(255,255,255,.4)", fontWeight:600, textAlign:"center" }}>
-          {d.label || ""}
-        </div>
-      )}
-    </div>
-  );
+  } catch (err) {
+    clearTimeout(timeout);
+    return { found: false, error: true, timeout: err.name === "AbortError" };
+  }
 }
 
-function VowelSequence({ syllables, name }) {
-  const { useState, useEffect } = React;
-  const [step, setStep] = useState(0);
-  const [playing, setPlaying] = useState(true);
+/* ── /api/gemini 서버리스 프록시 호출 (키는 Vercel 환경변수에 보관) ── */
+async function callGemini(prompt) {
+  const res = await fetch("/api/gemini", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
+  });
 
-  useEffect(() => { setStep(0); setPlaying(true); }, [syllables]);
-
-  function onStepDone() {
-    if (step < syllables.length - 1) {
-      setTimeout(() => setStep(s => s + 1), 600);
-    } else {
-      setPlaying(false);
-    }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = err.error || `HTTP ${res.status}`;
+    if (res.status === 429) throw new Error("API 호출 한도 초과. 잠시 후 다시 시도하세요.");
+    if (res.status === 500) throw new Error("서버 오류: " + msg);
+    throw new Error("API 오류: " + msg);
   }
 
-  return (
-    <div style={{ marginBottom:28 }}>
-      <div style={{ fontSize:11, color:"rgba(255,255,255,.38)", fontWeight:700,
-        letterSpacing:1.5, textTransform:"uppercase", marginBottom:18 }}>
-        ✦ {name}의 모음 — 천지인으로 만들어지는 원리
-      </div>
-
-      {/* Side by side: buttons LEFT, circle RIGHT */}
-      <div style={{ display:"flex", gap:20, alignItems:"flex-start", justifyContent:"center" }}>
-
-        {/* LEFT — vertical step buttons */}
-        <div style={{ display:"flex", flexDirection:"column", gap:10, paddingTop:8, flexShrink:0 }}>
-          {syllables.map((s, i) => {
-            const color = VOWEL_COLORS[s.koreanVowel] || "#888";
-            return (
-              <button key={i} onClick={() => { setStep(i); setPlaying(true); }}
-                style={{
-                  padding:"10px 18px", borderRadius:14, border:"none", cursor:"pointer",
-                  background: i===step ? color : "rgba(255,255,255,.08)",
-                  color: i===step ? "white" : "rgba(255,255,255,.45)",
-                  fontWeight:900, fontSize:17,
-                  fontFamily:"'Noto Serif KR', serif",
-                  transition:"all .2s",
-                  boxShadow: i===step ? `0 4px 16px ${color}55` : "none",
-                  textAlign:"left", minWidth:110,
-                  letterSpacing:1,
-                }}>
-                <span style={{ fontSize:13, opacity:.7, fontFamily:"'Noto Sans KR',sans-serif", fontWeight:600 }}>{s.syllable}</span>
-                <br/>
-                <span style={{ fontSize:22 }}>{s.koreanVowel}</span>
-                <span style={{ fontSize:12, marginLeft:6, opacity:.7, fontFamily:"'Noto Sans KR',sans-serif" }}>/{(VOWEL_META[s.koreanVowel]||{roman:"?"}).roman}/</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* RIGHT — big animation circle */}
-        <VowelSequenceStep
-          key={`${step}-${syllables[step]?.koreanVowel}`}
-          syllable={syllables[step]?.syllable || ""}
-          koreanVowel={syllables[step]?.koreanVowel || "ㅏ"}
-          stepIdx={step}
-          isActive={true}
-          onDone={onStepDone}
-        />
-      </div>
-
-      {/* Replay / all done */}
-      <div style={{ textAlign:"center", marginTop:18 }}>
-        {!playing ? (
-          <button onClick={() => { setStep(0); setPlaying(true); }}
-            style={{ padding:"8px 22px", borderRadius:20, border:"1.5px solid rgba(255,255,255,.2)",
-              background:"transparent", color:"rgba(255,255,255,.6)", fontWeight:700, fontSize:13, cursor:"pointer" }}>
-            ↩ 다시 보기
-          </button>
-        ) : (
-          <div style={{ fontSize:11, color:"rgba(255,255,255,.25)", fontWeight:600 }}>
-            자동 재생 중 {step+1} / {syllables.length}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  const data = await res.json();
+  const raw = data.text || "";
+  if (!raw) throw new Error("응답이 비어있습니다.");
+  const clean = raw.trim().replace(/^```json\n?/,"").replace(/^```\n?/,"").replace(/```\n?$/,"").trim();
+  return clean;
 }
 
+/* ── 규칙 기반 분석 ── */
+async function analyzeWithGemini(inputName, langKey) {
+  const cfg = LANG_CONFIG[langKey];
+  const prompt = `${cfg.systemPrompt}
 
-const EXAMPLES = ["Ryan", "Juan", "Sofia", "Michael", "Nadia", "Lucas"];
+INPUT NAME: "${inputName}"
+LANGUAGE: ${cfg.name}
 
-function App() {
-  const [name, setName]             = useState("");
-  const [isLoading, setIsLoading]   = useState(false);
-  const [result, setResult]         = useState(null);
-  const [activeCard, setActiveCard] = useState(null);
-  const [stage, setStage]           = useState("input");
-  const [dots, setDots]             = useState("");
-  const [animKeys, setAnimKeys]     = useState({});
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (!isLoading) return;
-    const id = setInterval(() => setDots(d => d.length >= 3 ? "" : d + "."), 380);
-    return () => clearInterval(id);
-  }, [isLoading]);
-
-  async function analyze() {
-    if (!name.trim()) return;
-    setIsLoading(true);
-    try {
-      const prompt = `You are a Korean language teacher for absolute beginners.
-The learner's name is: "${name.trim()}"
-
-Analyze the name phonetically and map each vowel sound to the closest Korean vowel (모음).
-Available Korean vowels: ㅏ ㅑ ㅓ ㅕ ㅗ ㅛ ㅜ ㅠ ㅡ ㅣ ㅐ ㅔ ㅘ ㅝ ㅚ ㅟ ㅢ
-
-Rules:
-- Split by syllable SOUND (not spelling). E.g. "Ryan" → ["Ry" /ya/ → ㅑ, "an" /a/ → ㅏ]
-- For compound vowels (ㅑ ㅕ ㅛ ㅠ ㅘ ㅝ ㅚ ㅟ ㅢ), set isCompound: true
-- IMPORTANT: Each syllable must have a DIFFERENT koreanVowel — never repeat the same vowel twice
-- Write greeting in English, keep it warm and short (1 sentence)
-- Return ONLY pure JSON, no markdown
+Analyze this name following the exact rules above. Return ONLY a JSON object (no markdown, no explanation outside JSON):
 
 {
-  "greeting": "short warm English welcome",
+  "koreanName": "완성된 한글 표기",
+  "pronunciation": "발음 설명 (한국어 1문장)",
   "syllables": [
     {
-      "syllable": "Ry",
-      "vowelSound": "ya",
-      "koreanVowel": "ㅑ",
-      "isCompound": true,
-      "tip": "one simple English pronunciation tip, no examples"
+      "original": "원문 음절 (로마자/일본어 등)",
+      "korean": "한글 음절",
+      "vowel": "핵심 모음 (예: ㅏ, ㅗ, ㅣ 등)",
+      "vowelRoman": "모음 로마자 표기",
+      "phoneme": "발음 기호 또는 발음 설명",
+      "ruleApplied": "적용 규칙 설명 (예: [f]→ㅍ 규칙 적용)",
+      "ruleRef": "근거 조항 (예: 외래어 표기법 제3장 제1절 제7항)"
     }
-  ]
+  ],
+  "overallRule": "${cfg.rule}",
+  "ruleRef": "${cfg.ruleRef}",
+  "tip": "학습자를 위한 짧은 발음 팁 (한국어 1~2문장)"
 }`;
 
-      const response = await fetch("/api/gemini", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "API error");
-      const raw = data.text.trim().replace(/```json\n?|```\n?/g, "").trim();
-      const parsed = JSON.parse(raw);
-      setResult(parsed);
+  const clean = await callGemini(prompt);
+  return JSON.parse(clean);
+}
+
+/* ── 모음 칩 컴포넌트 ── */
+function VowelChip({ vowel, size = "md", glow = false, delay = 0 }) {
+  const color = VOWEL_COLORS[vowel] || "#888";
+  const roman = VOWEL_ROMAN[vowel] || "?";
+  const sz = size === "lg" ? { box:56, font:28, sub:12 } : size === "sm" ? { box:34, font:16, sub:10 } : { box:44, font:22, sub:11 };
+  return (
+    <div style={{
+      display:"flex", flexDirection:"column", alignItems:"center", gap:3,
+      animation: `popIn 0.45s ${delay}s cubic-bezier(.34,1.56,.64,1) both`,
+    }}>
+      <div style={{
+        width:sz.box, height:sz.box,
+        background: color,
+        borderRadius: sz.box * 0.28,
+        display:"flex", alignItems:"center", justifyContent:"center",
+        fontSize: sz.font, fontWeight:900, color:"white",
+        boxShadow: glow ? `0 0 22px ${color}88, 0 4px 14px ${color}55` : `0 4px 14px ${color}44`,
+        animation: glow ? "glowPulse 2s ease-in-out infinite" : "none",
+        letterSpacing: -1,
+      }}>{vowel}</div>
+      <div style={{ fontSize:sz.sub, fontWeight:700, color, opacity:0.9 }}>/{roman}/</div>
+    </div>
+  );
+}
+
+/* ── 음절 카드 ── */
+function SyllableCard({ syl, index }) {
+  const color = VOWEL_COLORS[syl.vowel] || "#888";
+  return (
+    <div style={{
+      background:`linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))`,
+      border:`1.5px solid ${color}44`,
+      borderRadius:18, padding:"18px 20px",
+      animation:`slideIn 0.4s ${index*0.1}s both`,
+      position:"relative", overflow:"hidden",
+    }}>
+      {/* 배경 모음 워터마크 */}
+      <div style={{
+        position:"absolute", right:10, top:"50%", transform:"translateY(-50%)",
+        fontSize:80, fontWeight:900, color: color, opacity:0.06, lineHeight:1,
+        pointerEvents:"none", userSelect:"none",
+      }}>{syl.vowel}</div>
+
+      <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:14 }}>
+        {/* 원문 → 한글 */}
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", fontWeight:700, letterSpacing:1.2, textTransform:"uppercase", marginBottom:5 }}>음절 {index+1}</div>
+          <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+            <span style={{ fontSize:22, fontWeight:900, color:"rgba(255,255,255,.85)", letterSpacing:1 }}>{syl.original}</span>
+            <span style={{ fontSize:16, color:"rgba(255,255,255,.3)" }}>→</span>
+            <span style={{ fontSize:26, fontWeight:900, color:"white", textShadow:`0 0 20px ${color}88` }}>{syl.korean}</span>
+          </div>
+          {syl.phoneme && (
+            <div style={{ fontSize:12, color:"rgba(255,255,255,.4)", marginTop:4, fontStyle:"italic" }}>{syl.phoneme}</div>
+          )}
+        </div>
+        {/* 모음 칩 */}
+        <VowelChip vowel={syl.vowel} size="md" glow={true} />
+      </div>
+
+      {/* 적용 규칙 */}
+      <div style={{
+        background:"rgba(0,0,0,0.25)", borderRadius:10, padding:"10px 14px",
+        borderLeft:`3px solid ${color}88`,
+      }}>
+        <div style={{ fontSize:11, color: color, fontWeight:800, marginBottom:3, letterSpacing:.8 }}>📐 적용 규칙</div>
+        <div style={{ fontSize:13, color:"rgba(255,255,255,.75)", fontWeight:600, lineHeight:1.55 }}>{syl.ruleApplied}</div>
+        {syl.ruleRef && (
+          <div style={{ fontSize:11, color:"rgba(255,255,255,.3)", marginTop:5, fontFamily:"monospace" }}>⚖ {syl.ruleRef}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── 언어 선택 버튼 그룹 ── */
+function LangSelector({ value, onChange }) {
+  return (
+    <div>
+      <div style={{ fontSize:11, color:"rgba(255,255,255,.4)", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:10 }}>
+        국적 / 언어권 선택 <span style={{ color:"#F87171", fontSize:10 }}>필수</span>
+      </div>
+      <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+        {Object.entries(LANG_CONFIG).map(([key, cfg]) => {
+          const active = value === key;
+          return (
+            <button key={key}
+              onClick={() => onChange(key)}
+              style={{
+                padding:"10px 18px",
+                background: active ? `linear-gradient(135deg,${cfg.color}33,${cfg.color}1a)` : "rgba(255,255,255,.06)",
+                border: active ? `1.5px solid ${cfg.color}88` : "1.5px solid rgba(255,255,255,.1)",
+                borderRadius:30,
+                color: active ? cfg.color : "rgba(255,255,255,.5)",
+                fontWeight: active ? 800 : 600,
+                fontSize:14,
+                transition:"all .2s",
+                boxShadow: active ? `0 0 18px ${cfg.color}33` : "none",
+              }}>
+              {cfg.flag} {cfg.name}
+            </button>
+          );
+        })}
+      </div>
+      {value && (
+        <div style={{
+          marginTop:10, padding:"8px 14px",
+          background:"rgba(255,255,255,.04)", borderRadius:10,
+          fontSize:12, color:"rgba(255,255,255,.4)",
+          animation:"fadeIn .3s both",
+        }}>
+          <span style={{ color: LANG_CONFIG[value].color, fontWeight:700 }}>⚖ 적용 법령: </span>
+          {LANG_CONFIG[value].rule} · {LANG_CONFIG[value].ruleRef}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── 규칙 참조 패널 ── */
+function RulePanel({ langKey }) {
+  const [open, setOpen] = useState(false);
+  const cfg = LANG_CONFIG[langKey];
+  if (!cfg) return null;
+  return (
+    <div style={{ marginTop:12 }}>
+      <button onClick={() => setOpen(o=>!o)} style={{
+        background:"none", border:"none", padding:0,
+        fontSize:12, color:"rgba(255,255,255,.35)", fontWeight:700,
+        display:"flex", alignItems:"center", gap:5,
+        letterSpacing:.5,
+      }}>
+        {open ? "▲" : "▶"} {cfg.name} 주요 표기 규칙 미리 보기
+      </button>
+      {open && (
+        <div style={{
+          marginTop:8, background:"rgba(0,0,0,0.3)", borderRadius:12, padding:"14px 16px",
+          animation:"fadeUp .2s both",
+        }}>
+          <div style={{ fontSize:11, color: cfg.color, fontWeight:800, marginBottom:10, letterSpacing:1 }}>
+            {cfg.rule}
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {cfg.keyRules.map((r,i) => (
+              <div key={i} style={{ display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
+                <span style={{ color:"rgba(255,255,255,.7)", fontWeight:700, minWidth:70, fontFamily:"monospace" }}>{r.symbol}</span>
+                <span style={{ color:"rgba(255,255,255,.3)" }}>{r.arrow}</span>
+                <span style={{ color: cfg.color, fontWeight:800, minWidth:40 }}>{r.result}</span>
+                <span style={{ color:"rgba(255,255,255,.35)", fontSize:11 }}>({r.example})</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── 소스 배지 ── */
+function SourceBadge({ source, apiError }) {
+  const isStandard = source === "standard";
+  return (
+    <div style={{
+      display:"inline-flex", alignItems:"center", gap:6,
+      padding:"5px 12px",
+      background: isStandard ? "rgba(52,211,153,.12)" : "rgba(167,139,250,.12)",
+      border: `1px solid ${isStandard ? "rgba(52,211,153,.35)" : "rgba(167,139,250,.35)"}`,
+      borderRadius:20, fontSize:11, fontWeight:700,
+      color: isStandard ? "#34D399" : "#A78BFA",
+      letterSpacing:.5,
+    }}>
+      {isStandard ? "✓ 국립국어원 표준 표기" : "⚙ 규칙 기반 분석"}
+      {apiError && <span style={{ color:"rgba(255,255,255,.3)", fontWeight:500 }}>(API 연결 불가)</span>}
+    </div>
+  );
+}
+
+/* ── 메인 앱 ── */
+function App() {
+  const [lang, setLang]               = useState("en");
+  const [name, setName]               = useState("");
+  const [stage, setStage]           = useState("input"); // input | loading | result
+  const [result, setResult]         = useState(null);
+  const [source, setSource]         = useState("rule");
+  const [apiError, setApiError]     = useState(false);
+  const [apiDetail, setApiDetail]   = useState(null);
+  const [loadMsg, setLoadMsg]       = useState("");
+  const [dots, setDots]             = useState("");
+  const inputRef = useRef(null);
+
+  // 로딩 점 애니메이션
+  useEffect(() => {
+    if (stage !== "loading") return;
+    const id = setInterval(() => setDots(d => d.length >= 3 ? "" : d + "."), 400);
+    return () => clearInterval(id);
+  }, [stage]);
+
+  async function analyze() {
+    if (!name.trim() || !lang) return;
+    setStage("loading");
+    setApiError(false);
+    setApiDetail(null);
+
+    try {
+      // ── Step 1: KCISA 외래어 표기법 API 조회 ──
+      // Endpoint: https://api.kcisa.kr/openapi/service/rest/meta6/getKRAG0401
+      // Params  : serviceKey(필수), keyword(검색어)
+      // Header  : accept: application/json
+      setLoadMsg("KCISA 외래어 표기법 API 조회 중");
+      const kcisa = await fetchKCISA(name.trim());
+
+      let analysisResult;
+      let src = "rule";
+      let apiErr = false;
+
+      if (kcisa.found) {
+        // ── Step 1 성공: KCISA에서 검증된 표기 발견 ──
+        // title   : 원어 + 한글표기 (예: "Paris(파리)")
+        // language: 언어 정보
+        src = "standard";
+        setApiDetail({ title: kcisa.title, language: kcisa.language, description: kcisa.description });
+        setLoadMsg(`표준 표기 발견 (${kcisa.language || "KCISA"}) — 모음 분석 중`);
+        const cfg = LANG_CONFIG[lang];
+        const prompt2 = `${cfg.systemPrompt}
+
+The KCISA (국립국어원) standard Korean transcription of "${name.trim()}" is:
+- title: "${kcisa.title}"
+- Korean word: "${kcisa.word}"
+- language tag: "${kcisa.language || "unknown"}"
+
+Analyze ONLY the vowels of the Korean word "${kcisa.word}". Return ONLY JSON:
+{
+  "koreanName": "${kcisa.word}",
+  "pronunciation": "발음 설명 1문장",
+  "syllables": [{"original":"","korean":"","vowel":"","vowelRoman":"","phoneme":"","ruleApplied":"","ruleRef":""}],
+  "overallRule": "${cfg.rule}",
+  "ruleRef": "${cfg.ruleRef}",
+  "tip": "1~2문장 팁"
+}`;
+        const r2raw = await callGemini(prompt2);
+        analysisResult = JSON.parse(r2raw);
+      } else {
+        if (kcisa.error || kcisa.noKey) { apiErr = true; }
+        const reasonMsg = kcisa.noKey    ? "KCISA 키 없음 — Gemini 규칙 분석 중"
+                        : kcisa.timeout ? "KCISA 타임아웃 — Gemini 규칙 분석 중"
+                        : kcisa.error   ? "KCISA CORS 차단 — Gemini 규칙 분석 중"
+                        : "KCISA 미등재 — Gemini 규칙 분석 중";
+        setLoadMsg(reasonMsg);
+        analysisResult = await analyzeWithGemini(name.trim(), lang);
+      }
+
+      setResult(analysisResult);
+      setSource(src);
+      setApiError(apiErr);
       setStage("result");
-      setActiveCard(null);
-      setAnimKeys({});
     } catch (e) {
       console.error(e);
-      alert("분석 실패. 다시 시도해주세요.");
-    } finally {
-      setIsLoading(false);
+      setStage("input");
+      alert(`분석 실패: ${e.message}\n다시 시도해 주세요.`);
     }
   }
 
   function reset() {
-    setStage("input"); setResult(null); setActiveCard(null); setName("");
-    setTimeout(() => inputRef.current && inputRef.current.focus(), 100);
+    setStage("input"); setResult(null); setName(""); setApiDetail(null);
+    setTimeout(() => inputRef.current?.focus(), 80);
   }
 
-  const wrap = { position: "relative", zIndex: 1, maxWidth: 680, margin: "0 auto", padding: "44px 20px 88px" };
+  const activeLang = LANG_CONFIG[lang];
 
   return (
-    <div style={{ minHeight: "100vh", overflowX: "hidden" }}>
-      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        <div style={{ position: "absolute", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%)", top: -100, left: -100 }} />
-        <div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(96,165,250,0.05) 0%, transparent 70%)", bottom: 0, right: -80 }} />
+    <div style={{ minHeight:"100vh" }}>
+      {/* 배경 오브 */}
+      <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0 }}>
+        <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"radial-gradient(circle,rgba(167,139,250,0.07) 0%,transparent 70%)", top:-100, left:-100 }}/>
+        <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle,rgba(96,165,250,0.05) 0%,transparent 70%)", bottom:0, right:-80 }}/>
       </div>
 
-      <div style={wrap}>
-        {/* HEADER */}
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(167,139,250,0.12)", backdropFilter: "blur(12px)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 30, padding: "7px 18px", marginBottom: 18 }}>
-            <span style={{ fontSize: 16 }}>🇰🇷</span>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>Korean Vowel · AI Learning</span>
+      <div style={{ position:"relative", zIndex:1, maxWidth:680, margin:"0 auto", padding:"44px 20px 100px" }}>
+
+        {/* ── 헤더 ── */}
+        <div style={{ textAlign:"center", marginBottom:36 }}>
+          <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"rgba(167,139,250,0.12)", backdropFilter:"blur(12px)", border:"1px solid rgba(167,139,250,0.25)", borderRadius:30, padding:"6px 18px", marginBottom:16 }}>
+            <span style={{ fontSize:14 }}>🇰🇷</span>
+            <span style={{ fontSize:11, color:"rgba(255,255,255,0.65)", fontWeight:700, letterSpacing:2, textTransform:"uppercase" }}>Korean Vowel · 외래어 분석기</span>
           </div>
-          <h1 style={{ fontSize: "clamp(24px,5.5vw,38px)", fontWeight: 900, color: "white", margin: "0 0 10px", lineHeight: 1.2 }}>
+          <h1 style={{ fontSize:"clamp(22px,5vw,36px)", fontWeight:900, color:"white", margin:"0 0 10px", lineHeight:1.2 }}>
             내 이름 속의{" "}
-            <span style={{ background: "linear-gradient(135deg,#A78BFA 0%,#60A5FA 60%,#34D399 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>한국어 모음</span>
-            을 찾아봐요
+            <span style={{ background:"linear-gradient(135deg,#A78BFA 0%,#60A5FA 60%,#34D399 100%)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>한국어 모음</span>
+            {" "}찾기
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.42)", fontSize: 14 }}>이름을 입력하면 AI가 한글 모음으로 변환해줘요</p>
+          {/* 안내 배너 */}
+          <div style={{
+            display:"inline-flex", alignItems:"center", gap:8,
+            background:"rgba(251,191,36,.09)", border:"1px solid rgba(251,191,36,.3)",
+            borderRadius:12, padding:"8px 16px", marginTop:10,
+            fontSize:13, color:"rgba(251,191,36,.9)", fontWeight:600, lineHeight:1.5,
+          }}>
+            <span>ℹ️</span>
+            <span>이 툴은 <strong>외국어 이름을 한글로 바꾸는 전용 툴</strong>입니다. 영문·일문·독문·불문 이름을 입력하세요.</span>
+          </div>
         </div>
 
-        {/* INPUT */}
+        {/* ── 입력 스테이지 ── */}
         {stage === "input" && (
-          <div style={{ background: "rgba(255,255,255,0.055)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 28, padding: "34px 30px", animation: "fadeUp .45s both" }}>
-            <label style={{ display: "block", fontWeight: 700, fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 10, letterSpacing: 1.5, textTransform: "uppercase" }}>이름 (알파벳)</label>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <input
-                ref={inputRef} value={name}
-                onChange={e => setName(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && !isLoading && name.trim() && analyze()}
-                placeholder="e.g. Ryan · Sofia · Lucas"
-                style={{ flex: 1, minWidth: 200, padding: "15px 18px", fontSize: 22, fontWeight: 700, letterSpacing: 3, background: "rgba(255,255,255,0.07)", border: "2px solid rgba(255,255,255,0.12)", borderRadius: 14, color: "white" }}
-              />
-              <button onClick={analyze} disabled={isLoading || !name.trim()} style={{
-                padding: "15px 24px", fontSize: 14, fontWeight: 800,
-                background: (isLoading || !name.trim()) ? "rgba(255,255,255,0.08)" : "linear-gradient(135deg,#A78BFA,#60A5FA)",
-                color: (isLoading || !name.trim()) ? "rgba(255,255,255,.28)" : "white",
-                border: "none", borderRadius: 14, cursor: (isLoading || !name.trim()) ? "not-allowed" : "pointer",
-                boxShadow: (isLoading || !name.trim()) ? "none" : "0 4px 22px rgba(167,139,250,.38)", whiteSpace: "nowrap",
-              }}>
-                {isLoading ? `분석 중${dots}` : "✦ 분석하기"}
-              </button>
+          <div style={{ background:"rgba(255,255,255,0.055)", backdropFilter:"blur(20px)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:28, padding:"30px 28px", animation:"fadeUp .4s both" }}>
+
+            {/* 언어 선택 */}
+            <div style={{ marginBottom:24 }}>
+              <LangSelector value={lang} onChange={setLang} />
+              <RulePanel langKey={lang} />
             </div>
 
-            <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,.3)", fontWeight: 700, letterSpacing: 1 }}>예시:</span>
-              {EXAMPLES.map(ex => (
-                <button key={ex} onClick={() => setName(ex)} style={{ padding: "5px 13px", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.13)", borderRadius: 20, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,.55)", cursor: "pointer" }}>
-                  {ex.flag} {ex.name}
+            {/* 이름 입력 */}
+            <div>
+              <label style={{ display:"block", fontSize:11, color:"rgba(255,255,255,.4)", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>
+                이름 입력 (원어 표기) — e.g. Jane, 田中, Müller, Dupont
+              </label>
+              <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                <input
+                  ref={inputRef}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && name.trim() && analyze()}
+                  placeholder={lang==="ja" ? "예: Tanaka · 田中 · タナカ" : lang==="de" ? "예: Müller · Schmidt" : lang==="fr" ? "예: Dupont · Marie" : "예: Jane · Smith · Ryan"}
+                  style={{
+                    flex:1, minWidth:200, padding:"14px 18px",
+                    fontSize:20, fontWeight:700, letterSpacing:2,
+                    background:"rgba(255,255,255,0.07)", border:"2px solid rgba(255,255,255,0.12)",
+                    borderRadius:14, color:"white",
+                  }}
+                />
+                <button
+                  onClick={analyze}
+                  disabled={!name.trim() || !lang}
+                  style={{
+                    padding:"14px 24px", fontSize:14, fontWeight:800,
+                    background: (!name.trim() || !lang) ? "rgba(255,255,255,.08)" : `linear-gradient(135deg,${activeLang?.color || "#A78BFA"},#A78BFA)`,
+                    color: (!name.trim() || !lang) ? "rgba(255,255,255,.28)" : "white",
+                    border:"none", borderRadius:14,
+                    boxShadow: (!name.trim() || !lang) ? "none" : `0 4px 22px ${activeLang?.color || "#A78BFA"}44`,
+                    whiteSpace:"nowrap", transition:"all .2s",
+                  }}>
+                  ✦ 분석하기
+                </button>
+              </div>
+            </div>
+
+            {/* 예시 버튼 */}
+            <div style={{ marginTop:18, display:"flex", flexWrap:"wrap", gap:7, alignItems:"center" }}>
+              <span style={{ fontSize:11, color:"rgba(255,255,255,.3)", fontWeight:700, letterSpacing:1 }}>예시:</span>
+              {(lang==="en" ? ["Jane","Ryan","Sofia","Michael"] :
+                lang==="ja" ? ["Tanaka","Honda","Suzuki","Yamamoto"] :
+                lang==="de" ? ["Müller","Schmidt","Bach","Schiller"] :
+                ["Dupont","Martin","Bordeaux","Champagne"]).map(ex => (
+                <button key={ex} onClick={() => setName(ex)}
+                  style={{ padding:"5px 12px", background:"rgba(255,255,255,.06)", border:`1px solid ${activeLang?.color || "#A78BFA"}33`, borderRadius:20, fontSize:13, fontWeight:700, color:"rgba(255,255,255,.55)" }}>
+                  {ex}
                 </button>
               ))}
             </div>
 
-            {isLoading && (
-              <div style={{ marginTop: 28, textAlign: "center" }}>
-                <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 12 }}>
-                  {["ㅏ","ㅗ","ㅣ","ㅜ"].map((v, i) => {
-                    const m = VOWEL_META[v];
-                    return <div key={v} style={{ width: 38, height: 38, background: m.color, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 900, color: "white", animation: `bounce .9s ${i*.18}s infinite` }}>{v}</div>;
-                  })}
-                </div>
-                <p style={{ color: "rgba(255,255,255,.4)", fontSize: 13 }}>AI가 모음을 분석하고 있어요…</p>
+            {/* 분석 흐름 설명 */}
+            <div style={{ marginTop:22, padding:"14px 16px", background:"rgba(0,0,0,.25)", borderRadius:14, display:"flex", gap:12, alignItems:"flex-start" }}>
+              <div style={{ fontSize:20, flexShrink:0 }}>🔍</div>
+              <div style={{ fontSize:12, color:"rgba(255,255,255,.4)", lineHeight:1.7 }}>
+                <strong style={{ color:"rgba(255,255,255,.6)" }}>2단계 하이브리드 분석 엔진</strong><br/>
+                <span style={{ color:"rgba(96,165,250,.7)", fontWeight:700 }}>Step 1</span> — KCISA 외래어 표기법 API(<span style={{ fontFamily:"monospace", fontSize:10 }}>getKRAG0401</span>)에서 <strong style={{ color:"rgba(255,255,255,.6)" }}>keyword</strong> 파라미터로 검색. 결과의 <strong style={{ color:"rgba(255,255,255,.6)" }}>title</strong> · <strong style={{ color:"rgba(255,255,255,.6)" }}>language</strong> 필드로 표준 표기 확인.<br/>
+                <span style={{ color:"rgba(167,139,250,.7)", fontWeight:700 }}>Step 2</span> — API 미등재 / 인증키 없음 → {activeLang?.rule} 규칙을 AI가 음소 단위로 적용.
               </div>
-            )}
+            </div>
           </div>
         )}
 
-        {/* RESULT */}
+        {/* ── 로딩 스테이지 ── */}
+        {stage === "loading" && (
+          <div style={{ background:"rgba(255,255,255,0.055)", backdropFilter:"blur(20px)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:28, padding:"48px 28px", textAlign:"center", animation:"fadeIn .3s both" }}>
+            <div style={{ display:"flex", justifyContent:"center", gap:12, marginBottom:20 }}>
+              {["ㅏ","ㅗ","ㅣ","ㅜ","ㅔ"].map((v,i) => (
+                <div key={v} style={{
+                  width:44, height:44,
+                  background: VOWEL_COLORS[v] || "#888",
+                  borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:20, fontWeight:900, color:"white",
+                  animation:`bounce .9s ${i*0.18}s infinite`,
+                }}>{v}</div>
+              ))}
+            </div>
+            <p style={{ color:"rgba(255,255,255,.7)", fontSize:15, fontWeight:700, marginBottom:6 }}>
+              {loadMsg}{dots}
+            </p>
+            <p style={{ color:"rgba(255,255,255,.3)", fontSize:12 }}>
+              {activeLang?.flag} {activeLang?.rule} 적용 중
+            </p>
+          </div>
+        )}
+
+        {/* ── 결과 스테이지 ── */}
         {stage === "result" && result && (
-          <div>
-            {/* 개인화 모음 코드 멘트 */}
-            <div style={{ background: "linear-gradient(135deg,rgba(167,139,250,.18),rgba(96,165,250,.13))", border: "1px solid rgba(167,139,250,.35)", borderRadius: 22, padding: "20px 24px", marginBottom: 22, animation: "fadeUp .5s both" }}>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,.45)", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>✦ 나의 모음 코드</div>
-              <p style={{ color: "white", fontSize: 17, fontWeight: 800, lineHeight: 1.7, marginBottom: 10 }}>
-                {name.trim()}, 당신의 이름엔{" "}
-                {result.syllables.map((s,i) => (
-                  <span key={i}>
-                    {i > 0 && (i === result.syllables.length-1 ? <span style={{color:"rgba(255,255,255,.6)"}}> 와 </span> : <span style={{color:"rgba(255,255,255,.6)"}}>, </span>)}
-                    <span style={{ color: VOWEL_META[s.koreanVowel]?.color || "#fff", textShadow:`0 0 20px ${VOWEL_META[s.koreanVowel]?.color || "#fff"}` }}>
-                      '{s.koreanVowel}'
-                    </span>
-                  </span>
+          <div style={{ animation:"fadeUp .4s both" }}>
+
+            {/* 소스 배지 + 한글 이름 */}
+            <div style={{
+              background:"linear-gradient(135deg,rgba(167,139,250,.15),rgba(96,165,250,.1))",
+              border:"1px solid rgba(167,139,250,.3)", borderRadius:24, padding:"24px 26px",
+              marginBottom:20, textAlign:"center",
+            }}>
+              <div style={{ marginBottom:12 }}>
+                <SourceBadge source={source} apiError={apiError} />
+              </div>
+              <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", fontWeight:700, letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>
+                {activeLang?.flag} {name} → 한글 표기
+              </div>
+              <div style={{
+                fontSize:"clamp(36px,10vw,64px)", fontWeight:900, color:"white",
+                textShadow:"0 0 40px rgba(167,139,250,0.5)",
+                letterSpacing:4, marginBottom:10,
+                animation:"cardIn 0.5s both",
+              }}>
+                {result.koreanName}
+              </div>
+              {result.pronunciation && (
+                <p style={{ color:"rgba(255,255,255,.5)", fontSize:14, fontWeight:500 }}>{result.pronunciation}</p>
+              )}
+              {/* 모음 요약 */}
+              <div style={{ marginTop:16, display:"flex", justifyContent:"center", gap:10, flexWrap:"wrap" }}>
+                {result.syllables?.map((s,i) => (
+                  <VowelChip key={i} vowel={s.vowel} size="lg" glow={true} delay={i*0.1} />
                 ))}
-                <span style={{color:"rgba(255,255,255,.9)"}}> 가 숨어있네요!</span>
-              </p>
-              <p style={{ color: "rgba(255,255,255,.6)", fontSize: 13, fontWeight: 500, lineHeight: 1.6 }}>{result.greeting}</p>
+              </div>
             </div>
 
-            {/* 순차 재생 — 천지인 애니메이션 */}
-            <VowelSequence syllables={result.syllables} name={name.trim()} />
+            {/* KCISA 원문 응답 패널 (표준 표기 발견 시) */}
+            {source === "standard" && apiDetail && (
+              <div style={{
+                background:"rgba(52,211,153,.07)", border:"1px solid rgba(52,211,153,.25)",
+                borderRadius:16, padding:"14px 18px", marginBottom:20,
+                animation:"fadeUp .4s .1s both",
+              }}>
+                <div style={{ fontSize:11, color:"#34D399", fontWeight:800, letterSpacing:.8, marginBottom:10 }}>
+                  ✓ KCISA API 응답 원문
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                  <div style={{ display:"flex", gap:10, alignItems:"baseline" }}>
+                    <span style={{ fontSize:11, fontFamily:"monospace", color:"rgba(52,211,153,.7)", minWidth:80 }}>title</span>
+                    <span style={{ fontSize:14, color:"rgba(255,255,255,.8)", fontWeight:700 }}>{apiDetail.title}</span>
+                  </div>
+                  {apiDetail.language && (
+                    <div style={{ display:"flex", gap:10, alignItems:"baseline" }}>
+                      <span style={{ fontSize:11, fontFamily:"monospace", color:"rgba(52,211,153,.7)", minWidth:80 }}>language</span>
+                      <span style={{ fontSize:13, color:"rgba(255,255,255,.6)" }}>{apiDetail.language}</span>
+                    </div>
+                  )}
+                  {apiDetail.description && (
+                    <div style={{ display:"flex", gap:10, alignItems:"baseline" }}>
+                      <span style={{ fontSize:11, fontFamily:"monospace", color:"rgba(52,211,153,.7)", minWidth:80 }}>description</span>
+                      <span style={{ fontSize:12, color:"rgba(255,255,255,.45)", lineHeight:1.5 }}>{apiDetail.description.slice(0,120)}{apiDetail.description.length>120?"…":""}</span>
+                    </div>
+                  )}
+                </div>
+                <div style={{ marginTop:10, fontSize:10, fontFamily:"monospace", color:"rgba(255,255,255,.2)" }}>
+                  /api/kcisa?keyword={encodeURIComponent(name)}&numOfRows=10&pageNo=1
+                </div>
+              </div>
+            )}
 
-            {/* Basic vowel reference */}
-            <div style={{ marginTop: 30, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 18, padding: "18px 22px", animation: "fadeUp .5s .35s both" }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,.3)", fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 14 }}>🗂 기본 모음 · Basic Korean Vowels</div>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {Object.entries(VOWEL_META).filter(([,m]) => m.basic).map(([v, m]) => {
-                  const used = result.syllables.some(s => s.koreanVowel === v);
+            {/* 음절별 카드 */}
+            <div style={{ marginBottom:22 }}>
+              <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 }}>
+                ✦ 음절별 분석 — {result.overallRule}
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                {result.syllables?.map((s,i) => (
+                  <SyllableCard key={i} syl={s} index={i} />
+                ))}
+              </div>
+            </div>
+
+            {/* 학습 팁 */}
+            {result.tip && (
+              <div style={{
+                background:"rgba(251,191,36,.08)", border:"1px solid rgba(251,191,36,.25)",
+                borderRadius:16, padding:"16px 18px", marginBottom:20,
+                animation:"fadeUp .4s .3s both",
+              }}>
+                <div style={{ fontSize:11, color:"#FBBF24", fontWeight:800, letterSpacing:.8, marginBottom:6 }}>💡 발음 팁</div>
+                <p style={{ color:"rgba(255,255,255,.7)", fontSize:14, lineHeight:1.65 }}>{result.tip}</p>
+              </div>
+            )}
+
+            {/* 법령 근거 */}
+            <div style={{
+              background:"rgba(0,0,0,.3)", borderRadius:14, padding:"14px 18px",
+              marginBottom:28, animation:"fadeUp .4s .4s both",
+            }}>
+              <div style={{ fontSize:11, color:"rgba(255,255,255,.3)", fontWeight:700, letterSpacing:.8, marginBottom:6 }}>⚖ 법령 근거</div>
+              <div style={{ fontSize:13, color:"rgba(255,255,255,.55)", lineHeight:1.6 }}>
+                <strong style={{ color:"rgba(255,255,255,.75)" }}>{result.overallRule}</strong>
+                {result.ruleRef && <span style={{ color:"rgba(255,255,255,.3)" }}> · {result.ruleRef}</span>}
+              </div>
+              <div style={{ marginTop:8, fontSize:11, color:"rgba(255,255,255,.25)", lineHeight:1.5 }}>
+                외래어 표기법은 원어의 발음을 기준으로 하며, 같은 알파벳도 국적에 따라 표기 규칙이 달라집니다.
+              </div>
+            </div>
+
+            {/* 모음 전체 참고표 */}
+            <div style={{ background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.08)", borderRadius:18, padding:"16px 20px", marginBottom:28 }}>
+              <div style={{ fontSize:11, color:"rgba(255,255,255,.3)", fontWeight:700, letterSpacing:1.2, textTransform:"uppercase", marginBottom:14 }}>🗂 기본 모음 참고표</div>
+              <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                {Object.entries(VOWEL_COLORS).map(([v, color]) => {
+                  const used = result.syllables?.some(s => s.vowel === v);
+                  const roman = VOWEL_ROMAN[v] || "?";
                   return (
-                    <div key={v} style={{ textAlign: "center", opacity: used ? 1 : 0.3 }}>
-                      <div style={{ width: 38, height: 38, background: m.color, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 900, color: "white", margin: "0 auto 3px", boxShadow: used ? `0 2px 10px ${m.color}55` : "none", outline: used ? `2.5px solid ${m.color}` : "none", outlineOffset: 2 }}>{v}</div>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: m.color }}>/{m.roman}/</div>
+                    <div key={v} style={{ textAlign:"center", opacity: used ? 1 : 0.25 }}>
+                      <div style={{
+                        width:34, height:34, background: color,
+                        borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center",
+                        fontSize:16, fontWeight:900, color:"white", margin:"0 auto 2px",
+                        boxShadow: used ? `0 2px 10px ${color}55` : "none",
+                        outline: used ? `2.5px solid ${color}` : "none", outlineOffset:2,
+                      }}>{v}</div>
+                      <div style={{ fontSize:9, fontWeight:700, color }}>{roman}</div>
                     </div>
                   );
                 })}
               </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,.2)", marginTop: 10 }}>✦ 밝게 표시된 모음 = 내 이름에 있는 모음</div>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,.2)", marginTop:10 }}>✦ 밝게 표시 = 이름에 포함된 모음</div>
             </div>
 
-            <div style={{ textAlign: "center", marginTop: 36 }}>
-              <button onClick={reset} style={{ padding: "14px 38px", fontSize: 14, fontWeight: 800, background: "transparent", color: "rgba(255,255,255,.6)", border: "1.5px solid rgba(255,255,255,.18)", borderRadius: 50, cursor: "pointer" }}>
-                ↩ 다른 이름 해보기
+            {/* 다시하기 */}
+            <div style={{ textAlign:"center" }}>
+              <button onClick={reset} style={{
+                padding:"13px 36px", fontSize:14, fontWeight:800,
+                background:"transparent", color:"rgba(255,255,255,.6)",
+                border:"1.5px solid rgba(255,255,255,.18)", borderRadius:50,
+              }}>
+                ↩ 다른 이름 분석하기
               </button>
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>

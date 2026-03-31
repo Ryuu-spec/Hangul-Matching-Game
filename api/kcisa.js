@@ -1,0 +1,80 @@
+// api/kcisa.js — Vercel Serverless Function
+// KCISA 외래어 표기법 API 프록시
+// 환경변수: KCISA_SERVICE_KEY (Vercel 대시보드에서 설정)
+//
+// 호출 원본: https://api.kcisa.kr/openapi/service/rest/meta6/getKRAG0401
+// 파라미터 : serviceKey, keyword, numOfRows, pageNo
+// 응답 형식: JSON (Accept: application/json)
+
+export default async function handler(req, res) {
+  // CORS 허용 (같은 Vercel 도메인에서 호출)
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method !== "GET" && req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // keyword 추출 (GET querystring 또는 POST body)
+  const keyword =
+    req.query?.keyword ||
+    req.body?.keyword ||
+    "";
+
+  if (!keyword.trim()) {
+    return res.status(400).json({ error: "keyword 파라미터가 필요합니다." });
+  }
+
+  const serviceKey = process.env.KCISA_SERVICE_KEY;
+  if (!serviceKey) {
+    return res.status(500).json({ error: "KCISA_SERVICE_KEY 환경변수가 설정되지 않았습니다." });
+  }
+
+  const numOfRows = req.query?.numOfRows || "10";
+  const pageNo    = req.query?.pageNo    || "1";
+
+  const endpoint = "https://api.kcisa.kr/openapi/service/rest/meta6/getKRAG0401";
+  const params   = new URLSearchParams({ serviceKey, keyword, numOfRows, pageNo });
+  const url      = `${endpoint}?${params.toString()}`;
+
+  try {
+    const upstream = await fetch(url, {
+      method : "GET",
+      headers: { "accept": "application/json" },
+    });
+
+    const body = await upstream.text();
+
+    // 상태 코드 그대로 전달 (200, 400, 500 등)
+    res.setHeader("Content-Type", "application/json");
+
+    if (!upstream.ok) {
+      return res.status(upstream.status).json({
+        error : `KCISA 서버 오류 (${upstream.status})`,
+        detail: body,
+      });
+    }
+
+    // JSON 파싱 시도 (실패 시 XML일 가능성 — 그대로 반환)
+    try {
+      const json = JSON.parse(body);
+      return res.status(200).json(json);
+    } catch {
+      // XML 응답이 온 경우 그대로 전달 (프론트에서 처리)
+      res.setHeader("Content-Type", "text/xml");
+      return res.status(200).send(body);
+    }
+
+  } catch (err) {
+    console.error("[kcisa proxy error]", err);
+    return res.status(500).json({
+      error : "KCISA API 호출 실패",
+      detail: err.message,
+    });
+  }
+}

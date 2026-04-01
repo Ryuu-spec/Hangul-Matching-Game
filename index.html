@@ -375,22 +375,32 @@ async function gemini(prompt){
 
 // ── Call 1: 언어 감지 ──────────────────
 async function callDetect(name){
-  const prompt=`당신은 국립국어원 외래어 표기법 전문가입니다.
+  const prompt=`당신은 국립국어원 외래어 표기법 전문가이자 언어학자입니다.
 이름 "${name}"이 어느 문화권의 이름인지 분석하세요.
 
 분석 기준:
 - 발음, 철자 패턴, 문화적 맥락을 종합 판단
-- 같은 이름이 여러 언어에 존재하면 모두 포함 (예: Michael→영어/독일어/스페인어)
-- 명확히 한 문화권인 이름(예: Haruki→일본어)은 1-2개만 반환
+- 같은 이름이 여러 언어에 존재하면 모두 포함 (예: Michael→영어/독일어/스페인어/프랑스어)
+- 명확히 한 문화권인 이름(예: Haruki→일본어만)은 1개만 반환
 - 최대 4개까지만 반환
 
-각 옵션마다 해당 언어의 국립국어원 외래어 표기법에 따른 한글 표기를 정확히 작성하세요.
-표기 규칙: 영어(영미권 발음 기준), 프랑스어(어말 자음 묵음), 독일어(ü→위, ä→에), 스페인어(ll→이, ñ→니), 일본어(헵번식), 베트남어(로마자 발음 기준), 태국어(로마자 기준 산스크리트 어원 반영)
+각 옵션마다 반드시 아래 4가지를 정확히 작성하세요:
+1. korean: 해당 언어 발음 기준 국립국어원 외래어 표기법 한글 표기
+   - 영어: 영미권 실제 발음 기준 (Michael→마이클)
+   - 독일어: ch=[ç] 이므로 ㅎ 계열 (Michael→미하엘, 미카엘 X)
+   - 스페인어: Miguel (mi-GEL) → 미겔 (미카엘 X)
+   - 프랑스어: Michel (mi-SHEL) → 미셸 (미카엘 X)
+   - 이탈리아어: Michele (mi-KE-le) → 미켈레
+   - 일본어: 헵번식 로마자 발음 기준
+   - 베트남어: 실제 발음 기준
+2. native: 그 언어에서 실제로 쓰는 원어 철자 (영어Michael, 스페인어Miguel, 프랑스어Michel, 독일어Michael)
+3. nativeLabel: 그 언어의 자국어 명칭 (English, Deutsch, Español, Français, Italiano, Português, Русский, 日本語, Tiếng Việt, ภาษาไทย, Bahasa Indonesia, Filipino)
+4. note: 표기 근거 한 줄 (간결하게, 전문 용어 최소화)
 
-지원 언어 목록: 영어, 프랑스어, 독일어, 스페인어, 이탈리아어, 포르투갈어, 러시아어, 일본어, 베트남어, 태국어, 인도네시아어, 필리핀어, 아랍어, 터키어, 페르시아어, 힌디어
+지원 언어: 영어, 프랑스어, 독일어, 스페인어, 이탈리아어, 포르투갈어, 러시아어, 일본어, 베트남어, 태국어, 인도네시아어, 필리핀어, 아랍어, 터키어, 힌디어
 
 반드시 아래 JSON만 응답(마크다운 없이):
-{"options":[{"lang":"영어","label":"English","korean":"마이클","note":"영미권 표기"},{"lang":"독일어","label":"German","korean":"마카엘","note":"독일어 표기"}]}`;
+{"options":[{"lang":"영어","nativeLabel":"English","native":"Michael","korean":"마이클","note":"영미권 발음 기준"},{"lang":"독일어","nativeLabel":"Deutsch","native":"Michael","korean":"미하엘","note":"ch=[ç] 독일어 발음 기준"}]}`;
   return gemini(prompt);
 }
 
@@ -446,7 +456,10 @@ async function callPoem(name, lang, korean){
 }
 
 // ── 로딩 셔플 ─────────────────────────
-const LC=['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅏ','ㅓ','ㅗ','ㅜ','ㅣ','가','나','다','라'];
+const LC=[
+  'ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ',
+  'ㅏ','ㅑ','ㅓ','ㅕ','ㅗ','ㅛ','ㅜ','ㅠ','ㅡ','ㅣ'
+];
 function shuffleLC(){
   const el=document.getElementById('lc');
   if(el)el.innerHTML=Array.from({length:6},()=>`<span>${LC[Math.floor(Math.random()*LC.length)]}</span>`).join('');
@@ -486,20 +499,18 @@ function buildPickScreen(){
   document.getElementById('pick-btn').disabled=true;
 
   if(n===1){
-    // 단일 옵션: 크게 표시
     const opt=curOptions[0];
     container.style.flexDirection='column';
     container.style.justifyContent='center';
     container.innerHTML=`
       <div class="pick-single" onclick="selectCard(0)">
-        <p style="font-family:'Work Sans',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;">${opt.label} · ${opt.lang}</p>
-        <p style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:clamp(48px,13vw,72px);line-height:1;color:#1c1c18;margin-bottom:8px;">${opt.korean}</p>
-        <p style="font-family:'Work Sans',sans-serif;font-size:11px;color:rgba(118,120,114,.6);">${opt.note||''}</p>
+        <p style="font-family:'Work Sans',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;">${opt.nativeLabel||opt.lang}</p>
+        <p style="font-family:'Playfair Display',serif;font-size:clamp(40px,11vw,60px);font-weight:700;line-height:1;color:#1c1c18;margin-bottom:10px;">${opt.native||curName}</p>
+        <p style="font-family:'Work Sans',sans-serif;font-size:11px;color:rgba(118,120,114,.55);">${opt.note||''}</p>
       </div>`;
     selectedIdx=0;
     document.getElementById('pick-btn').disabled=false;
   } else {
-    // 다중 옵션: 그리드
     container.style.flexDirection='column';
     container.style.justifyContent='center';
     const grid=document.createElement('div');
@@ -510,8 +521,8 @@ function buildPickScreen(){
       card.className='pick-card';
       card.id=`pc-${i}`;
       card.innerHTML=`
-        <p class="pick-card-lang">${opt.label}</p>
-        <p class="pick-card-korean">${opt.korean}</p>
+        <p class="pick-card-lang">${opt.nativeLabel||opt.lang}</p>
+        <p class="pick-card-korean" style="font-family:'Playfair Display',serif;font-size:clamp(22px,6vw,30px);font-weight:700;line-height:1.1;color:#1c1c18;">${opt.native||curName}</p>
         <p class="pick-card-note">${opt.note||''}</p>`;
       card.onclick=()=>selectCard(i);
       grid.appendChild(card);

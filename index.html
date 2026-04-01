@@ -51,6 +51,11 @@ body{background:var(--cream);color:var(--navy);font-family:'Noto Serif KR',serif
   background:var(--cream);
   flex-direction:column;align-items:center;justify-content:center;
 }
+#anim-overlay > #anim-stage {
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+}
 
 #anim-stage{
   position:relative;
@@ -125,12 +130,18 @@ body{background:var(--cream);color:var(--navy);font-family:'Noto Serif KR',serif
   position:relative;min-height:520px;justify-content:space-between;
 }
 .stamp{
-  width:56px;height:56px;border:2.5px solid var(--red);
+  width:64px;height:64px;border:2px solid var(--red);
+  border-radius:4px;
   color:var(--red);display:flex;align-items:center;justify-content:center;
-  transform:rotate(-6deg);opacity:.85;mix-blend-mode:multiply;
-  position:absolute;bottom:24px;right:24px;
+  transform:rotate(-5deg);opacity:.82;mix-blend-mode:multiply;
+  position:absolute;bottom:24px;right:22px;
+  background:rgba(140,39,39,0.03);
 }
-.stamp-inner{border:1px solid var(--red);width:88%;height:88%;display:flex;align-items:center;justify-content:center;}
+.stamp-inner{
+  border:1px solid var(--red);width:86%;height:86%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1px;padding:4px 2px;
+}
 
 /* fade util */
 .fade-cert{opacity:0;transition:opacity 1s ease;}
@@ -201,8 +212,8 @@ body{background:var(--cream);color:var(--navy);font-family:'Noto Serif KR',serif
       <span onclick="setName('Lena')" style="font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--muted);border-bottom:1px dotted var(--muted);cursor:pointer;">Lena</span>
     </div>
   </div>
-  <div style="padding:16px 24px 40px;flex-shrink:0;">
-    <button class="btn-primary" onclick="startProcess()">Discover Meaning</button>
+  <div style="padding:16px 24px 40px;flex-shrink:0;width:100%;">
+    <button class="btn-primary" style="width:100%;" onclick="startProcess()">Discover Meaning</button>
   </div>
 </div>
 
@@ -235,15 +246,14 @@ body{background:var(--cream);color:var(--navy);font-family:'Noto Serif KR',serif
       <!-- 중앙 콘텐츠 -->
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1;padding:20px 0;">
         <!-- 영어 이름 (위) -->
-        <p id="co" style="font-family:'Cormorant Garamond',serif;font-size:20px;color:rgba(26,36,59,.45);font-style:italic;margin-bottom:14px;letter-spacing:2px;"></p>
+        <p id="co" style="font-family:'Cormorant Garamond',serif;font-size:28px;color:rgba(26,36,59,.5);font-style:italic;margin-bottom:16px;letter-spacing:3px;font-weight:400;"></p>
         <!-- 한글 이름 (중앙, 크게) -->
         <h1 id="ck" style="font-family:'Nanum Myeongjo',serif;font-size:80px;font-weight:700;color:var(--navy);line-height:1;margin-bottom:28px;letter-spacing:4px;"></h1>
-        <!-- 자모 분해 -->
-        <div id="cv" style="display:flex;gap:12px;align-items:center;justify-content:center;"></div>
+        <div id="cv" style="display:none;"></div>
       </div>
       <!-- 도장 -->
       <div class="stamp">
-        <div class="stamp-inner"><span id="cs" style="font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:20px;line-height:1.1;text-align:center;"></span></div>
+        <div class="stamp-inner" id="cs"></div>
       </div>
       <!-- 하단 라벨 -->
       <div style="position:absolute;bottom:20px;left:20px;text-align:left;">
@@ -431,32 +441,32 @@ function fillCertificate(orig,res){
   const yr=new Date().getFullYear();
   const syls=decompose(res.korean);
 
-  // 자모 분해: 자음(네이비) + 모음(골드)
-  const jamoHtml=syls.map((s,i)=>{
-    const isLast=i===syls.length-1;
-    const parts=[];
-    parts.push(`<span style="font-family:'Nanum Myeongjo',serif;font-size:28px;font-weight:700;color:#1A243B;">${s.onset}</span>`);
-    parts.push(`<span style="font-family:'Nanum Myeongjo',serif;font-size:28px;font-weight:700;color:#C09040;">${s.vowel}</span>`);
-    if(s.coda) parts.push(`<span style="font-family:'Nanum Myeongjo',serif;font-size:28px;font-weight:700;color:#1A243B;">${s.coda}</span>`);
-    return parts.join('<span style="color:rgba(26,36,59,.2);font-size:16px;margin:0 2px;"> </span>')+(isLast?'':`<span style="color:rgba(26,36,59,.15);font-size:20px;margin:0 6px;">·</span>`);
+  // 고유 모음만 표시 — 깔끔하고 교육적
+  const uv=uniqueVowels(res.korean);
+  const jamoHtml=uv.map((v,i)=>{
+    const isLast=i===uv.length-1;
+    return `<span style="font-family:'Nanum Myeongjo',serif;font-size:36px;font-weight:700;color:#C09040;letter-spacing:2px;">${v}</span>`
+      +(isLast?'':'<span style="color:rgba(192,144,64,.3);font-size:20px;margin:0 10px;">·</span>');
   }).join('');
-
   document.getElementById('cv').innerHTML=jamoHtml;
   document.getElementById('ck').textContent=res.korean;
   document.getElementById('co').textContent=orig;
   document.getElementById('cy').textContent=yr;
-  const st=res.korean.length>=2?res.korean[0]+'<br/>'+res.korean[1]:res.korean;
-  document.getElementById('cs').innerHTML=st;
+  // 도장: 최대 3글자, 한 자씩 세로 배열
+  const stampChars=[...res.korean].slice(0,3);
+  const stHtml=stampChars.map(c=>`<span style="font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:${stampChars.length===1?'22':stampChars.length===2?'18':'14'}px;line-height:1.15;color:var(--red);">${c}</span>`).join('');
+  document.getElementById('cs').innerHTML=stHtml;
 
   // 캡처카드 - 자모 텍스트 버전
-  const jamoText=syls.map(s=>s.onset+s.vowel+(s.coda||'')).join(' · ');
-  document.getElementById('xv').textContent=jamoText;
+  const uv2=uniqueVowels(res.korean);
+  document.getElementById('xv').textContent=uv2.join('  ·  ');
   document.getElementById('xk').textContent=res.korean;
   document.getElementById('xo').textContent=orig;
   document.getElementById('xmk').textContent='';
   document.getElementById('xme').textContent='';
   document.getElementById('xy').textContent=yr;
-  document.getElementById('xs').innerHTML=st;
+  const xStampChars=[...res.korean].slice(0,3);
+  document.getElementById('xs').innerHTML=xStampChars.map(c=>`<span style="font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:${xStampChars.length===1?'22':xStampChars.length===2?'18':'14'}px;line-height:1.15;color:#8C2727;">${c}</span>`).join('');
 }
 
 // ══════════════════════════════════════════════

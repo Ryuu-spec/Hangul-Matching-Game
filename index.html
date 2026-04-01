@@ -179,8 +179,8 @@ body{background:var(--cream);color:var(--navy);font-family:'Noto Serif KR',serif
     <label class="row"><input class="cr" name="lg" type="radio" value="포르투갈어"/> <span style="font-family:'Cormorant Garamond',serif;font-size:18px;margin-left:16px;">Portuguese</span></label>
     <label class="row" style="border-bottom:none;"><input class="cr" name="lg" type="radio" value="일본어"/> <span style="font-family:'Cormorant Garamond',serif;font-size:18px;margin-left:16px;">Japanese</span></label>
   </div>
-  <div style="padding:16px 24px 32px;flex-shrink:0;">
-    <button class="btn-gold" onclick="goName()">NEXT</button>
+  <div style="padding:16px 24px 32px;flex-shrink:0;width:100%;">
+    <button class="btn-gold" style="width:100%;height:56px;" onclick="goName()">NEXT</button>
   </div>
 </div>
 
@@ -233,7 +233,7 @@ body{background:var(--cream);color:var(--navy);font-family:'Noto Serif KR',serif
         <div style="width:36px;height:1px;background:var(--gold);margin:8px auto 0;opacity:.5;"></div>
       </div>
       <!-- 중앙 콘텐츠 -->
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1;padding:60px 0 40px;">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1;padding:20px 0;">
         <!-- 영어 이름 (위) -->
         <p id="co" style="font-family:'Cormorant Garamond',serif;font-size:20px;color:rgba(26,36,59,.45);font-style:italic;margin-bottom:14px;letter-spacing:2px;"></p>
         <!-- 한글 이름 (중앙, 크게) -->
@@ -264,9 +264,9 @@ body{background:var(--cream);color:var(--navy);font-family:'Noto Serif KR',serif
 </div>
 
 <!-- 캡처 카드 -->
-<div id="cap" style="position:fixed;top:-9999px;left:-9999px;width:390px;background:#F9F6F0;font-family:'Noto Serif KR',serif;">
-  <div style="padding:8px;">
-    <div style="border:1px solid #C8A97E;padding:40px 32px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;min-height:500px;justify-content:space-between;">
+<div id="cap" style="position:fixed;top:-9999px;left:-9999px;width:540px;height:540px;background:#F9F6F0;font-family:'Noto Serif KR',serif;display:flex;align-items:center;justify-content:center;">
+  <div style="padding:12px;width:480px;">
+    <div style="border:1px solid #C8A97E;padding:32px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;height:456px;justify-content:space-between;">
       <div><p style="font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:4px;color:rgba(26,36,59,.5);text-transform:uppercase;margin-bottom:8px;">Certificate of Name</p></div>
       <div style="display:flex;flex-direction:column;align-items:center;padding:20px 0;">
         <div id="xv" style="font-family:'Nanum Myeongjo',serif;font-size:22px;color:#C8A97E;letter-spacing:12px;margin-bottom:16px;"></div>
@@ -597,12 +597,12 @@ async function saveCard(){
   btn.textContent='저장 중…'; btn.disabled=true;
   try{
     const card=document.getElementById('cap');
-    card.style.cssText='position:absolute;top:0;left:0;width:390px;';
+    card.style.cssText='position:absolute;top:0;left:0;width:540px;height:540px;';
     await sleep(250);
-    const canvas=await html2canvas(card,{backgroundColor:'#F9F6F0',scale:2,useCORS:true});
-    card.style.cssText='position:fixed;top:-9999px;left:-9999px;width:390px;';
+    const canvas=await html2canvas(card,{backgroundColor:'#F9F6F0',scale:2,useCORS:true,width:540,height:540});
+    card.style.cssText='position:fixed;top:-9999px;left:-9999px;width:540px;height:540px;';
     const a=document.createElement('a');
-    a.download=`${curKor}-한글코드.png`;
+    a.download=`${curKor}-한글코드-1080x1080.png`;
     a.href=canvas.toDataURL('image/png');
     a.click();
   }catch{alert('저장 중 오류가 발생했습니다.');}

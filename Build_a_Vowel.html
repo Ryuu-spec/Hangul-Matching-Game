@@ -96,11 +96,11 @@ body {
    한글 결합 애니메이션
 ══════════════════════════════════════ */
 #anim-overlay {
-  position:absolute; inset:0;
+  position:fixed; inset:0;
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
-  background:#F9F6F0; z-index:20;
-  transition:opacity .8s ease;
+  background:#F9F6F0; z-index:200;
+  transition:opacity 1s ease;
 }
 
 #anim-stage {
@@ -314,7 +314,7 @@ body {
   </div>
 
   <!-- Certificate 카드 -->
-  <div id="certificate" class="relative w-full bg-brand-cream shadow-2xl p-2 flex flex-col mt-14 mb-4 overflow-hidden" style="min-height:580px;">
+  <div id="certificate" class="relative w-full bg-brand-cream shadow-2xl p-2 flex flex-col mt-14 mb-4" style="min-height:580px;">
 
     <!-- ① 한글 결합 애니메이션 오버레이 -->
     <div id="anim-overlay">
@@ -585,20 +585,20 @@ function setStatus(el, text) {
 
 async function animateOneSyllable(stage, syl) {
   // ① 초성 등장 (왼쪽에서)
-  const onsetEl = makeJamo(syl.onset, 'onset', '-110px', '0px');
+  const onsetEl = makeJamo(syl.onset, 'onset', '-140px', '0px');
   stage.appendChild(onsetEl);
-  await sleep(50);
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   onsetEl.style.opacity = '1';
   onsetEl.style.left = '-36px';
-  await sleep(1000);
+  await sleep(1100);
 
   // ② 중성 등장 (오른쪽에서)
-  const vowelEl = makeJamo(syl.vowel, 'vowel', '110px', '0px');
+  const vowelEl = makeJamo(syl.vowel, 'vowel', '140px', '0px');
   stage.appendChild(vowelEl);
-  await sleep(50);
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   vowelEl.style.opacity = '1';
   vowelEl.style.left = '36px';
-  await sleep(1000);
+  await sleep(1100);
 
   // ③ 서로 가운데로 당겨짐
   onsetEl.style.transition = 'all 0.8s cubic-bezier(0.34,1.1,0.64,1)';
@@ -694,11 +694,12 @@ function revealCertificate() {
   const content = document.getElementById('cert-content');
   const actions = document.getElementById('cert-actions');
   overlay.style.opacity = '0';
-  setTimeout(() => { overlay.style.display = 'none'; }, 800);
+  overlay.style.pointerEvents = 'none';
+  setTimeout(() => { overlay.style.display = 'none'; }, 1000);
   setTimeout(() => {
     content.style.opacity = '1';
     actions.style.opacity = '1';
-  }, 600);
+  }, 700);
 }
 
 // ── TTS ───────────────────────────────────────
@@ -736,6 +737,7 @@ function startOver(){
   // 애니메이션 오버레이 초기화
   const overlay=document.getElementById('anim-overlay');
   overlay.style.opacity='1'; overlay.style.display='flex';
+  overlay.style.pointerEvents='auto';
   document.getElementById('cert-content').style.opacity='0';
   document.getElementById('cert-actions').style.opacity='0';
   document.getElementById('anim-final-name').className='';

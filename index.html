@@ -163,27 +163,6 @@ body{
   padding:80px;
   font-family:'Noto Serif KR',serif;
 }
-
-/* ── 낙하 자모 배경 ── */
-#jamo-rain {
-  position:absolute;inset:0;overflow:hidden;
-  pointer-events:none;z-index:0;
-}
-.rain-char {
-  position:absolute;
-  font-family:'Noto Serif KR',serif;
-  font-weight:900;
-  color:rgba(28,28,24,0.07);
-  animation:fall linear infinite;
-  user-select:none;
-  line-height:1;
-}
-@keyframes fall {
-  0%   { transform:translateY(-120px) rotate(var(--rot)); opacity:0; }
-  8%   { opacity:1; }
-  90%  { opacity:1; }
-  100% { transform:translateY(110%) rotate(var(--rot)); opacity:0; }
-}
 </style>
 </head>
 <body>
@@ -271,6 +250,21 @@ body{
 
 <!-- ════ 5. 애니메이션 화면 (Stitch Museum - Mobile) ════ -->
 <div id="pg-anim" class="pg">
+  <!-- 고정 배경 자모 -->
+  <div style="position:absolute;inset:0;pointer-events:none;z-index:0;">
+  <div style="position:absolute;left:8%;top:5%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:7rem;color:rgba(28,28,24,0.055);transform:rotate(6deg);pointer-events:none;line-height:1;user-select:none;">ㄹ</div>
+<div style="position:absolute;left:12%;top:18%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:5rem;color:rgba(28,28,24,0.04);transform:rotate(-4deg);pointer-events:none;line-height:1;user-select:none;">ㄱ</div>
+<div style="position:absolute;left:25%;top:8%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:4rem;color:rgba(28,28,24,0.05);transform:rotate(8deg);pointer-events:none;line-height:1;user-select:none;">ㅅ</div>
+<div style="position:absolute;left:80%;top:6%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:6rem;color:rgba(28,28,24,0.045);transform:rotate(-6deg);pointer-events:none;line-height:1;user-select:none;">ㄴ</div>
+<div style="position:absolute;left:88%;top:22%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:4.5rem;color:rgba(28,28,24,0.04);transform:rotate(5deg);pointer-events:none;line-height:1;user-select:none;">ㅎ</div>
+<div style="position:absolute;left:72%;top:40%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:3.5rem;color:rgba(28,28,24,0.035);transform:rotate(-8deg);pointer-events:none;line-height:1;user-select:none;">ㅗ</div>
+<div style="position:absolute;left:5%;top:48%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:5.5rem;color:rgba(28,28,24,0.04);transform:rotate(3deg);pointer-events:none;line-height:1;user-select:none;">ㅁ</div>
+<div style="position:absolute;left:90%;top:58%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:6rem;color:rgba(28,28,24,0.05);transform:rotate(2deg);pointer-events:none;line-height:1;user-select:none;">ㅣ</div>
+<div style="position:absolute;left:18%;top:72%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:4rem;color:rgba(28,28,24,0.04);transform:rotate(-5deg);pointer-events:none;line-height:1;user-select:none;">ㅈ</div>
+<div style="position:absolute;left:60%;top:75%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:4.5rem;color:rgba(28,28,24,0.045);transform:rotate(7deg);pointer-events:none;line-height:1;user-select:none;">ㅡ</div>
+<div style="position:absolute;left:40%;top:85%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:3.5rem;color:rgba(28,28,24,0.035);transform:rotate(-3deg);pointer-events:none;line-height:1;user-select:none;">ㅂ</div>
+<div style="position:absolute;left:78%;top:82%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:5rem;color:rgba(28,28,24,0.04);transform:rotate(4deg);pointer-events:none;line-height:1;user-select:none;">ㅊ</div>
+  </div>
   <!-- 상단 레이블 -->
   <div style="padding:48px 24px 0;flex-shrink:0;z-index:2;position:relative;">
     <span style="font-family:'Work Sans',sans-serif;font-size:9px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;">Archive No. 042</span>
@@ -439,8 +433,6 @@ async function startProcess(){
   if(!name) return;
   curName=name;
   show('pg-load');
-  initRain(); // 로딩 시작하면 바로 비 시작
-
   const msgs=['Extracting vowels...','Applying loanword rules...','Assembling identity...'];
   let mi=0;
   const ct=setInterval(shuffleLC,160);
@@ -587,7 +579,6 @@ async function saveCard(){
 
 // ── 처음으로 ──────────────────────────
 function startOver(){
-  clearRain();
   curKor=''; curName='';
   document.getElementById('nf').value='';
   resetAnimElements();
@@ -596,34 +587,7 @@ function startOver(){
 
 
 // ── 낙하 자모 배경 생성 ─────────────────
-const RAIN_CHARS = ['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ','ㄲ','ㄸ','ㅃ','ㅆ','ㅏ','ㅓ','ㅗ','ㅜ','ㅣ','ㅡ','ㅐ','ㅔ','ㅕ','ㅛ','ㅠ'];
-function initRain() {
-  const container = document.getElementById('jamo-rain');
-  if (!container) return;
-  container.style.display = 'block';
-  container.innerHTML = '';
-  const count = 28;
-  for (let i = 0; i < count; i++) {
-    const el = document.createElement('div');
-    el.className = 'rain-char';
-    const size = 24 + Math.random() * 56; // 24~80px
-    const left = Math.random() * 100;
-    const delay = -Math.random() * 18;
-    const duration = 9 + Math.random() * 14;
-    const rot = (Math.random() - 0.5) * 20;
-    const opacity = 0.04 + Math.random() * 0.08;
-    el.textContent = RAIN_CHARS[Math.floor(Math.random() * RAIN_CHARS.length)];
-    el.style.cssText = `
-      font-size:${size}px;
-      left:${left}%;
-      animation-duration:${duration}s;
-      animation-delay:${delay}s;
-      --rot:${rot}deg;
-      color:rgba(28,28,24,${opacity});
-    `;
-    container.appendChild(el);
-  }
-}
+
 
 // Enter
 document.getElementById('nf').addEventListener('keydown',e=>{if(e.key==='Enter')startProcess();});
@@ -631,8 +595,6 @@ document.getElementById('nf').addEventListener('keydown',e=>{if(e.key==='Enter')
 // sEl 버그 방지
 var sEl=null;
 </script>
-<!-- 전역 자모 비 — 모든 pg 위에 -->
-<div id="jamo-rain" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:50;display:none;"></div>
 </div><!-- /app-shell -->
 </body>
 </html>

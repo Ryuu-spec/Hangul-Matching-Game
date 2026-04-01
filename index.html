@@ -398,9 +398,9 @@ async function startProcess(){
     ov.style.display='flex';
     ov.style.opacity='1';
 
-    await sleep(300);
+    await sleep(100);
     await runAnimation(decompose(res.korean), res.korean);
-    await sleep(600);
+    await sleep(300);
 
     // 애니메이션 닫기
     ov.style.transition='opacity .8s ease';
@@ -460,7 +460,7 @@ async function runAnimation(syllables, fullName){
   for(let i=0;i<syllables.length;i++){
     await animSyllable(stage, statusEl, syllables[i]);
     stage.innerHTML='';
-    await sleep(350);
+    await sleep(200);
   }
 
   // 완성 이름 등장
@@ -470,7 +470,7 @@ async function runAnimation(syllables, fullName){
   nameEl.classList.add('on');
   await sleep(500);
   nameEl.classList.add('glow');
-  await sleep(2000);
+  await sleep(1400);
   nameEl.className='';
 }
 
@@ -487,7 +487,7 @@ async function animSyllable(stage, statusEl, syl){
   oEl.style.transform='translate(calc(-50% - 140px), -50%)';
   stage.appendChild(oEl);
   await raf2();
-  oEl.style.transition='transform 1.4s cubic-bezier(.34,1.1,.64,1), opacity .8s ease';
+  oEl.style.transition='transform 1.0s cubic-bezier(.34,1.1,.64,1), opacity .6s ease';
   oEl.style.transform='translate(calc(-50% - 44px), -50%)';
   oEl.style.opacity='1';
   await sleep(1400);
@@ -497,7 +497,7 @@ async function animSyllable(stage, statusEl, syl){
   vEl.style.transform='translate(calc(-50% + 140px), -50%)';
   stage.appendChild(vEl);
   await raf2();
-  vEl.style.transition='transform 1.4s cubic-bezier(.34,1.1,.64,1), opacity .8s ease';
+  vEl.style.transition='transform 1.0s cubic-bezier(.34,1.1,.64,1), opacity .6s ease';
   vEl.style.transform='translate(calc(-50% + 44px), -50%)';
   vEl.style.opacity='1';
 
@@ -508,11 +508,11 @@ async function animSyllable(stage, statusEl, syl){
     cEl.style.transform='translate(-50%, calc(-50% - 120px))';
     stage.appendChild(cEl);
     await raf2();
-    cEl.style.transition='transform 1.4s cubic-bezier(.34,1.1,.64,1), opacity .8s ease';
+    cEl.style.transition='transform 1.0s cubic-bezier(.34,1.1,.64,1), opacity .6s ease';
     cEl.style.transform='translate(-50%, calc(-50% + 66px))';
     cEl.style.opacity='1';
   }
-  await sleep(1500);
+  await sleep(1100);
 
   // ④ 중앙으로 당겨짐
   const sT='transform .9s cubic-bezier(.34,1.1,.64,1), opacity .5s ease';
@@ -520,7 +520,7 @@ async function animSyllable(stage, statusEl, syl){
   oEl.style.transform='translate(-50%, -50%)'; oEl.style.opacity='0.12';
   vEl.style.transform='translate(-50%, -50%)'; vEl.style.opacity='0.12';
   if(cEl){ cEl.style.transition=sT; cEl.style.transform='translate(-50%, -50%)'; cEl.style.opacity='0.12'; }
-  await sleep(900);
+  await sleep(700);
 
   // ⑤ 플래시 + 파티클 + 완성 음절
   addFlash(stage); addParticles(stage);
@@ -534,7 +534,7 @@ async function animSyllable(stage, statusEl, syl){
   rEl.style.transition='transform .7s cubic-bezier(.34,1.56,.64,1), opacity .4s ease';
   rEl.style.transform='translate(-50%, -50%) scale(1)';
   rEl.style.opacity='1';
-  await sleep(1000);
+  await sleep(700);
 }
 
 function mkJm(char, cls){

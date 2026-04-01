@@ -723,12 +723,20 @@ async function saveCard(){
       ctx.stroke();
     });
 
-    // ③ 이름 텍스트
+    // ③-a 영어 이름 (한글 위에 작게)
+    const engSize=Math.round(fontSize*0.2);
+    ctx.fillStyle='rgba(18,18,17,0.38)';
+    ctx.font=`italic 400 ${engSize}px "Cormorant Garamond", serif`;
+    ctx.textAlign='center';
+    ctx.textBaseline='bottom';
+    const nameY=W*0.44;
+    ctx.fillText(curName, W/2, nameY-fontSize*0.52);
+
+    // ③-b 한글 이름
     ctx.fillStyle='#121211';
     ctx.font=`700 ${fontSize}px "Noto Serif KR", serif`;
     ctx.textAlign='center';
     ctx.textBaseline='middle';
-    const nameY=W*0.44;
     ctx.fillText(curKor, W/2, nameY);
 
     // ④ 도장 — 이름 오른쪽 하단에 정확히 배치
@@ -736,7 +744,7 @@ async function saveCard(){
     const nameRight=W/2+tm.width/2;
     const ss=Math.round(fontSize*0.20);
     const sealX=nameRight+8;
-    const sealY=nameY+fontSize*0.28;
+    const sealY=nameY+fontSize*0.35;
     ctx.save();
     ctx.translate(sealX+ss/2, sealY-ss/2);
     ctx.rotate(2*Math.PI/180);

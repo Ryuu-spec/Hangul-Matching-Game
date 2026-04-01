@@ -4,20 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>너의 이름의 한글 코드</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,300&family=Noto+Serif+KR:wght@300;400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;0,600;0,700;1,400&family=Noto+Serif+KR:wght@300;400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root {
-  --bg: #07091A;
-  --surface: rgba(255,255,255,0.04);
-  --border: rgba(255,255,255,0.09);
-  --gold: #E8C547;
-  --gold-dim: rgba(232,197,71,0.18);
-  --gold-glow: 0 0 18px rgba(232,197,71,0.55), 0 0 40px rgba(232,197,71,0.2);
-  --silver: #8FA3C0;
-  --white: #F0EDE8;
-  --muted: #4A5A72;
-  --teal: #4FC3C8;
+  --bg: #FAF7F2;
+  --bg2: #F2EDE4;
+  --surface: #FFFFFF;
+  --border: #E2D9CC;
+  --navy: #0D1B2A;
+  --navy2: #2B3E52;
+  --gold: #B8860B;
+  --gold-light: #F5E6B8;
+  --gold-glow: 0 0 14px rgba(184,134,11,0.25);
+  --muted: #8A7E72;
+  --teal: #2A7A8A;
+  --red: #C0392B;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,59 +27,65 @@
 body {
   font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
   background: var(--bg);
-  color: var(--white);
+  color: var(--navy);
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
 }
 
-/* ── 배경 부유 한글 ── */
-.bg-floaters {
-  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+/* ── 배경 패턴 ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(184,134,11,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(42,122,138,0.05) 0%, transparent 50%);
+  pointer-events: none;
 }
+
+/* 부유 한글 */
+.bg-floaters { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
 .floater {
   position: absolute;
   font-family: 'Noto Serif KR', serif;
   font-weight: 900;
-  color: rgba(232,197,71,0.04);
+  color: rgba(184,134,11,0.06);
   user-select: none;
   animation: floatUp linear infinite;
 }
 @keyframes floatUp {
-  0%   { transform: translateY(110vh) rotate(-10deg); opacity: 0; }
+  0%   { transform: translateY(110vh) rotate(-8deg); opacity: 0; }
   10%  { opacity: 1; }
   90%  { opacity: 1; }
-  100% { transform: translateY(-10vh) rotate(10deg); opacity: 0; }
+  100% { transform: translateY(-10vh) rotate(8deg); opacity: 0; }
 }
 
 /* ── 레이아웃 ── */
-.page { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+.page {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 48px 20px;
+}
 
 /* ── 헤더 ── */
-.header { text-align: center; margin-bottom: 48px; }
+.header { text-align: center; margin-bottom: 44px; }
 .kicker {
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 4px;
-  color: var(--gold);
-  text-transform: uppercase;
+  font-size: 10px; letter-spacing: 4px;
+  color: var(--gold); text-transform: uppercase;
   margin-bottom: 16px;
-  opacity: 0.8;
 }
 .title {
-  font-size: clamp(28px, 6vw, 52px);
-  font-weight: 300;
-  letter-spacing: -0.5px;
-  line-height: 1.2;
-  color: var(--white);
+  font-size: clamp(30px, 6vw, 54px);
+  font-weight: 300; letter-spacing: -0.5px; line-height: 1.15;
+  color: var(--navy);
 }
 .title em { font-style: italic; color: var(--gold); }
 .subtitle {
   margin-top: 14px;
-  font-size: 15px;
-  font-weight: 300;
-  color: var(--silver);
-  line-height: 1.7;
+  font-size: 16px; font-weight: 300; color: var(--muted); line-height: 1.7;
 }
 
 /* ── 입력 카드 ── */
@@ -86,221 +94,209 @@ body {
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 40px;
-  width: 100%;
-  max-width: 520px;
-  backdrop-filter: blur(12px);
+  width: 100%; max-width: 520px;
+  box-shadow: 0 4px 32px rgba(13,27,42,0.07), 0 1px 4px rgba(13,27,42,0.04);
 }
 
 /* ── 언어 선택 ── */
-.lang-label { font-size: 11px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; font-family: 'DM Mono', monospace; }
+.lang-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3px;
+  color: var(--muted); text-transform: uppercase; margin-bottom: 12px;
+}
 .lang-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
 .lang-btn {
-  background: transparent;
-  border: 1px solid var(--border);
+  background: var(--bg);
+  border: 1.5px solid var(--border);
   border-radius: 8px;
-  color: var(--silver);
+  color: var(--navy2);
   font-family: 'Cormorant Garamond', serif;
-  font-size: 14px;
-  padding: 7px 14px;
-  cursor: pointer;
-  transition: all .2s;
-  display: flex; align-items: center; gap: 6px;
+  font-size: 14px; padding: 7px 13px;
+  cursor: pointer; transition: all .2s;
 }
-.lang-btn:hover { border-color: var(--gold); color: var(--gold); }
-.lang-btn.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+.lang-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-light); }
+.lang-btn.active { background: var(--gold-light); border-color: var(--gold); color: var(--gold); font-weight: 600; }
 
-/* ── 이름 입력 ── */
-.input-wrap { position: relative; margin-bottom: 20px; }
+/* ── 입력 ── */
 .name-input {
   width: 100%;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border);
+  background: var(--bg);
+  border: 1.5px solid var(--border);
   border-radius: 12px;
-  color: var(--white);
+  color: var(--navy);
   font-family: 'Cormorant Garamond', serif;
-  font-size: 22px;
-  font-weight: 300;
-  padding: 16px 20px;
+  font-size: 22px; font-weight: 400;
+  padding: 15px 20px;
   outline: none;
   transition: border-color .2s, box-shadow .2s;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  margin-bottom: 14px;
 }
-.name-input::placeholder { color: var(--muted); }
-.name-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(232,197,71,0.1); }
+.name-input::placeholder { color: #BDB3A8; }
+.name-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,134,11,0.1); }
 
 .submit-btn {
   width: 100%;
-  background: var(--gold);
-  border: none;
-  border-radius: 12px;
-  color: #07091A;
+  background: var(--navy);
+  border: none; border-radius: 12px;
+  color: #FFFFFF;
   font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
-  font-weight: 600;
-  padding: 16px;
-  cursor: pointer;
-  transition: all .2s;
-  letter-spacing: 0.5px;
+  font-size: 18px; font-weight: 600;
+  padding: 15px; cursor: pointer;
+  transition: all .2s; letter-spacing: 0.5px;
 }
-.submit-btn:hover { background: #F5D060; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(232,197,71,0.25); }
-.submit-btn:active { transform: translateY(0); }
+.submit-btn:hover { background: var(--navy2); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(13,27,42,0.18); }
 
 .examples { margin-top: 16px; text-align: center; font-size: 13px; color: var(--muted); }
-.examples span { cursor: pointer; color: var(--silver); border-bottom: 1px dotted var(--muted); margin: 0 6px; transition: color .2s; }
+.examples span {
+  cursor: pointer; color: var(--navy2);
+  border-bottom: 1px dotted var(--border); margin: 0 5px;
+  transition: color .2s;
+}
 .examples span:hover { color: var(--gold); }
 
 /* ── 로딩 ── */
 #loading-screen { display: none; text-align: center; }
 .loader-ring {
-  width: 56px; height: 56px;
-  border: 2px solid var(--border);
+  width: 52px; height: 52px;
+  border: 2.5px solid var(--border);
   border-top-color: var(--gold);
   border-radius: 50%;
   animation: spin .9s linear infinite;
   margin: 0 auto 24px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 15px; color: var(--silver); font-weight: 300; letter-spacing: 1px; }
+.loading-text { font-size: 16px; color: var(--muted); font-weight: 300; letter-spacing: 0.5px; }
 
 /* ── 결과 화면 ── */
 #result-screen { display: none; width: 100%; max-width: 560px; }
 
-/* Step 1 — 모음 코드 */
 .step-label {
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 4px;
-  color: var(--muted);
-  text-transform: uppercase;
-  text-align: center;
-  margin-bottom: 10px;
+  font-size: 10px; letter-spacing: 4px;
+  color: var(--muted); text-transform: uppercase;
+  text-align: center; margin-bottom: 10px;
 }
-.step-title { text-align: center; font-size: 20px; font-weight: 300; color: var(--silver); margin-bottom: 32px; line-height: 1.5; }
-.step-title strong { color: var(--white); font-weight: 600; }
+.step-title {
+  text-align: center; font-size: 19px; font-weight: 300;
+  color: var(--navy2); margin-bottom: 32px; line-height: 1.6;
+}
+.step-title strong { color: var(--navy); font-weight: 700; }
 
+/* 모음 orb */
 .vowel-stage {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-  margin-bottom: 40px;
+  display: flex; justify-content: center;
+  align-items: center; gap: 18px;
+  flex-wrap: wrap; margin-bottom: 44px;
 }
 .vowel-orb {
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  background: var(--gold-dim);
-  border: 1.5px solid rgba(232,197,71,0.4);
+  width: 84px; height: 84px; border-radius: 50%;
+  background: var(--gold-light);
+  border: 2px solid var(--gold);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Noto Serif KR', serif;
-  font-size: 34px;
-  font-weight: 700;
+  font-size: 36px; font-weight: 900;
   color: var(--gold);
   box-shadow: var(--gold-glow);
-  opacity: 0;
-  transform: scale(0.6);
-  transition: opacity .5s, transform .5s;
+  opacity: 0; transform: scale(0.5);
+  transition: opacity .45s, transform .45s;
 }
-.vowel-orb.show { opacity: 1; transform: scale(1); animation: pulse-glow 2.5s ease-in-out infinite; }
-@keyframes pulse-glow {
+.vowel-orb.show {
+  opacity: 1; transform: scale(1);
+  animation: pulse-orb 2.8s ease-in-out infinite;
+}
+@keyframes pulse-orb {
   0%, 100% { box-shadow: var(--gold-glow); }
-  50% { box-shadow: 0 0 28px rgba(232,197,71,0.7), 0 0 60px rgba(232,197,71,0.3); }
+  50% { box-shadow: 0 0 22px rgba(184,134,11,0.35), 0 0 0 6px rgba(184,134,11,0.08); }
 }
 
-/* Step 2 — 한글 완성 */
+/* 한글 이름 */
 .divider { border: none; border-top: 1px solid var(--border); margin: 8px 0 40px; }
 
-.korean-name-wrap { text-align: center; margin-bottom: 28px; }
+.korean-name-wrap { text-align: center; margin-bottom: 16px; }
 .korean-name {
   font-family: 'Noto Serif KR', serif;
-  font-size: clamp(54px, 14vw, 96px);
-  font-weight: 900;
-  letter-spacing: 8px;
-  line-height: 1;
-  display: flex;
-  justify-content: center;
-  gap: 4px;
-  flex-wrap: wrap;
+  font-size: clamp(52px, 13vw, 90px);
+  font-weight: 900; letter-spacing: 6px; line-height: 1.1;
+  display: flex; justify-content: center; gap: 4px; flex-wrap: wrap;
 }
 .syllable {
-  position: relative;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity .5s, transform .5s;
+  opacity: 0; transform: translateY(18px);
+  transition: opacity .45s, transform .45s;
   display: inline-block;
 }
 .syllable.show { opacity: 1; transform: translateY(0); }
-.syllable.has-vowel { color: var(--gold); text-shadow: 0 0 30px rgba(232,197,71,0.5); }
-.syllable.no-vowel { color: var(--white); }
+.syllable.has-vowel { color: var(--gold); }
+.syllable.no-vowel { color: var(--navy); }
 
 .note-text {
-  text-align: center;
-  font-size: 14px;
-  color: var(--muted);
-  font-style: italic;
-  margin-bottom: 36px;
-  line-height: 1.6;
+  text-align: center; font-size: 14px;
+  color: var(--muted); font-style: italic;
+  margin-bottom: 36px; line-height: 1.7;
+  padding: 0 16px;
 }
 
-/* ── 액션 버튼 ── */
-.action-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+/* 액션 버튼 */
+.action-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
 .action-btn {
   display: flex; align-items: center; gap: 8px;
   border-radius: 10px;
   font-family: 'Cormorant Garamond', serif;
-  font-size: 15px;
-  padding: 12px 22px;
-  cursor: pointer;
-  transition: all .2s;
-  border: 1px solid var(--border);
+  font-size: 16px; padding: 11px 22px;
+  cursor: pointer; transition: all .2s;
 }
-.action-btn.primary { background: var(--gold); color: #07091A; border-color: var(--gold); font-weight: 600; }
-.action-btn.primary:hover { background: #F5D060; transform: translateY(-1px); }
-.action-btn.ghost { background: transparent; color: var(--silver); }
-.action-btn.ghost:hover { border-color: var(--silver); color: var(--white); }
-.retry-link { display: block; text-align: center; font-size: 13px; color: var(--muted); cursor: pointer; margin-top: 4px; }
+.action-btn.primary {
+  background: var(--navy); color: #FFF;
+  border: 1.5px solid var(--navy); font-weight: 600;
+}
+.action-btn.primary:hover { background: var(--navy2); transform: translateY(-1px); }
+.action-btn.ghost {
+  background: transparent; color: var(--navy2);
+  border: 1.5px solid var(--border);
+}
+.action-btn.ghost:hover { border-color: var(--navy2); background: var(--bg); }
+
+.retry-link {
+  display: block; text-align: center;
+  font-size: 13px; color: var(--muted);
+  cursor: pointer; margin-top: 4px;
+}
 .retry-link:hover { color: var(--gold); }
 
-/* ── 공유 카드 (off-screen 캡처용) ── */
+/* ── 공유 카드 (캡처 전용) ── */
 #share-card {
-  position: fixed;
-  top: -9999px; left: -9999px;
-  width: 540px;
-  background: #07091A;
-  padding: 56px 48px 48px;
-  border: 1px solid rgba(232,197,71,0.2);
+  position: fixed; top: -9999px; left: -9999px;
+  width: 520px;
+  background: #FAF7F2;
+  padding: 52px 48px 44px;
+  border: 2px solid rgba(184,134,11,0.3);
   border-radius: 24px;
   font-family: 'Noto Serif KR', serif;
-  display: flex; flex-direction: column; align-items: center; gap: 0;
+  display: flex; flex-direction: column; align-items: center;
 }
-.sc-kicker { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 4px; color: rgba(232,197,71,0.6); text-transform: uppercase; margin-bottom: 32px; }
+.sc-kicker { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 4px; color: var(--muted); text-transform: uppercase; margin-bottom: 32px; }
 .sc-vowels { display: flex; gap: 14px; margin-bottom: 36px; }
 .sc-orb {
-  width: 64px; height: 64px; border-radius: 50%;
-  background: rgba(232,197,71,0.12);
-  border: 1px solid rgba(232,197,71,0.5);
+  width: 60px; height: 60px; border-radius: 50%;
+  background: var(--gold-light); border: 2px solid var(--gold);
   display: flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 700; color: #E8C547;
+  font-size: 26px; font-weight: 900; color: var(--gold);
 }
-.sc-name { font-size: 80px; font-weight: 900; color: #E8C547; letter-spacing: 8px; margin-bottom: 8px; line-height: 1; }
-.sc-original { font-size: 20px; color: #8FA3C0; font-family: 'Cormorant Garamond', serif; font-weight: 300; letter-spacing: 2px; margin-bottom: 40px; }
-.sc-brand { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,0.2); text-transform: uppercase; }
-
-/* ── 유틸 ── */
-.hidden { display: none !important; }
+.sc-name { font-size: 76px; font-weight: 900; color: var(--gold); letter-spacing: 8px; margin-bottom: 10px; line-height: 1; }
+.sc-original { font-size: 20px; color: var(--muted); font-family: 'Cormorant Garamond', serif; font-weight: 300; letter-spacing: 2px; margin-bottom: 40px; }
+.sc-brand { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; color: #C8BFB5; text-transform: uppercase; }
 </style>
 </head>
 <body>
 
-<!-- 배경 부유 한글 -->
 <div class="bg-floaters" id="bgFloaters"></div>
 
 <div class="page">
 
-  <!-- ① 입력 화면 -->
+  <!-- ① 입력 -->
   <div id="input-screen">
     <div class="header">
-      <div class="kicker">Korean Vowel Code</div>
+      <div class="kicker">Korean Vowel Code · HelloEdu</div>
       <h1 class="title">너의 이름의<br><em>한글 코드</em></h1>
       <p class="subtitle">이름을 입력하면, 그 안에 숨은<br>한글 모음의 비밀을 알려드립니다.</p>
     </div>
@@ -318,9 +314,7 @@ body {
         <button class="lang-btn" data-lang="일본어">🇯🇵 일본어</button>
       </div>
 
-      <div class="input-wrap">
-        <input type="text" id="nameInput" class="name-input" placeholder="이름을 입력하세요 (예: Ryan)" maxlength="30" autocomplete="off" />
-      </div>
+      <input type="text" id="nameInput" class="name-input" placeholder="이름을 입력하세요 (예: Ryan)" maxlength="30" autocomplete="off" />
       <button class="submit-btn" id="submitBtn">한글 코드 해독하기 ✦</button>
 
       <div class="examples">
@@ -341,7 +335,6 @@ body {
 
   <!-- ③ 결과 -->
   <div id="result-screen">
-    <!-- Step 1: 모음 코드 -->
     <div id="step1">
       <div class="step-label">Step 1 · 모음 코드 발견</div>
       <div class="step-title" id="step1Title"></div>
@@ -350,7 +343,6 @@ body {
 
     <hr class="divider">
 
-    <!-- Step 2: 한글 완성 -->
     <div id="step2">
       <div class="step-label">Step 2 · 이름 완성</div>
       <div class="step-title">당신의 이름이 한글로 탄생했습니다</div>
@@ -367,9 +359,9 @@ body {
     </div>
   </div>
 
-</div><!-- .page -->
+</div>
 
-<!-- 공유 카드 (캡처 전용) -->
+<!-- 공유 카드 -->
 <div id="share-card">
   <div class="sc-kicker">Korean Vowel Code · HelloEdu</div>
   <div class="sc-vowels" id="scVowels"></div>
@@ -379,24 +371,19 @@ body {
 </div>
 
 <script>
-// ─── 배경 부유 글자 생성 ───────────────────────────────
+// 배경 부유 글자
 const FLOATER_CHARS = ['ㅏ','ㅓ','ㅗ','ㅜ','ㅣ','ㅐ','ㅕ','ㅛ','ㅠ','ㅡ','ㅔ','ㅑ'];
-const container = document.getElementById('bgFloaters');
-for (let i = 0; i < 18; i++) {
+const bgEl = document.getElementById('bgFloaters');
+for (let i = 0; i < 16; i++) {
   const el = document.createElement('div');
   el.className = 'floater';
   el.textContent = FLOATER_CHARS[i % FLOATER_CHARS.length];
-  const size = 40 + Math.random() * 80;
-  el.style.cssText = `
-    font-size:${size}px;
-    left:${Math.random()*100}%;
-    animation-duration:${12+Math.random()*18}s;
-    animation-delay:-${Math.random()*20}s;
-  `;
-  container.appendChild(el);
+  const size = 50 + Math.random() * 90;
+  el.style.cssText = `font-size:${size}px;left:${Math.random()*100}%;animation-duration:${14+Math.random()*16}s;animation-delay:-${Math.random()*22}s;`;
+  bgEl.appendChild(el);
 }
 
-// ─── 언어 선택 ─────────────────────────────────────────
+// 언어 선택
 let selectedLang = '영어';
 document.getElementById('langGrid').addEventListener('click', e => {
   const btn = e.target.closest('.lang-btn');
@@ -406,228 +393,155 @@ document.getElementById('langGrid').addEventListener('click', e => {
   selectedLang = btn.dataset.lang;
 });
 
-// ─── 예시 채우기 ───────────────────────────────────────
 function fillExample(name) {
   document.getElementById('nameInput').value = name;
   document.getElementById('nameInput').focus();
 }
 
-// ─── 한글 음절 분해 ────────────────────────────────────
+// 모음 추출
 const VOWEL_LIST = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
 
-function decomposeSyllable(char) {
-  const code = char.charCodeAt(0);
-  if (code < 0xAC00 || code > 0xD7A3) return { vowel: null };
-  const offset = code - 0xAC00;
-  const vowelIdx = Math.floor(offset / 28) % 21;
-  return { vowel: VOWEL_LIST[vowelIdx] };
-}
-
-function extractVowelsFromKorean(korean) {
-  // 공백 제거 후 음절 처리
-  const result = [];
-  const vowelsSeen = new Set();
-  const uniqueVowels = [];
-
+function extractVowels(korean) {
+  const syllables = [], seen = new Set(), unique = [];
   for (const char of korean) {
-    const { vowel } = decomposeSyllable(char);
-    result.push({ char, vowel });
-    if (vowel && !vowelsSeen.has(vowel)) {
-      vowelsSeen.add(vowel);
-      uniqueVowels.push(vowel);
+    const code = char.charCodeAt(0);
+    if (code >= 0xAC00 && code <= 0xD7A3) {
+      const vowel = VOWEL_LIST[Math.floor((code - 0xAC00) / 28) % 21];
+      syllables.push({ char, vowel });
+      if (!seen.has(vowel)) { seen.add(vowel); unique.push(vowel); }
+    } else {
+      syllables.push({ char, vowel: null });
     }
   }
-  return { syllables: result, uniqueVowels };
+  return { syllables, unique };
 }
 
-// ─── Gemini 호출 ───────────────────────────────────────
-const GEMINI_ENDPOINT = 'https://hangul-vowel.vercel.app/api/gemini';
-
+// Gemini 호출
+const ENDPOINT = 'https://hangul-vowel.vercel.app/api/gemini';
 const LANG_RULES = {
-  '영어': '영미권 발음 기준. p/t/k는 모음 앞에서 ㅍ/ㅌ/ㅋ, 어말/자음 앞에서 ㅂ·프/ㅅ·트/ㄱ·크. r은 모음과 결합 시 표기, 어말에서는 생략 또는 처리. 이미 굳어진 표기(Michael→마이클, Ryan→라이언) 우선.',
-  '프랑스어': '[ə]→으, [œ]→외, [ø]→외, 어말 자음 묵음 처리, [j]→이 (모음 결합 시 합쳐서 1음절)',
-  '독일어': '[ε]→에, [ø]→외, 어말 -er→어, [x]→ㅎ, [ts]→츠, ü→위',
-  '스페인어': 'll→이, rr→르, ñ→니, 어말 -n→ㄴ, h 묵음, v→ㅂ',
-  '이탈리아어': '-zione→치오네, -gli→리, -gn→ㄴ, sc+i/e→시, [ts]→츠',
-  '러시아어': '키릴 문자 기준. Александр→알렉산드르 방식. й→이, ы→이, ъ·ь 묵음',
-  '포르투갈어': '[ã]→앙, [õ]→옹, lh→리, nh→니, -ção→상',
-  '일본어': '헵번식 로마자 기준. 장모음 처리(aa→아, ii→이), つ→쓰, ふ→후, じ→지'
+  '영어': '영미권 발음 기준. p/t/k는 모음 앞 ㅍ/ㅌ/ㅋ, 어말/자음 앞 ㅂ·프/ㅅ·트/ㄱ·크. 이미 굳어진 표기 우선(Michael→마이클, Ryan→라이언, Sophie→소피).',
+  '프랑스어': '[ə]→으, [œ]→외, 어말 자음 묵음 처리, [j]→이(모음 결합 시 1음절). Sophie(소피), Pierre(피에르).',
+  '독일어': '[ε]→에, [ø]→외, 어말 -er→어, ü→위, [ts]→츠. Wolfgang→볼프강.',
+  '스페인어': 'll→이, rr→르, ñ→니, 어말 -n→ㄴ, h 묵음, v→ㅂ. Sofia→소피아.',
+  '이탈리아어': '-zione→치오네, -gli→리, sc+i/e→시, [ts]→츠. Marco→마르코.',
+  '러시아어': '키릴 기준. й→이, ы→이, ъ·ь 묵음. Александр→알렉산드르.',
+  '포르투갈어': '[ã]→앙, [õ]→옹, lh→리, nh→니, -ção→상. João→주앙.',
+  '일본어': '헵번식 로마자 기준. 장모음 처리, つ→쓰, ふ→후. Haruto→하루토.'
 };
 
 async function convertName(name, lang) {
-  const rules = LANG_RULES[lang] || '';
   const prompt = `당신은 국립국어원 외래어 표기법 전문가입니다.
-"${name}"을(를) ${lang} 이름으로 보고, 국립국어원 외래어 표기법에 따라 한글로 정확히 변환하세요.
+"${name}"을(를) ${lang} 이름으로 보고, 국립국어원 외래어 표기법에 따라 한글로 변환하세요.
+${lang} 규칙: ${LANG_RULES[lang] || ''}
+반드시 아래 JSON만 응답 (마크다운 없이):
+{"korean":"한글 표기","note":"표기 근거 한 문장 (한국어)"}`;
 
-${lang} 표기 핵심 규칙: ${rules}
-
-반드시 아래 JSON만 응답하세요 (마크다운 없이, 다른 텍스트 없이):
-{
-  "korean": "한글 표기 결과",
-  "note": "표기 근거를 한 문장으로 (한국어로)"
-}`;
-
-  const res = await fetch(GEMINI_ENDPOINT, {
+  const res = await fetch(ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt })
   });
-  if (!res.ok) throw new Error('API 호출 실패');
+  if (!res.ok) throw new Error('API 오류');
   const data = await res.json();
-  const text = data.text || '';
-  // JSON 파싱 (마크다운 펜스 제거)
-  const clean = text.replace(/```json|```/g, '').trim();
+  const clean = (data.text || '').replace(/```json|```/g, '').trim();
   return JSON.parse(clean);
 }
 
-// ─── 메인 흐름 ─────────────────────────────────────────
-let currentKorean = '';
-let currentName = '';
-let currentVowels = [];
+// 메인
+let currentKorean = '', currentName = '';
 
-document.getElementById('submitBtn').addEventListener('click', runConversion);
-document.getElementById('nameInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') runConversion();
-});
+document.getElementById('submitBtn').addEventListener('click', run);
+document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
 
-async function runConversion() {
+async function run() {
   const name = document.getElementById('nameInput').value.trim();
-  if (!name) {
-    document.getElementById('nameInput').focus();
-    return;
-  }
+  if (!name) { document.getElementById('nameInput').focus(); return; }
   currentName = name;
 
-  // 로딩
-  show('loading-screen');
-  hide('input-screen');
-  hide('result-screen');
+  show('loading-screen'); hide('input-screen'); hide('result-screen');
 
-  const msgs = [
-    '한글 코드를 분석하는 중…',
-    `${selectedLang} 외래어 표기법 적용 중…`,
-    '모음을 찾는 중…'
-  ];
+  const msgs = ['한글 코드를 분석하는 중…', `${selectedLang} 표기법 적용 중…`, '모음을 찾는 중…'];
   let mi = 0;
-  const msgTimer = setInterval(() => {
-    document.getElementById('loadingText').textContent = msgs[++mi % msgs.length];
-  }, 1200);
+  const t = setInterval(() => { document.getElementById('loadingText').textContent = msgs[++mi % msgs.length]; }, 1200);
 
   try {
     const result = await convertName(name, selectedLang);
-    clearInterval(msgTimer);
+    clearInterval(t);
     currentKorean = result.korean;
 
-    const { syllables, uniqueVowels } = extractVowelsFromKorean(currentKorean);
-    currentVowels = uniqueVowels;
-
-    renderResult(name, currentKorean, syllables, uniqueVowels, result.note);
-    hide('loading-screen');
-    show('result-screen');
-    animateReveal(syllables, uniqueVowels);
+    const { syllables, unique } = extractVowels(currentKorean);
+    renderResult(name, currentKorean, syllables, unique, result.note);
+    hide('loading-screen'); show('result-screen');
+    animateReveal(syllables, unique);
   } catch (err) {
-    clearInterval(msgTimer);
-    hide('loading-screen');
-    show('input-screen');
-    alert('변환 중 오류가 발생했습니다. 다시 시도해주세요.\n' + err.message);
+    clearInterval(t);
+    hide('loading-screen'); show('input-screen');
+    alert('변환 중 오류가 발생했습니다.\n' + err.message);
   }
 }
 
-function renderResult(original, korean, syllables, uniqueVowels, note) {
-  // Step 1
+function renderResult(original, korean, syllables, unique, note) {
   document.getElementById('step1Title').innerHTML =
-    `<strong>${original}</strong>, 당신의 이름 속에는<br>${uniqueVowels.map(v=>`<strong>${v}</strong>`).join(' · ')} 가 숨어있어요`;
+    `<strong>${original}</strong>, 당신의 이름 속에<br>${unique.map(v=>`<strong>${v}</strong>`).join(' · ')} 가 숨어있어요`;
 
-  const vowelStage = document.getElementById('vowelStage');
-  vowelStage.innerHTML = uniqueVowels.map(v =>
-    `<div class="vowel-orb" data-vowel="${v}">${v}</div>`
-  ).join('');
+  document.getElementById('vowelStage').innerHTML =
+    unique.map(v => `<div class="vowel-orb" data-v="${v}">${v}</div>`).join('');
 
-  // Step 2
-  const nameDisplay = document.getElementById('koreanNameDisplay');
-  nameDisplay.innerHTML = syllables.map(({ char, vowel }) =>
-    `<span class="syllable ${vowel ? 'has-vowel' : 'no-vowel'}">${char}</span>`
-  ).join('');
+  document.getElementById('koreanNameDisplay').innerHTML =
+    syllables.map(({ char, vowel }) =>
+      `<span class="syllable ${vowel ? 'has-vowel' : 'no-vowel'}">${char}</span>`
+    ).join('');
 
   document.getElementById('noteText').textContent = note || '';
 
-  // 공유카드 준비
-  document.getElementById('scVowels').innerHTML = uniqueVowels.map(v =>
-    `<div class="sc-orb">${v}</div>`
-  ).join('');
+  document.getElementById('scVowels').innerHTML = unique.map(v => `<div class="sc-orb">${v}</div>`).join('');
   document.getElementById('scName').textContent = korean;
   document.getElementById('scOriginal').textContent = original;
 }
 
-function animateReveal(syllables, uniqueVowels) {
-  // 모음 orb 순차 등장
-  const orbs = document.querySelectorAll('.vowel-orb');
-  orbs.forEach((orb, i) => {
-    setTimeout(() => orb.classList.add('show'), i * 300 + 200);
+function animateReveal(syllables, unique) {
+  document.querySelectorAll('.vowel-orb').forEach((o, i) => {
+    setTimeout(() => o.classList.add('show'), i * 280 + 150);
   });
-
-  // 음절 순차 등장
-  const spans = document.querySelectorAll('.syllable');
-  spans.forEach((span, i) => {
-    setTimeout(() => span.classList.add('show'), uniqueVowels.length * 300 + i * 180 + 600);
+  document.querySelectorAll('.syllable').forEach((s, i) => {
+    setTimeout(() => s.classList.add('show'), unique.length * 280 + i * 160 + 500);
   });
 }
 
-// ─── TTS ───────────────────────────────────────────────
+// TTS
 document.getElementById('ttsBtn').addEventListener('click', () => {
   if (!currentKorean) return;
-  const utter = new SpeechSynthesisUtterance(currentKorean);
-  utter.lang = 'ko-KR';
-  utter.rate = 0.85;
+  const u = new SpeechSynthesisUtterance(currentKorean);
+  u.lang = 'ko-KR'; u.rate = 0.85;
   window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utter);
+  window.speechSynthesis.speak(u);
 });
 
-// ─── 카드 저장 ─────────────────────────────────────────
+// 카드 저장
 document.getElementById('shareBtn').addEventListener('click', async () => {
   const btn = document.getElementById('shareBtn');
-  btn.textContent = '📸 저장 중…';
-  btn.disabled = true;
+  btn.textContent = '저장 중…'; btn.disabled = true;
   try {
     const card = document.getElementById('share-card');
-    card.style.top = '0';
-    card.style.left = '0';
-    card.style.position = 'absolute';
-
-    await new Promise(r => setTimeout(r, 300));
-    const canvas = await html2canvas(card, {
-      backgroundColor: '#07091A',
-      scale: 2,
-      useCORS: true
-    });
-
-    card.style.top = '-9999px';
-    card.style.left = '-9999px';
-    card.style.position = 'fixed';
-
-    const link = document.createElement('a');
-    link.download = `${currentKorean}-한글코드.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  } catch (e) {
-    alert('저장 중 오류가 발생했습니다.');
-  }
-  btn.textContent = '📸 카드 저장';
-  btn.disabled = false;
+    card.style.cssText = 'position:absolute;top:0;left:0;';
+    await new Promise(r => setTimeout(r, 200));
+    const canvas = await html2canvas(card, { backgroundColor: '#FAF7F2', scale: 2, useCORS: true });
+    card.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
+    const a = document.createElement('a');
+    a.download = `${currentKorean}-한글코드.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  } catch { alert('저장 중 오류가 발생했습니다.'); }
+  btn.textContent = '📸 카드 저장'; btn.disabled = false;
 });
 
-// ─── 리셋 ──────────────────────────────────────────────
 function resetAll() {
-  hide('result-screen');
-  show('input-screen');
+  hide('result-screen'); show('input-screen');
   document.getElementById('nameInput').value = '';
   document.getElementById('nameInput').focus();
-  document.querySelectorAll('.vowel-orb').forEach(o => o.classList.remove('show'));
-  document.querySelectorAll('.syllable').forEach(s => s.classList.remove('show'));
   currentKorean = '';
 }
 
-// ─── 유틸 ──────────────────────────────────────────────
 function show(id) { document.getElementById(id).style.display = ''; }
 function hide(id) { document.getElementById(id).style.display = 'none'; }
 </script>

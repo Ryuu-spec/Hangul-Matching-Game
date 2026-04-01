@@ -463,8 +463,10 @@ async function runAnimation(syllables, fullName){
     await sleep(200);
   }
 
-  // 완성 이름 등장
+  // 완성 이름 등장 — stage 숨기고 중앙에
   setStatus(statusEl,'');
+  stage.style.opacity='0';
+  await sleep(200);
   nameEl.textContent=fullName;
   await raf2();
   nameEl.classList.add('on');
@@ -472,6 +474,7 @@ async function runAnimation(syllables, fullName){
   nameEl.classList.add('glow');
   await sleep(1400);
   nameEl.className='';
+  stage.style.opacity='1';
 }
 
 function setStatus(el,txt){

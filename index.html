@@ -14,10 +14,26 @@
   --primary:#f1b055; --muted:#767872; --gold:#C8A97E;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--cream);color:#1c1c18;font-family:'Noto Serif KR',serif;min-height:100dvh;overflow:hidden;}
+html,body{height:100%;background:#e8e4dc;} /* 바깥 배경 */
+body{
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Noto Serif KR',serif;
+  overflow:hidden;
+}
+/* 모바일 앱 컨테이너 */
+#app-shell {
+  position:relative;
+  width:100%;
+  max-width:430px;
+  height:100dvh;
+  max-height:932px;
+  background:var(--cream);
+  overflow:hidden;
+  box-shadow:0 0 60px rgba(0,0,0,0.15);
+}
 
 /* ── 화면 ── */
-.pg{display:none;position:fixed;inset:0;flex-direction:column;}
+.pg{display:none;position:absolute;inset:0;flex-direction:column;}
 .pg.on{display:flex;}
 
 /* ── 라디오 ── */
@@ -103,7 +119,7 @@ body{background:var(--cream);color:#1c1c18;font-family:'Noto Serif KR',serif;min
 /* 플래시 */
 @keyframes flash{0%{opacity:.7;}100%{opacity:0;}}
 #anim-flash{
-  position:fixed;inset:0;background:#fff;
+  position:absolute;inset:0;background:#fff;
   opacity:0;pointer-events:none;z-index:100;
 }
 #anim-flash.on{animation:flash .5s ease-out forwards;}
@@ -166,12 +182,13 @@ body{background:var(--cream);color:#1c1c18;font-family:'Noto Serif KR',serif;min
   0%   { transform:translateY(-120px) rotate(var(--rot)); opacity:0; }
   8%   { opacity:1; }
   90%  { opacity:1; }
-  100% { transform:translateY(110vh) rotate(var(--rot)); opacity:0; }
+  100% { transform:translateY(110%) rotate(var(--rot)); opacity:0; }
 }
 </style>
 </head>
 <body>
 
+<div id="app-shell">
 <!-- ════ 플래시 오버레이 ════ -->
 <div id="anim-flash"></div>
 
@@ -610,5 +627,6 @@ document.getElementById('nf').addEventListener('keydown',e=>{if(e.key==='Enter')
 // sEl 버그 방지
 var sEl=null;
 </script>
+</div><!-- /app-shell -->
 </body>
 </html>

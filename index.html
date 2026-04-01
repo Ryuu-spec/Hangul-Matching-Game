@@ -169,7 +169,7 @@ body{background:var(--cream);color:var(--navy);font-family:'Noto Serif KR',serif
   <div style="padding:0 24px 24px;flex-shrink:0;">
     <h1 style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--navy);">Where is your name from?</h1>
   </div>
-  <div style="flex:1;overflow-y:auto;padding:0 16px;min-height:0;">
+  <div style="flex:1;overflow-y:auto;padding:0 16px;min-height:0;width:100%;">
     <label class="row"><input class="cr" name="lg" type="radio" value="영어" checked/> <span style="font-family:'Cormorant Garamond',serif;font-size:18px;margin-left:16px;">English</span></label>
     <label class="row"><input class="cr" name="lg" type="radio" value="프랑스어"/> <span style="font-family:'Cormorant Garamond',serif;font-size:18px;margin-left:16px;">French</span></label>
     <label class="row"><input class="cr" name="lg" type="radio" value="독일어"/> <span style="font-family:'Cormorant Garamond',serif;font-size:18px;margin-left:16px;">German</span></label>
@@ -500,61 +500,41 @@ async function animSyllable(stage, statusEl, syl){
   vEl.style.transition='transform 1.4s cubic-bezier(.34,1.1,.64,1), opacity .8s ease';
   vEl.style.transform='translate(calc(-50% + 44px), -50%)';
   vEl.style.opacity='1';
-  await sleep(1400);
 
-  // ③ 중앙으로 당겨짐
+  // ③ 받침 있으면 동시에 위에서 내려옴
+  let cEl=null;
+  if(syl.coda){
+    cEl=mkJm(syl.coda,'jm jm-c');
+    cEl.style.transform='translate(-50%, calc(-50% - 120px))';
+    stage.appendChild(cEl);
+    await raf2();
+    cEl.style.transition='transform 1.4s cubic-bezier(.34,1.1,.64,1), opacity .8s ease';
+    cEl.style.transform='translate(-50%, calc(-50% + 66px))';
+    cEl.style.opacity='1';
+  }
+  await sleep(1500);
+
+  // ④ 중앙으로 당겨짐
   const sT='transform .9s cubic-bezier(.34,1.1,.64,1), opacity .5s ease';
   oEl.style.transition=sT; vEl.style.transition=sT;
-  oEl.style.transform='translate(-50%, -50%)'; oEl.style.opacity='0.15';
-  vEl.style.transform='translate(-50%, -50%)'; vEl.style.opacity='0.15';
-  await sleep(850);
+  oEl.style.transform='translate(-50%, -50%)'; oEl.style.opacity='0.12';
+  vEl.style.transform='translate(-50%, -50%)'; vEl.style.opacity='0.12';
+  if(cEl){ cEl.style.transition=sT; cEl.style.transform='translate(-50%, -50%)'; cEl.style.opacity='0.12'; }
+  await sleep(900);
 
-  // ④ 플래시 + 파티클
+  // ⑤ 플래시 + 파티클 + 완성 음절
   addFlash(stage); addParticles(stage);
-  oEl.remove(); vEl.remove();
+  oEl.remove(); vEl.remove(); if(cEl) cEl.remove();
   await sleep(80);
 
-  // ⑤ 결합 음절 (받침 있으면 받침 없는 버전 먼저)
-  const showChar = syl.coda ? syl.charNoCoda : syl.char;
-  const rEl=mkJm(showChar,'jm jm-r');
+  const rEl=mkJm(syl.char,'jm jm-r');
   rEl.style.transform='translate(-50%, -50%) scale(.25)';
   stage.appendChild(rEl);
   await raf2();
   rEl.style.transition='transform .7s cubic-bezier(.34,1.56,.64,1), opacity .4s ease';
   rEl.style.transform='translate(-50%, -50%) scale(1)';
   rEl.style.opacity='1';
-  await sleep(900);
-
-  // ⑥ 받침이 있으면 위에서 내려옴
-  if(syl.coda){
-    setStatus(statusEl, `+ ${syl.coda} ↓`);
-    const cEl=mkJm(syl.coda,'jm jm-c');
-    cEl.style.transform='translate(-50%, calc(-50% - 90px))';
-    stage.appendChild(cEl);
-    await raf2();
-    cEl.style.transition='transform 1.4s cubic-bezier(.34,1.1,.64,1), opacity .7s ease';
-    cEl.style.transform='translate(-50%, calc(-50% + 64px))';
-    cEl.style.opacity='1';
-    await sleep(1400);
-
-    // 받침 결합 → 완성 음절
-    cEl.style.opacity='0';
-    rEl.style.opacity='0';
-    await sleep(350);
-    cEl.remove(); rEl.remove();
-
-    const f2=mkJm(syl.char,'jm jm-r');
-    f2.style.transform='translate(-50%, -50%) scale(.25)';
-    stage.appendChild(f2);
-    await raf2();
-    f2.style.transition='transform .7s cubic-bezier(.34,1.56,.64,1), opacity .4s ease';
-    f2.style.transform='translate(-50%, -50%) scale(1)';
-    f2.style.opacity='1';
-    addFlash(stage);
-    await sleep(1000);
-  } else {
-    await sleep(700);
-  }
+  await sleep(1000);
 }
 
 function mkJm(char, cls){

@@ -91,11 +91,11 @@ body::before {
 /* ── 입력 카드 ── */
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1.5px solid #D0C5B5;
   border-radius: 20px;
   padding: 40px;
   width: 100%; max-width: 520px;
-  box-shadow: 0 4px 32px rgba(13,27,42,0.07), 0 1px 4px rgba(13,27,42,0.04);
+  box-shadow: 0 8px 40px rgba(13,27,42,0.13), 0 2px 8px rgba(13,27,42,0.07);
 }
 
 /* ── 언어 선택 ── */
@@ -542,7 +542,12 @@ function resetAll() {
   currentKorean = '';
 }
 
-function show(id) { document.getElementById(id).style.display = ''; }
+function show(id) {
+  const el = document.getElementById(id);
+  // flex 컨테이너는 flex, 나머지는 block
+  el.style.display = ['result-screen','loading-screen'].includes(id) ? 'flex' : 'block';
+  if (id === 'result-screen') el.style.flexDirection = 'column';
+}
 function hide(id) { document.getElementById(id).style.display = 'none'; }
 </script>
 </body>

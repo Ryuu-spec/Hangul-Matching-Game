@@ -260,6 +260,7 @@ body{
 
 <!-- ════ 4. 로딩 ════ -->
 <div id="pg-load" class="pg" style="align-items:center;justify-content:center;gap:28px;text-align:center;">
+  <div id="jamo-rain-load" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;"></div>
   <div style="position:relative;height:100px;display:flex;align-items:center;justify-content:center;width:100%;">
     <div class="lc" id="lc" style="font-family:'Noto Serif KR',serif;font-size:52px;font-weight:700;color:#1c1c18;letter-spacing:8px;">
       <span>ㅅ</span><span>ㅑ</span><span>ㄹ</span><span>ㄹ</span><span>ㅗ</span><span>ㅅ</span>
@@ -270,8 +271,6 @@ body{
 
 <!-- ════ 5. 애니메이션 화면 (Stitch Museum - Mobile) ════ -->
 <div id="pg-anim" class="pg">
-  <!-- 낙하 자모 배경 -->
-  <div id="jamo-rain"></div>
   <!-- 상단 레이블 -->
   <div style="padding:48px 24px 0;flex-shrink:0;z-index:2;position:relative;">
     <span style="font-family:'Work Sans',sans-serif;font-size:9px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;">Archive No. 042</span>
@@ -440,6 +439,7 @@ async function startProcess(){
   if(!name) return;
   curName=name;
   show('pg-load');
+  initRain(); // 로딩 시작하면 바로 비 시작
 
   const msgs=['Extracting vowels...','Applying loanword rules...','Assembling identity...'];
   let mi=0;
@@ -587,6 +587,7 @@ async function saveCard(){
 
 // ── 처음으로 ──────────────────────────
 function startOver(){
+  clearRain();
   curKor=''; curName='';
   document.getElementById('nf').value='';
   resetAnimElements();
@@ -599,6 +600,7 @@ const RAIN_CHARS = ['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ',
 function initRain() {
   const container = document.getElementById('jamo-rain');
   if (!container) return;
+  container.style.display = 'block';
   container.innerHTML = '';
   const count = 28;
   for (let i = 0; i < count; i++) {
@@ -629,6 +631,8 @@ document.getElementById('nf').addEventListener('keydown',e=>{if(e.key==='Enter')
 // sEl 버그 방지
 var sEl=null;
 </script>
+<!-- 전역 자모 비 — 모든 pg 위에 -->
+<div id="jamo-rain" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:50;display:none;"></div>
 </div><!-- /app-shell -->
 </body>
 </html>

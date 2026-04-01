@@ -314,18 +314,24 @@ body{display:flex;align-items:center;justify-content:center;font-family:'Noto Se
 
 <!-- ════ 캡처 카드 (1080×1080) ════ -->
 <div id="cap" style="position:fixed;top:-9999px;left:-9999px;width:1080px;height:1080px;background:#F9F6F0;font-family:'Noto Serif KR',serif;">
+  <!-- 코너 장식 -->
   <div style="position:absolute;top:48px;left:48px;width:24px;height:24px;border-top:1px solid rgba(200,169,126,.4);border-left:1px solid rgba(200,169,126,.4);"></div>
   <div style="position:absolute;top:48px;right:48px;width:24px;height:24px;border-top:1px solid rgba(200,169,126,.4);border-right:1px solid rgba(200,169,126,.4);"></div>
   <div style="position:absolute;bottom:48px;left:48px;width:24px;height:24px;border-bottom:1px solid rgba(200,169,126,.4);border-left:1px solid rgba(200,169,126,.4);"></div>
   <div style="position:absolute;bottom:48px;right:48px;width:24px;height:24px;border-bottom:1px solid rgba(200,169,126,.4);border-right:1px solid rgba(200,169,126,.4);"></div>
-  <div style="position:absolute;top:38%;left:50%;transform:translate(calc(-50% - 31px),-50%);display:inline-flex;align-items:flex-end;gap:10px;">
-    <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:180px;line-height:1.05;letter-spacing:-.03em;color:#121211;white-space:nowrap;"></div>
-    <div style="background:#A72B20;color:#F9F6F0;border-radius:4px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;transform:rotate(1deg);margin-bottom:14px;flex-shrink:0;">印</div>
+  <!-- 중앙 콘텐츠 블록 -->
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;width:900px;">
+    <!-- 이름 + 도장 -->
+    <div style="display:inline-flex;align-items:flex-end;gap:12px;margin-bottom:36px;">
+      <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:180px;line-height:1;letter-spacing:-.03em;color:#121211;white-space:nowrap;"></div>
+      <div style="background:#A72B20;color:#F9F6F0;border-radius:4px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;transform:rotate(1deg);margin-bottom:18px;flex-shrink:0;">印</div>
+    </div>
+    <!-- 구분선 -->
+    <div style="width:40px;height:1px;background:rgba(200,169,126,.5);margin:0 auto 28px;"></div>
+    <!-- 개인화 카피 -->
+    <div id="cap-poem" style="font-family:'Noto Serif KR',serif;font-size:30px;line-height:1.8;color:rgba(18,18,17,.45);letter-spacing:.04em;"></div>
   </div>
-  <div style="position:absolute;top:63%;left:50%;transform:translateX(-50%);width:80%;text-align:center;">
-    <div style="width:40px;height:1px;background:rgba(200,169,126,.5);margin:0 auto 20px;"></div>
-    <div id="cap-poem" style="font-family:'Noto Serif KR',serif;font-size:28px;line-height:1.8;color:rgba(18,18,17,.45);letter-spacing:.04em;"></div>
-  </div>
+  <!-- 하단 메타 -->
   <div style="position:absolute;bottom:72px;left:80px;right:80px;display:flex;justify-content:space-between;align-items:flex-end;">
     <div style="font-family:'Work Sans',sans-serif;font-size:20px;letter-spacing:.12em;color:rgba(18,18,17,.4);text-transform:uppercase;">SEOUL, KOREA / <span id="cap-yr"></span></div>
     <div style="font-family:'Work Sans',sans-serif;font-size:20px;letter-spacing:.1em;color:rgba(18,18,17,.25);text-transform:uppercase;">HelloEdu</div>
@@ -505,8 +511,7 @@ function buildPickScreen(){
     container.innerHTML=`
       <div class="pick-single" onclick="selectCard(0)">
         <p style="font-family:'Work Sans',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;">${opt.nativeLabel||opt.lang}</p>
-        <p style="font-family:'Playfair Display',serif;font-size:clamp(40px,11vw,60px);font-weight:700;line-height:1;color:#1c1c18;margin-bottom:10px;">${opt.native||curName}</p>
-        <p style="font-family:'Work Sans',sans-serif;font-size:11px;color:rgba(118,120,114,.55);">${opt.note||''}</p>
+        <p style="font-family:'Playfair Display',serif;font-size:clamp(40px,11vw,60px);font-weight:700;line-height:1;color:#1c1c18;">${opt.native||curName}</p>
       </div>`;
     selectedIdx=0;
     document.getElementById('pick-btn').disabled=false;
@@ -522,8 +527,7 @@ function buildPickScreen(){
       card.id=`pc-${i}`;
       card.innerHTML=`
         <p class="pick-card-lang">${opt.nativeLabel||opt.lang}</p>
-        <p class="pick-card-korean" style="font-family:'Playfair Display',serif;font-size:clamp(22px,6vw,30px);font-weight:700;line-height:1.1;color:#1c1c18;">${opt.native||curName}</p>
-        <p class="pick-card-note">${opt.note||''}</p>`;
+        <p class="pick-card-korean" style="font-family:'Playfair Display',serif;font-size:clamp(22px,6vw,30px);font-weight:700;line-height:1.1;color:#1c1c18;">${opt.native||curName}</p>`;
       card.onclick=()=>selectCard(i);
       grid.appendChild(card);
     });
@@ -551,20 +555,28 @@ async function confirmPick(){
   document.getElementById('result-name').style.fontSize=rSize;
   document.getElementById('cap-name').style.fontSize=(rLen<=2?180:rLen<=4?130:rLen<=6?100:80)+'px';
   document.getElementById('cap-name').textContent=curKor;
-  document.getElementById('result-lang-badge').textContent=`${opt.label} version`;
+  document.getElementById('result-lang-badge').textContent=(opt.nativeLabel||opt.lang||'')+ ' version';
   document.getElementById('result-poem').style.opacity='0';
   document.getElementById('result-poem').textContent='';
 
+  // ── 자모 깜박임 로딩 시작 ──
   show('pg-load');
   const msgs=['Assembling identity...','Reading the strokes...','Finding your essence...'];
   let mi=0;
   const ct=setInterval(shuffleLC,160);
   const mt=setInterval(()=>{const e=document.getElementById('lt');if(e)e.textContent=msgs[++mi%msgs.length];},900);
 
-  // 카피 생성 (병렬)
-  const poemPromise=callPoem(curName, curLang, curKor);
-
   try{
+    // poem 생성 완료될 때까지 자모 깜박임 유지
+    let poemRes;
+    try{
+      poemRes=await callPoem(curName, curLang, curKor);
+      curPoem=poemRes.poem||'';
+    }catch(pe){
+      console.warn('카피 생성 실패:',pe);
+      curPoem='';
+    }
+
     clearInterval(ct); clearInterval(mt);
     show('pg-anim');
     await sleep(200);
@@ -576,16 +588,14 @@ async function confirmPick(){
     show('pg-result');
     fl.classList.remove('on');
 
-    // 카피 페이드인
-    try{
-      const poemRes=await poemPromise;
-      curPoem=poemRes.poem||'';
-      await sleep(300);
+    // poem 표시
+    if(curPoem){
       const pEl=document.getElementById('result-poem');
       pEl.textContent=curPoem;
       document.getElementById('cap-poem').textContent=curPoem;
+      await sleep(300);
       pEl.style.opacity='1';
-    }catch(pe){console.warn('카피 생성 실패:',pe);}
+    }
 
   }catch(e){
     clearInterval(ct); clearInterval(mt);

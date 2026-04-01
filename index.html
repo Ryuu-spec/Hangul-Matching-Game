@@ -339,11 +339,11 @@ body{
 <!-- 캡처 카드 (1080×1080) -->
 <div id="cap" style="position:fixed;top:-9999px;left:-9999px;width:1080px;height:1080px;background:#F9F6F0;font-family:'Noto Serif KR',serif;">
   <!-- 이름 완전 중앙 -->
-  <!-- 이름: 수학적 중앙, 도장은 우하단 absolute -->
-  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
-    <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:180px;line-height:1.05;letter-spacing:-.03em;color:#121211;"></div>
+  <!-- 이름 + 도장 함께 중앙 -->
+  <div style="position:absolute;top:44%;left:50%;transform:translate(calc(-50% - 31px),-50%);display:inline-flex;align-items:flex-end;gap:10px;">
+    <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:180px;line-height:1.05;letter-spacing:-.03em;color:#121211;white-space:nowrap;"></div>
+    <div id="cap-seal" style="background:#A72B20;color:#F9F6F0;border-radius:4px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;transform:rotate(1deg);margin-bottom:14px;flex-shrink:0;">印</div>
   </div>
-  <div style="position:absolute;bottom:160px;right:80px;background:#A72B20;color:#F9F6F0;border-radius:4px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;transform:rotate(1deg);">印</div>
   <!-- 하단 메타 -->
   <div style="position:absolute;bottom:72px;left:80px;right:80px;display:flex;justify-content:space-between;align-items:flex-end;">
     <div style="font-family:'Work Sans',sans-serif;font-size:20px;letter-spacing:.12em;color:rgba(18,18,17,.4);text-transform:uppercase;">SEOUL, KOREA / <span id="cap-yr"></span></div>

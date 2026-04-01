@@ -57,7 +57,7 @@ body{background:var(--cream);color:#1c1c18;font-family:'Noto Serif KR',serif;min
 #anim-consonant{
   position:absolute;
   font-family:'Noto Serif KR',serif;font-weight:900;
-  font-size:11rem;line-height:1;color:#1c1c18;
+  font-size:clamp(72px,20vw,10rem);line-height:1;color:#1c1c18;
   opacity:0;
   transform:translateX(-120px);
   transition:transform 1.2s cubic-bezier(.34,1.1,.64,1), opacity .8s ease;
@@ -65,7 +65,7 @@ body{background:var(--cream);color:#1c1c18;font-family:'Noto Serif KR',serif;min
 #anim-vowel{
   position:absolute;
   font-family:'Noto Serif KR',serif;font-weight:200;
-  font-size:11rem;line-height:1;color:#e15545;
+  font-size:clamp(72px,20vw,10rem);line-height:1;color:#e15545;
   opacity:0;
   transform:translateX(120px);
   transition:transform 1.2s cubic-bezier(.34,1.1,.64,1), opacity .8s ease;
@@ -73,17 +73,17 @@ body{background:var(--cream);color:#1c1c18;font-family:'Noto Serif KR',serif;min
 #anim-coda{
   position:absolute;
   font-family:'Noto Serif KR',serif;font-weight:900;
-  font-size:7rem;line-height:1;color:#1c1c18;
+  font-size:clamp(48px,13vw,6rem);line-height:1;color:#1c1c18;
   opacity:0;
   transform:translateY(-90px);
   transition:transform 1.2s cubic-bezier(.34,1.1,.64,1), opacity .8s ease;
-  top:60%;
+  top:62%;
 }
 #anim-result{
   position:absolute;inset:0;
   display:flex;align-items:center;justify-content:center;
   font-family:'Noto Serif KR',serif;font-weight:900;
-  font-size:11rem;line-height:1;color:#1c1c18;
+  font-size:clamp(72px,20vw,10rem);line-height:1;color:#1c1c18;
   opacity:0;
   transform:scale(.6);
   transition:opacity .6s ease, transform .6s cubic-bezier(.34,1.56,.64,1);
@@ -230,44 +230,49 @@ body{background:var(--cream);color:#1c1c18;font-family:'Noto Serif KR',serif;min
   <p id="lt" style="font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:rgba(28,28,24,.5);letter-spacing:3px;">Extracting vowels...</p>
 </div>
 
-<!-- ════ 5. 애니메이션 화면 (Stitch Museum) ════ -->
+<!-- ════ 5. 애니메이션 화면 (Stitch Museum - Mobile) ════ -->
 <div id="pg-anim" class="pg">
-  <!-- 배경 텍스트 장식 -->
-  <div style="position:absolute;top:80px;left:24px;max-width:200px;z-index:1;">
-    <span style="font-family:'Work Sans',sans-serif;font-size:10px;letter-spacing:.2em;color:var(--muted);display:block;margin-bottom:8px;text-transform:uppercase;">Archive No. 042</span>
-    <p style="font-family:'Noto Serif KR',serif;font-size:14px;line-height:1.8;opacity:.6;">한글의 구조적 결합은<br/>정신의 조화를 상징합니다.</p>
+  <!-- 상단 레이블 -->
+  <div style="padding:48px 24px 0;flex-shrink:0;">
+    <span style="font-family:'Work Sans',sans-serif;font-size:9px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;">Archive No. 042</span>
   </div>
-  <!-- 우측 위도경도 -->
-  <div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:24px;align-items:center;z-index:1;">
-    <div style="writing-mode:vertical-rl;font-family:'Work Sans',sans-serif;font-size:9px;letter-spacing:.4em;color:rgba(118,120,114,.6);white-space:nowrap;">LATITUDE 37.5665° N</div>
-    <div style="width:1px;height:60px;background:rgba(28,28,24,.1);"></div>
-    <div style="writing-mode:vertical-rl;font-family:'Work Sans',sans-serif;font-size:9px;letter-spacing:.4em;color:rgba(118,120,114,.6);white-space:nowrap;">LONGITUDE 126.9780° E</div>
-  </div>
+
   <!-- 중앙 격자 스테이지 -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%;padding:80px 0 0;">
-    <div id="anim-grid" class="hangeul-grid" style="width:280px;height:280px;position:relative;display:flex;align-items:center;justify-content:center;border:.5px solid rgba(28,28,24,.08);">
-      <!-- 격자 십자선 -->
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%;padding:0 24px;">
+    <!-- 격자 박스 — 뷰포트 기준 반응형 -->
+    <div id="anim-grid" class="hangeul-grid" style="
+      width:min(72vw,300px);height:min(72vw,300px);
+      position:relative;display:flex;align-items:center;justify-content:center;
+      border:.5px solid rgba(28,28,24,.08);
+    ">
       <div style="position:absolute;top:50%;left:0;width:100%;height:.5px;background:rgba(28,28,24,.05);pointer-events:none;"></div>
       <div style="position:absolute;left:50%;top:0;width:.5px;height:100%;background:rgba(28,28,24,.05);pointer-events:none;"></div>
-      <!-- 자모 요소들 -->
       <div id="anim-consonant">ㅈ</div>
       <div id="anim-vowel">ㅣ</div>
       <div id="anim-coda">ㄴ</div>
       <div id="anim-result"></div>
     </div>
+
     <!-- 상태 바 -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:36px;">
-      <div id="anim-eq" class="anim-equation"></div>
-      <div style="width:40px;height:1px;background:rgba(225,85,69,.25);"></div>
-      <div class="anim-status">Assembling Identity</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:28px;">
+      <div id="anim-eq" class="anim-equation" style="font-size:clamp(16px,5vw,24px);"></div>
+      <div style="width:36px;height:1px;background:rgba(225,85,69,.25);"></div>
+      <div class="anim-status" style="font-size:9px;">Assembling Identity</div>
     </div>
+
+    <!-- 하단 문구 -->
+    <p style="font-family:'Noto Serif KR',serif;font-size:12px;line-height:1.9;color:rgba(28,28,24,.45);text-align:center;margin-top:24px;max-width:240px;">
+      한글의 구조적 결합은<br/>정신의 조화를 상징합니다.
+    </p>
   </div>
-  <!-- 하단 -->
-  <div style="padding:24px 24px 40px;width:100%;display:flex;justify-content:space-between;align-items:flex-end;">
+
+  <!-- 푸터 -->
+  <div style="padding:16px 24px 36px;width:100%;display:flex;justify-content:space-between;align-items:flex-end;flex-shrink:0;">
     <div>
-      <div style="font-family:'Noto Serif KR',serif;font-size:16px;font-weight:700;color:#1c1c18;letter-spacing:-.02em;">한글</div>
-      <div style="font-family:'Work Sans',sans-serif;font-size:10px;letter-spacing:.2em;color:rgba(28,28,24,.35);margin-top:4px;text-transform:uppercase;">SEOUL, KOREA / <span id="yr1"></span></div>
+      <div style="font-family:'Noto Serif KR',serif;font-size:14px;font-weight:700;color:#1c1c18;">한글</div>
+      <div style="font-family:'Work Sans',sans-serif;font-size:9px;letter-spacing:.2em;color:rgba(28,28,24,.3);margin-top:3px;text-transform:uppercase;">SEOUL, KOREA / <span id="yr1"></span></div>
     </div>
+    <div style="writing-mode:vertical-rl;font-family:'Work Sans',sans-serif;font-size:8px;letter-spacing:.3em;color:rgba(118,120,114,.4);white-space:nowrap;">37.5665° N · 126.9780° E</div>
   </div>
 </div>
 

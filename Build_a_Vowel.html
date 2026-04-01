@@ -236,13 +236,13 @@ body {
 </div>
 
 <!-- ══════════ 2. 언어 선택 ══════════ -->
-<div id="screen-lang" class="screen flex-col w-full max-w-md min-h-screen bg-brand-cream relative shadow-2xl overflow-hidden border-x border-[#E5E0D8] mx-auto">
+<div id="screen-lang" class="screen flex-col w-full max-w-md min-h-screen bg-brand-cream border-x border-[#E5E0D8] mx-auto">
   <header class="pt-12 px-6 pb-6 flex items-center shrink-0">
     <button onclick="goTo('screen-landing')" class="text-brand-navy p-2 -ml-2">
       <span class="material-symbols-outlined text-2xl">arrow_back</span>
     </button>
   </header>
-  <main class="flex-1 overflow-y-auto px-6 pb-32">
+  <main class="flex-1 px-6">
     <h1 class="font-serif-en text-[28px] font-semibold text-brand-navy leading-tight mb-8">Where is your name from?</h1>
     <form id="langForm" class="flex flex-col">
       <label class="list-item-label flex items-center h-16 border-b border-muted/30 cursor-pointer px-4"><input checked class="custom-radio mr-4" name="origin" type="radio" value="영어"/><span class="font-serif-en text-lg text-brand-navy mt-1">English</span></label>
@@ -252,11 +252,11 @@ body {
       <label class="list-item-label flex items-center h-16 border-b border-muted/30 cursor-pointer px-4"><input class="custom-radio mr-4" name="origin" type="radio" value="이탈리아어"/><span class="font-serif-en text-lg text-brand-navy mt-1">Italian</span></label>
       <label class="list-item-label flex items-center h-16 border-b border-muted/30 cursor-pointer px-4"><input class="custom-radio mr-4" name="origin" type="radio" value="러시아어"/><span class="font-serif-en text-lg text-brand-navy mt-1">Russian</span></label>
       <label class="list-item-label flex items-center h-16 border-b border-muted/30 cursor-pointer px-4"><input class="custom-radio mr-4" name="origin" type="radio" value="포르투갈어"/><span class="font-serif-en text-lg text-brand-navy mt-1">Portuguese</span></label>
-      <label class="list-item-label flex items-center h-16 border-b border-muted/30 cursor-pointer px-4"><input class="custom-radio mr-4" name="origin" type="radio" value="일본어"/><span class="font-serif-en text-lg text-brand-navy mt-1">Japanese</span></label>
+      <label class="list-item-label flex items-center h-16 border-muted/30 cursor-pointer px-4"><input class="custom-radio mr-4" name="origin" type="radio" value="일본어"/><span class="font-serif-en text-lg text-brand-navy mt-1">Japanese</span></label>
     </form>
   </main>
-  <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-brand-cream via-brand-cream to-transparent pt-12">
-    <button onclick="confirmLang()" class="w-full h-14 bg-primary text-white font-serif-en font-semibold text-base tracking-[2px] uppercase flex items-center justify-center hover:bg-[#e09f45] active:bg-[#c98e3c]">NEXT</button>
+  <div class="px-6 py-6 shrink-0">
+    <button onclick="confirmLang()" class="w-full h-14 bg-primary text-white font-serif-en font-semibold text-base tracking-[2px] uppercase flex items-center justify-center hover:bg-[#e09f45] active:bg-[#c98e3c] transition-colors">NEXT</button>
   </div>
 </div>
 

@@ -264,21 +264,6 @@ body{
 
 <!-- ════ 5. 애니메이션 화면 (Stitch Museum - Mobile) ════ -->
 <div id="pg-anim" class="pg">
-  <!-- 고정 배경 자모 -->
-  <div style="position:absolute;inset:0;pointer-events:none;z-index:0;">
-  <div style="position:absolute;left:8%;top:5%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:7rem;color:rgba(28,28,24,0.055);transform:rotate(6deg);pointer-events:none;line-height:1;user-select:none;">ㄹ</div>
-<div style="position:absolute;left:12%;top:18%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:5rem;color:rgba(28,28,24,0.04);transform:rotate(-4deg);pointer-events:none;line-height:1;user-select:none;">ㄱ</div>
-<div style="position:absolute;left:25%;top:8%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:4rem;color:rgba(28,28,24,0.05);transform:rotate(8deg);pointer-events:none;line-height:1;user-select:none;">ㅅ</div>
-<div style="position:absolute;left:80%;top:6%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:6rem;color:rgba(28,28,24,0.045);transform:rotate(-6deg);pointer-events:none;line-height:1;user-select:none;">ㄴ</div>
-<div style="position:absolute;left:88%;top:22%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:4.5rem;color:rgba(28,28,24,0.04);transform:rotate(5deg);pointer-events:none;line-height:1;user-select:none;">ㅎ</div>
-<div style="position:absolute;left:72%;top:40%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:3.5rem;color:rgba(28,28,24,0.035);transform:rotate(-8deg);pointer-events:none;line-height:1;user-select:none;">ㅗ</div>
-<div style="position:absolute;left:5%;top:48%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:5.5rem;color:rgba(28,28,24,0.04);transform:rotate(3deg);pointer-events:none;line-height:1;user-select:none;">ㅁ</div>
-<div style="position:absolute;left:90%;top:58%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:6rem;color:rgba(28,28,24,0.05);transform:rotate(2deg);pointer-events:none;line-height:1;user-select:none;">ㅣ</div>
-<div style="position:absolute;left:18%;top:72%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:4rem;color:rgba(28,28,24,0.04);transform:rotate(-5deg);pointer-events:none;line-height:1;user-select:none;">ㅈ</div>
-<div style="position:absolute;left:60%;top:75%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:4.5rem;color:rgba(28,28,24,0.045);transform:rotate(7deg);pointer-events:none;line-height:1;user-select:none;">ㅡ</div>
-<div style="position:absolute;left:40%;top:85%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:3.5rem;color:rgba(28,28,24,0.035);transform:rotate(-3deg);pointer-events:none;line-height:1;user-select:none;">ㅂ</div>
-<div style="position:absolute;left:78%;top:82%;font-family:'Noto Serif KR',serif;font-weight:900;font-size:5rem;color:rgba(28,28,24,0.04);transform:rotate(4deg);pointer-events:none;line-height:1;user-select:none;">ㅊ</div>
-  </div>
   <!-- 상단 레이블 -->
   <div style="padding:48px 24px 0;flex-shrink:0;z-index:2;position:relative;">
     <span style="font-family:'Work Sans',sans-serif;font-size:9px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;">Archive No. 042</span>
@@ -354,10 +339,11 @@ body{
 <!-- 캡처 카드 (1080×1080) -->
 <div id="cap" style="position:fixed;top:-9999px;left:-9999px;width:1080px;height:1080px;background:#F9F6F0;font-family:'Noto Serif KR',serif;">
   <!-- 이름 완전 중앙 -->
-  <div id="cap-name-wrap" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:flex-end;gap:14px;">
-    <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:180px;line-height:1.05;letter-spacing:-.03em;color:#121211;text-align:center;word-break:keep-all;"></div>
-    <div style="background:#A72B20;color:#F9F6F0;border-radius:4px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;transform:rotate(1deg);margin-bottom:14px;flex-shrink:0;align-self:flex-end;">印</div>
+  <!-- 이름: 수학적 중앙, 도장은 우하단 absolute -->
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+    <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:180px;line-height:1.05;letter-spacing:-.03em;color:#121211;"></div>
   </div>
+  <div style="position:absolute;bottom:160px;right:80px;background:#A72B20;color:#F9F6F0;border-radius:4px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;transform:rotate(1deg);">印</div>
   <!-- 하단 메타 -->
   <div style="position:absolute;bottom:72px;left:80px;right:80px;display:flex;justify-content:space-between;align-items:flex-end;">
     <div style="font-family:'Work Sans',sans-serif;font-size:20px;letter-spacing:.12em;color:rgba(18,18,17,.4);text-transform:uppercase;">SEOUL, KOREA / <span id="cap-yr"></span></div>

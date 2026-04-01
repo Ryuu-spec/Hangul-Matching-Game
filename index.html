@@ -291,7 +291,7 @@ body{display:flex;align-items:center;justify-content:center;font-family:'Noto Se
     <span class="material-symbols-outlined" style="font-size:22px;">arrow_back</span>
   </button>
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-    <p id="result-eng" style="font-family:'Cormorant Garamond',serif;font-size:21px;font-style:italic;color:rgba(18,18,17,.35);letter-spacing:.05em;margin-bottom:12px;"></p>
+    <p id="result-eng" style="font-family:'Playfair Display',serif;font-size:21px;font-style:italic;color:rgba(18,18,17,.35);letter-spacing:.05em;margin-bottom:12px;"></p>
     <div style="display:inline-flex;align-items:flex-end;position:relative;">
       <div id="result-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:clamp(72px,18vw,110px);line-height:1;letter-spacing:-.03em;color:#121211;"></div>
       <div class="heritage-seal">印</div>
@@ -728,7 +728,7 @@ async function saveCard(){
     // ③-a 영어 이름 (한글 위에 작게)
     const engSize=Math.round(fontSize*0.22);
     ctx.fillStyle='rgba(18,18,17,0.38)';
-    ctx.font=`italic 400 ${engSize}px "Cormorant Garamond", serif`;
+    ctx.font=`italic 400 ${engSize}px "Playfair Display", serif`;
     ctx.textAlign='center';
     ctx.textBaseline='bottom';
     const nameY=W*0.44;

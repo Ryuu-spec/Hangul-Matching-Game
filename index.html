@@ -102,20 +102,28 @@ body::before {
 .lang-label {
   font-family: 'DM Mono', monospace;
   font-size: 10px; letter-spacing: 3px;
-  color: var(--muted); text-transform: uppercase; margin-bottom: 12px;
+  color: var(--muted); text-transform: uppercase; margin-bottom: 10px;
 }
-.lang-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
-.lang-btn {
+.lang-select {
+  width: 100%;
   background: var(--bg);
   border: 1.5px solid var(--border);
-  border-radius: 8px;
-  color: var(--navy2);
+  border-radius: 10px;
+  color: var(--navy);
   font-family: 'Cormorant Garamond', serif;
-  font-size: 14px; padding: 7px 13px;
-  cursor: pointer; transition: all .2s;
+  font-size: 16px;
+  padding: 12px 16px;
+  margin-bottom: 22px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238A7E72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  transition: border-color .2s, box-shadow .2s;
 }
-.lang-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-light); }
-.lang-btn.active { background: var(--gold-light); border-color: var(--gold); color: var(--gold); font-weight: 600; }
+.lang-select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,134,11,0.1); }
 
 /* ── 입력 ── */
 .name-input {
@@ -217,8 +225,8 @@ body::before {
 .korean-name {
   font-family: 'Noto Serif KR', serif;
   font-size: clamp(52px, 13vw, 90px);
-  font-weight: 900; letter-spacing: 6px; line-height: 1.1;
-  display: flex; justify-content: center; gap: 4px; flex-wrap: wrap;
+  font-weight: 900; letter-spacing: 1px; line-height: 1.1;
+  display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
 }
 .syllable {
   opacity: 0; transform: translateY(18px);
@@ -303,16 +311,16 @@ body::before {
 
     <div class="card">
       <div class="lang-label">언어 선택</div>
-      <div class="lang-grid" id="langGrid">
-        <button class="lang-btn active" data-lang="영어">🇺🇸 영어</button>
-        <button class="lang-btn" data-lang="프랑스어">🇫🇷 프랑스어</button>
-        <button class="lang-btn" data-lang="독일어">🇩🇪 독일어</button>
-        <button class="lang-btn" data-lang="스페인어">🇪🇸 스페인어</button>
-        <button class="lang-btn" data-lang="이탈리아어">🇮🇹 이탈리아어</button>
-        <button class="lang-btn" data-lang="러시아어">🇷🇺 러시아어</button>
-        <button class="lang-btn" data-lang="포르투갈어">🇧🇷 포르투갈어</button>
-        <button class="lang-btn" data-lang="일본어">🇯🇵 일본어</button>
-      </div>
+      <select class="lang-select" id="langSelect">
+        <option value="영어">🇺🇸 영어 (English)</option>
+        <option value="프랑스어">🇫🇷 프랑스어 (French)</option>
+        <option value="독일어">🇩🇪 독일어 (German)</option>
+        <option value="스페인어">🇪🇸 스페인어 (Spanish)</option>
+        <option value="이탈리아어">🇮🇹 이탈리아어 (Italian)</option>
+        <option value="러시아어">🇷🇺 러시아어 (Russian)</option>
+        <option value="포르투갈어">🇧🇷 포르투갈어 (Portuguese)</option>
+        <option value="일본어">🇯🇵 일본어 (Japanese)</option>
+      </select>
 
       <input type="text" id="nameInput" class="name-input" placeholder="이름을 입력하세요 (예: Ryan)" maxlength="30" autocomplete="off" />
       <button class="submit-btn" id="submitBtn">한글 코드 해독하기 ✦</button>
@@ -385,12 +393,8 @@ for (let i = 0; i < 16; i++) {
 
 // 언어 선택
 let selectedLang = '영어';
-document.getElementById('langGrid').addEventListener('click', e => {
-  const btn = e.target.closest('.lang-btn');
-  if (!btn) return;
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  selectedLang = btn.dataset.lang;
+document.getElementById('langSelect').addEventListener('change', e => {
+  selectedLang = e.target.value;
 });
 
 function fillExample(name) {

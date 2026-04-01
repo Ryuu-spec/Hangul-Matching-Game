@@ -51,11 +51,7 @@ body{background:var(--cream);color:var(--navy);font-family:'Noto Serif KR',serif
   background:var(--cream);
   flex-direction:column;align-items:center;justify-content:center;
 }
-#anim-overlay > #anim-stage {
-  position:absolute;
-  top:50%; left:50%;
-  transform:translate(-50%,-50%);
-}
+
 
 #anim-stage{
   position:relative;
@@ -487,18 +483,31 @@ async function runAnimation(syllables, fullName){
     await sleep(200);
   }
 
-  // 완성 이름 등장 — stage 숨기고 중앙에
+  // stage 완전히 숨기기
   setStatus(statusEl,'');
+  stage.style.transition='opacity .4s ease';
   stage.style.opacity='0';
-  await sleep(200);
+  await sleep(450);
+  stage.style.display='none';
+
+  // 완성 이름 중앙 등장
   nameEl.textContent=fullName;
+  nameEl.style.display='block';
+  nameEl.style.opacity='0';
+  nameEl.style.transform='scale(.6)';
   await raf2();
-  nameEl.classList.add('on');
-  await sleep(500);
+  nameEl.style.transition='opacity .7s ease, transform .7s cubic-bezier(.34,1.56,.64,1)';
+  nameEl.style.opacity='1';
+  nameEl.style.transform='scale(1)';
+  await sleep(600);
   nameEl.classList.add('glow');
   await sleep(1400);
-  nameEl.className='';
+  // 정리
+  nameEl.style.transition='';
+  nameEl.classList.remove('glow');
+  stage.style.display='';
   stage.style.opacity='1';
+  stage.style.transition='';
 }
 
 function setStatus(el,txt){
@@ -627,8 +636,12 @@ function startOver(){
   document.getElementById('anim-overlay').style.display='none';
   document.getElementById('anim-overlay').style.opacity='1';
   document.getElementById('anim-overlay').style.transition='';
-  document.getElementById('anim-name').className='';
-  document.getElementById('anim-name').textContent='';
+  const an=document.getElementById('anim-name');
+  an.className=''; an.textContent='';
+  an.style.display='none'; an.style.opacity='0';
+  an.style.transform='scale(.6)'; an.style.transition='';
+  document.getElementById('anim-stage').style.display='';
+  document.getElementById('anim-stage').style.opacity='1';
   document.getElementById('anim-stage').innerHTML='';
   show('pg-land');
 }

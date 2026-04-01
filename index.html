@@ -338,20 +338,16 @@ body{
 </div>
 
 <!-- 캡처 카드 (1080×1080) -->
-<div id="cap" style="position:fixed;top:-9999px;left:-9999px;width:1080px;height:1080px;background:#F9F6F0;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:80px;font-family:'Noto Serif KR',serif;">
-  <!-- 상단 여백 -->
-  <div></div>
-  <!-- 중앙 이름 -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;">
-    <div style="display:inline-flex;align-items:flex-end;gap:12px;">
-      <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:clamp(120px,18vw,200px);line-height:1;letter-spacing:-.03em;color:#121211;text-align:center;"></div>
-      <div style="background:#A72B20;color:#F9F6F0;border-radius:4px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:500;transform:rotate(1deg);margin-bottom:12px;flex-shrink:0;">印</div>
-    </div>
+<div id="cap" style="position:fixed;top:-9999px;left:-9999px;width:1080px;height:1080px;background:#F9F6F0;font-family:'Noto Serif KR',serif;">
+  <!-- 이름 완전 중앙 -->
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:flex-end;gap:14px;white-space:nowrap;">
+    <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:180px;line-height:1;letter-spacing:-.03em;color:#121211;"></div>
+    <div style="background:#A72B20;color:#F9F6F0;border-radius:4px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;transform:rotate(1deg);margin-bottom:14px;flex-shrink:0;">印</div>
   </div>
   <!-- 하단 메타 -->
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;width:100%;">
-    <div style="font-family:'Work Sans',sans-serif;font-size:18px;letter-spacing:.12em;color:rgba(18,18,17,.4);text-transform:uppercase;">SEOUL, KOREA / <span id="cap-yr"></span></div>
-    <div style="font-family:'Work Sans',sans-serif;font-size:18px;letter-spacing:.1em;color:rgba(18,18,17,.25);text-transform:uppercase;">HelloEdu</div>
+  <div style="position:absolute;bottom:72px;left:80px;right:80px;display:flex;justify-content:space-between;align-items:flex-end;">
+    <div style="font-family:'Work Sans',sans-serif;font-size:20px;letter-spacing:.12em;color:rgba(18,18,17,.4);text-transform:uppercase;">SEOUL, KOREA / <span id="cap-yr"></span></div>
+    <div style="font-family:'Work Sans',sans-serif;font-size:20px;letter-spacing:.1em;color:rgba(18,18,17,.25);text-transform:uppercase;">HelloEdu</div>
   </div>
 </div>
 
@@ -449,7 +445,6 @@ async function startProcess(){
 
     // 애니메이션
     show('pg-anim');
-    initRain();
     await sleep(200);
     await runAnimation(decompose(res.korean));
 
@@ -565,10 +560,10 @@ async function saveCard(){
   btn.textContent='저장 중…'; btn.disabled=true;
   try{
     const card=document.getElementById('cap');
-    card.style.cssText='position:absolute;top:0;left:0;width:1080px;height:1080px;background:#F9F6F0;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:80px;font-family:Noto Serif KR,serif;';
+    card.style.cssText='position:absolute;top:0;left:0;width:1080px;height:1080px;background:#F9F6F0;font-family:Noto Serif KR,serif;';
     await sleep(250);
     const canvas=await html2canvas(card,{backgroundColor:'#F9F6F0',scale:1,useCORS:true,width:1080,height:1080});
-    card.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1080px;height:1080px;background:#F9F6F0;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:80px;font-family:Noto Serif KR,serif;';
+    card.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1080px;height:1080px;background:#F9F6F0;font-family:Noto Serif KR,serif;';
     const a=document.createElement('a');
     a.download=`${curKor}-한글코드-1080x1080.png`;
     a.href=canvas.toDataURL('image/png');

@@ -226,22 +226,26 @@ body{background:var(--cream);color:var(--navy);font-family:'Noto Serif KR',serif
 
   <!-- Certificate -->
   <div class="cert-wrap fade-cert" id="cert-wrap">
-    <div class="cert-inner">
-      <div>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:rgba(26,36,59,.5);margin-bottom:10px;">Certificate of Name</p>
-        <div style="width:40px;height:1px;background:var(--gold);margin:0 auto;opacity:.5;"></div>
+    <div class="cert-inner" style="justify-content:center;gap:0;">
+      <!-- 헤더 -->
+      <div style="position:absolute;top:24px;left:0;right:0;text-align:center;">
+        <p style="font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:rgba(26,36,59,.45);">Certificate of Name</p>
+        <div style="width:36px;height:1px;background:var(--gold);margin:8px auto 0;opacity:.5;"></div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:center;padding:20px 0;flex:1;justify-content:center;">
-        <div id="cv" style="font-family:'Nanum Myeongjo',serif;font-size:24px;color:var(--gold);letter-spacing:14px;margin-bottom:20px;"></div>
-        <h1 id="ck" style="font-family:'Nanum Myeongjo',serif;font-size:72px;font-weight:700;color:var(--navy);line-height:1;margin-bottom:12px;"></h1>
-        <p id="co" style="font-family:'Cormorant Garamond',serif;font-size:18px;color:rgba(26,36,59,.5);font-style:italic;margin-bottom:28px;"></p>
-        <p id="cmk" style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:500;color:var(--navy);margin-bottom:6px;"></p>
-        <p id="cme" style="font-family:'Cormorant Garamond',serif;font-size:16px;color:rgba(26,36,59,.55);font-style:italic;"></p>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:10px;color:rgba(26,36,59,.25);margin-top:20px;font-style:italic;">✦ AI가 모음에서 영감받아 만든 시적 해석입니다</p>
+      <!-- 중앙 콘텐츠 -->
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1;padding:60px 0 40px;">
+        <!-- 영어 이름 (위) -->
+        <p id="co" style="font-family:'Cormorant Garamond',serif;font-size:20px;color:rgba(26,36,59,.45);font-style:italic;margin-bottom:14px;letter-spacing:2px;"></p>
+        <!-- 한글 이름 (중앙, 크게) -->
+        <h1 id="ck" style="font-family:'Nanum Myeongjo',serif;font-size:80px;font-weight:700;color:var(--navy);line-height:1;margin-bottom:28px;letter-spacing:4px;"></h1>
+        <!-- 자모 분해 -->
+        <div id="cv" style="display:flex;gap:12px;align-items:center;justify-content:center;"></div>
       </div>
+      <!-- 도장 -->
       <div class="stamp">
         <div class="stamp-inner"><span id="cs" style="font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:20px;line-height:1.1;text-align:center;"></span></div>
       </div>
+      <!-- 하단 라벨 -->
       <div style="position:absolute;bottom:20px;left:20px;text-align:left;">
         <p style="font-family:'Cormorant Garamond',serif;font-size:10px;letter-spacing:2px;color:rgba(26,36,59,.35);text-transform:uppercase;">Seoul, KR</p>
         <p id="cy" style="font-family:'Cormorant Garamond',serif;font-size:10px;color:rgba(26,36,59,.25);margin-top:2px;"></p>
@@ -268,9 +272,8 @@ body{background:var(--cream);color:var(--navy);font-family:'Noto Serif KR',serif
         <div id="xv" style="font-family:'Nanum Myeongjo',serif;font-size:22px;color:#C8A97E;letter-spacing:12px;margin-bottom:16px;"></div>
         <div id="xk" style="font-family:'Nanum Myeongjo',serif;font-size:72px;font-weight:700;color:#1A243B;line-height:1;margin-bottom:12px;"></div>
         <div id="xo" style="font-family:'Cormorant Garamond',serif;font-size:18px;color:rgba(26,36,59,.5);font-style:italic;margin-bottom:24px;"></div>
-        <div id="xmk" style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:500;color:#1A243B;margin-bottom:6px;"></div>
-        <div id="xme" style="font-family:'Cormorant Garamond',serif;font-size:16px;color:rgba(26,36,59,.55);font-style:italic;"></div>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:10px;color:rgba(26,36,59,.25);margin-top:16px;font-style:italic;">✦ AI가 모음에서 영감받아 만든 시적 해석입니다</p>
+        <div id="xmk" style="display:none;"></div>
+        <div id="xme" style="display:none;"></div>
       </div>
       <div style="position:absolute;bottom:24px;right:24px;width:56px;height:56px;border:2px solid #8C2727;color:#8C2727;display:flex;align-items:center;justify-content:center;transform:rotate(-5deg);opacity:.85;mix-blend-mode:multiply;">
         <div style="border:1px solid #8C2727;width:88%;height:88%;display:flex;align-items:center;justify-content:center;"><span id="xs" style="font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:18px;line-height:1.1;text-align:center;"></span></div>
@@ -351,11 +354,11 @@ const RULES={
   '일본어':'헵번식 로마자 기준.つ→쓰,ふ→후.'
 };
 async function callGemini(name,lang){
-  const p=`당신은 국립국어원 외래어 표기법 전문가이자 한국 시인입니다.
-"${name}"을(를) ${lang} 이름으로 보고 외래어 표기법에 따라 한글로 변환하고, 그 모음에서 영감받은 시적 한 줄 의미를 창작하세요.
+  const p=`당신은 국립국어원 외래어 표기법 전문가입니다.
+"${name}"을(를) ${lang} 이름으로 보고 외래어 표기법에 따라 한글로 변환하세요.
 규칙: ${RULES[lang]||''}
 반드시 아래 JSON만 응답(마크다운 없이):
-{"korean":"한글표기","meaning_kr":"시적의미(4-6자)","meaning_en":"English translation","note":"표기근거"}`;
+{"korean":"한글표기","note":"표기근거"}`;
   const r=await fetch(EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p})});
   if(!r.ok)throw new Error('API 오류');
   const d=await r.json();
@@ -426,21 +429,32 @@ async function startProcess(){
 // ── Certificate 채우기 ────────────────────────
 function fillCertificate(orig,res){
   const yr=new Date().getFullYear();
-  const uv=uniqueVowels(res.korean);
-  document.getElementById('cv').textContent=uv.join('   ');
+  const syls=decompose(res.korean);
+
+  // 자모 분해: 자음(네이비) + 모음(골드)
+  const jamoHtml=syls.map((s,i)=>{
+    const isLast=i===syls.length-1;
+    const parts=[];
+    parts.push(`<span style="font-family:'Nanum Myeongjo',serif;font-size:28px;font-weight:700;color:#1A243B;">${s.onset}</span>`);
+    parts.push(`<span style="font-family:'Nanum Myeongjo',serif;font-size:28px;font-weight:700;color:#C09040;">${s.vowel}</span>`);
+    if(s.coda) parts.push(`<span style="font-family:'Nanum Myeongjo',serif;font-size:28px;font-weight:700;color:#1A243B;">${s.coda}</span>`);
+    return parts.join('<span style="color:rgba(26,36,59,.2);font-size:16px;margin:0 2px;"> </span>')+(isLast?'':`<span style="color:rgba(26,36,59,.15);font-size:20px;margin:0 6px;">·</span>`);
+  }).join('');
+
+  document.getElementById('cv').innerHTML=jamoHtml;
   document.getElementById('ck').textContent=res.korean;
   document.getElementById('co').textContent=orig;
-  document.getElementById('cmk').textContent=res.meaning_kr||'';
-  document.getElementById('cme').textContent=res.meaning_en||'';
   document.getElementById('cy').textContent=yr;
   const st=res.korean.length>=2?res.korean[0]+'<br/>'+res.korean[1]:res.korean;
   document.getElementById('cs').innerHTML=st;
-  // 캡처카드
-  document.getElementById('xv').textContent=uv.join('   ');
+
+  // 캡처카드 - 자모 텍스트 버전
+  const jamoText=syls.map(s=>s.onset+s.vowel+(s.coda||'')).join(' · ');
+  document.getElementById('xv').textContent=jamoText;
   document.getElementById('xk').textContent=res.korean;
   document.getElementById('xo').textContent=orig;
-  document.getElementById('xmk').textContent=res.meaning_kr||'';
-  document.getElementById('xme').textContent=res.meaning_en||'';
+  document.getElementById('xmk').textContent='';
+  document.getElementById('xme').textContent='';
   document.getElementById('xy').textContent=yr;
   document.getElementById('xs').innerHTML=st;
 }

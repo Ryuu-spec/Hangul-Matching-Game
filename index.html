@@ -322,9 +322,9 @@ body{display:flex;align-items:center;justify-content:center;font-family:'Noto Se
   <!-- 중앙 콘텐츠 블록 -->
   <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;width:900px;">
     <!-- 이름 + 도장 -->
-    <div style="display:inline-flex;align-items:flex-end;gap:12px;margin-bottom:36px;">
-      <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:180px;line-height:1;letter-spacing:-.03em;color:#121211;white-space:nowrap;"></div>
-      <div style="background:#A72B20;color:#F9F6F0;border-radius:4px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;transform:rotate(1deg);margin-bottom:18px;flex-shrink:0;">印</div>
+    <div style="display:inline-block;position:relative;margin-bottom:36px;padding-right:72px;">
+      <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:180px;line-height:1;letter-spacing:-.03em;color:#121211;white-space:nowrap;display:inline-block;vertical-align:bottom;"></div>
+      <div id="cap-seal" style="position:absolute;bottom:14px;right:0;background:#A72B20;color:#F9F6F0;border-radius:4px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;transform:rotate(1deg);">印</div>
     </div>
     <!-- 구분선 -->
     <div style="width:40px;height:1px;background:rgba(200,169,126,.5);margin:0 auto 28px;"></div>
@@ -482,14 +482,17 @@ async function detectLanguages(){
   const name=document.getElementById('nf').value.trim();
   if(!name)return;
   curName=name;
-  document.getElementById('detect-name').textContent=name;
-  show('pg-detect');
+  // pg-detect(점 세개) 완전 건너뜀 → 자모 셔플 로딩 바로 시작
+  show('pg-load');
+  shuffleLC();
+  const ct0=setInterval(shuffleLC,160);
   try{
     const res=await callDetect(name);
     curOptions=res.options||[];
     if(!curOptions.length)throw new Error('옵션 없음');
+    clearInterval(ct0);
     if(curOptions.length===1){
-      // 단일 옵션: pg-pick 건너뛰고 바로 자모 로딩으로
+      // 단일 옵션: pg-pick 건너뛰고 바로 poem 처리
       selectedIdx=0;
       await runProcess(curOptions[0]);
     } else {
@@ -497,6 +500,7 @@ async function detectLanguages(){
       show('pg-pick');
     }
   }catch(e){
+    clearInterval(ct0);
     show('pg-name');
     alert('이름을 인식하지 못했습니다.\n'+e.message);
   }
@@ -568,8 +572,12 @@ async function runProcess(opt){
   const rLen=curKor.length;
   const rSize=rLen<=2?'clamp(72px,18vw,110px)':rLen<=4?'clamp(52px,13vw,80px)':'clamp(36px,9vw,56px)';
   document.getElementById('result-name').style.fontSize=rSize;
-  document.getElementById('cap-name').style.fontSize=(rLen<=2?180:rLen<=4?130:rLen<=6?100:80)+'px';
+  const capFontSize=(rLen<=2?180:rLen<=4?130:rLen<=6?100:80);
+  document.getElementById('cap-name').style.fontSize=capFontSize+'px';
   document.getElementById('cap-name').textContent=curKor;
+  // 도장 위치: 폰트 크기에 비례해서 마지막 글자 아래쪽에 오도록
+  const capSeal=document.getElementById('cap-seal');
+  if(capSeal) capSeal.style.bottom=Math.round(capFontSize*0.08)+'px';
   document.getElementById('result-lang-badge').textContent=(opt.nativeLabel||opt.lang||'')+ ' version';
   document.getElementById('result-poem').style.opacity='0';
   document.getElementById('result-poem').textContent='';

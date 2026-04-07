@@ -70,15 +70,17 @@
 
         .game-board {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 2vw;
-            padding: 0 2vw;
+            grid-template-columns: repeat(4, min(18vh, 20vw));
+            grid-template-rows: repeat(2, min(22.5vh, 25vw));
+            gap: 1.5vw;
+            padding: 0;
             flex: 1;
+            min-height: 0;
+            justify-content: center;
             align-content: center;
         }
 
         .card {
-            aspect-ratio: 0.8;
             border-radius: 20px;
             display: flex;
             align-items: center;
@@ -108,7 +110,7 @@
             color: #2a4a8a;
             font-family: Arial, sans-serif;
             font-weight: bold;
-            font-size: clamp(36px, 8vw, 130px);
+            font-size: clamp(36px, 6vw, 80px);
             border: clamp(3px, 0.5vw, 6px) solid white;
             letter-spacing: -1px;
         }
@@ -118,7 +120,7 @@
             border: clamp(3px, 0.5vw, 6px) solid #84aae4;
             font-family: 'Noto Sans KR', sans-serif;
             font-weight: 900;
-            font-size: clamp(60px, 10vw, 140px);
+            font-size: clamp(40px, 7vw, 100px);
         }
 
         .card.selected {

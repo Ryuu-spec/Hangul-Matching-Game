@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>세종학당 자음 학습: ㄴ, ㅁ, ㄹ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .stroke {
+            fill: none;
+            stroke-width: 25;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            transition: stroke-dashoffset 1s ease-in-out, stroke 0.3s;
+        }
+
+        .stroke-bg {
+            fill: none;
+            stroke: #f1f5f9;
+            stroke-width: 25;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .active .stroke {
+            stroke-dashoffset: 0;
+        }
+
+        /* ㄴ (Base) - Blue */
+        .color-n { stroke: #3b82f6; }
+        /* ㅁ (Extension) - Green */
+        .color-m-ext { stroke: #10b981; }
+        /* ㄹ (Extension) - Purple */
+        .color-r-ext { stroke: #a855f7; }
+
+        .step-card {
+            transition: all 0.3s ease;
+        }
+
+        .step-card.active {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            transform: translateY(-2px);
+        }
+
+        .highlight-text {
+            font-weight: 700;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4">
+
+    <header class="text-center mb-10">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">한글 자음의 진화</h1>
+        <p class="text-gray-600">ㄴ에서 시작하여 ㅁ과 ㄹ이 완성되는 과정을 살펴보세요.</p>
+    </header>
+
+    <main class="max-w-4xl w-full flex flex-col md:flex-row gap-10 items-center justify-center">
+        
+        <!-- 시각화 캔버스 -->
+        <div class="canvas-container flex items-center justify-center" id="mainCanvas">
+            <svg width="250" height="250" viewBox="0 0 200 200" id="hangeulSvg">
+                <!-- ㄴ Base Path (Common for all) -->
+                <path class="stroke-bg" d="M60 40 V160 H160" />
+                <path id="path-n" class="stroke color-n" d="M60 40 V160 H160" />
+                
+                <!-- ㅁ Extension Paths -->
+                <path id="path-m-ext" class="stroke color-m-ext" d="M60 40 H160 V160" />
+                
+                <!-- ㄹ Extension Paths -->
+                <path id="path-r-top" class="stroke color-r-ext" d="M60 40 H160 V100 H60 V160" />
+            </svg>
+        </div>
+
+        <!-- 학습 단계 설명 -->
+        <div class="flex flex-col gap-4 w-full md:w-96">
+            <!-- Step 1: ㄴ -->
+            <div id="step-1" class="step-card p-5 border-2 border-transparent rounded-xl cursor-pointer bg-white shadow-sm active" onclick="showStep(1)">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold">1</span>
+                    <h2 class="text-xl font-bold">ㄴ (기초, Base)</h2>
+                </div>
+                <p class="text-sm text-gray-600">혀가 윗잇몸에 닿는 모양입니다. 모든 자음의 바닥 지지대 역할을 합니다.</p>
+            </div>
+
+            <!-- Step 2: ㅁ -->
+            <div id="step-2" class="step-card p-5 border-2 border-transparent rounded-xl cursor-pointer bg-white shadow-sm" onclick="showStep(2)">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold">2</span>
+                    <h2 class="text-xl font-bold">ㅁ (확장, Enclosure)</h2>
+                </div>
+                <p class="text-sm text-gray-600"><span class="highlight-text">ㄴ</span> 위에 'ㄱ' 모양을 덮어 입 모양(ㅁ)을 완성합니다. 닫힌 구조의 기초입니다.</p>
+            </div>
+
+            <!-- Step 3: ㄹ -->
+            <div id="step-3" class="step-card p-5 border-2 border-transparent rounded-xl cursor-pointer bg-white shadow-sm" onclick="showStep(3)">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">3</span>
+                    <h2 class="text-xl font-bold">ㄹ (흐름, Flow)</h2>
+                </div>
+                <p class="text-sm text-gray-600"><span class="highlight-text">ㄴ</span> 위에 층을 쌓아 물 흐르듯 연결합니다. 소리가 굴러가는 역동성을 표현합니다.</p>
+            </div>
+        </div>
+    </main>
+
+    <section class="mt-16 max-w-2xl text-center">
+        <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+            <h3 class="font-bold text-blue-800 mb-2">학습 툴 설계 포인트</h3>
+            <ul class="text-left text-sm text-blue-700 space-y-2 list-disc list-inside">
+                <li><strong>시각적 일관성:</strong> 하단의 파란색 'ㄴ'은 변하지 않고 유지되어 글자 간의 혈통을 보여줍니다.</li>
+                <li><strong>레이어 시스템:</strong> 새로운 글자는 기존 뼈대 위에 추가적인 색상의 획을 얹는 방식으로 표현됩니다.</li>
+                <li><strong>인지적 부담 감소:</strong> 복잡한 'ㄹ'을 'ㄴ'의 확장형으로 이해하게 하여 학습 장벽을 낮춥니다.</li>
+            </ul>
+        </div>
+    </section>
+
+    <script>
+        function showStep(step) {
+            // Reset all cards
+            document.querySelectorAll('.step-card').forEach(card => card.classList.remove('active'));
+            // Activate current card
+            document.getElementById(`step-${step}`).classList.add('active');
+
+            const pathN = document.getElementById('path-n');
+            const pathMExt = document.getElementById('path-m-ext');
+            const pathRTop = document.getElementById('path-r-top');
+
+            // Reset strokes
+            pathN.style.strokeDashoffset = "1000";
+            pathMExt.style.strokeDashoffset = "1000";
+            pathRTop.style.strokeDashoffset = "1000";
+
+            // Trigger animation based on step
+            setTimeout(() => {
+                if (step === 1) {
+                    pathN.style.strokeDashoffset = "0";
+                    pathN.style.stroke = "#3b82f6";
+                } else if (step === 2) {
+                    pathN.style.strokeDashoffset = "0";
+                    pathN.style.stroke = "#3b82f6"; // Base is blue
+                    setTimeout(() => {
+                        pathMExt.style.strokeDashoffset = "0";
+                    }, 500);
+                } else if (step === 3) {
+                    pathN.style.strokeDashoffset = "0";
+                    pathN.style.stroke = "#3b82f6"; // Base is blue
+                    setTimeout(() => {
+                        pathRTop.style.strokeDashoffset = "0";
+                    }, 500);
+                }
+            }, 100);
+        }
+
+        // Initialize with Step 1
+        window.onload = () => showStep(1);
+    </script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>한글 기본 모음 AI 트레이너</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=DM+Mono:wght@400;500&family=Gowun+Dodum&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { overflow: hidden; font-family: 'Noto Sans KR', sans-serif; background-color: #f0f6ff; height: 100%; }
+        .app-container { display: flex; height: 100vh; width: 100%; }
+
+        .left-panel { flex: 1.2; display: flex; flex-direction: column; padding: 28px 28px 24px; background: #ffffff; gap: 16px; }
+        .char-bar { display: flex; gap: 6px; padding-top: 10px; }
+        .char-item { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 28px; }
+        .score-badge { position: absolute; top: 0; background: #4a7fd4; color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: translateY(6px); white-space: nowrap; box-shadow: 0 4px 10px rgba(74,127,212,0.35); font-family: 'DM Mono', monospace; }
+        .score-badge.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+        .score-badge.grade-a { background: #4a7fd4; }
+        .score-badge.grade-b { background: #3a9e72; }
+        .score-badge.grade-c { background: #f0a500; }
+        .score-badge.grade-d { background: #e05555; }
+        .char-btn { width: 100%; height: 56px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; border-radius: 14px; border: 2px solid #e8f0fe; background: #f8fbff; color: #94a3b8; cursor: pointer; transition: all 0.2s; font-family: 'Gowun Dodum', 'Noto Sans KR', sans-serif; }
+        .char-btn:hover { border-color: #4a7fd4; color: #4a7fd4; }
+        .char-btn.active { background: #4a7fd4; color: white; border-color: #4a7fd4; box-shadow: 0 8px 20px rgba(74,127,212,0.3); }
+        .board-label { text-align: center; font-size: 9px; font-weight: 900; color: #cbd5e1; letter-spacing: 0.4em; text-transform: uppercase; }
+        .canvas-wrap { flex: 1; position: relative; background: #ffffff; border: 2px solid #e8f0fe; border-radius: 24px; overflow: hidden; box-shadow: inset 0 2px 10px rgba(74,127,212,0.05); }
+        #guide-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        #drawing-canvas { position: relative; z-index: 2; cursor: crosshair; touch-action: none; width: 100%; height: 100%; }
+        .model-status { font-size: 11px; color: #94a3b8; text-align: center; }
+        .model-status.ready { color: #3a9e72; }
+        .model-status.error { color: #e05555; }
+        .btn-row { display: flex; gap: 12px; }
+        .btn-clear { flex: 1; padding: 16px; background: #f1f5f9; color: #64748b; font-weight: 700; border-radius: 16px; border: none; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; font-size: 14px; transition: all 0.2s; }
+        .btn-clear:hover { background: #e2e8f0; }
+        .btn-score { flex: 1.8; padding: 16px; background: #4a7fd4; color: white; font-weight: 700; border-radius: 16px; border: none; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; box-shadow: 0 8px 20px rgba(74,127,212,0.3); }
+        .btn-score:hover { background: #3d6bbf; transform: translateY(-1px); }
+        .btn-score:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+        .spinner.on { display: block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-steps { display: none; flex-direction: column; gap: 10px; width: 100%; padding: 0 24px; }
+        .loading-step { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #94a3b8; padding: 8px 12px; border-radius: 10px; transition: all 0.3s; }
+        .loading-step.active { color: #4a7fd4; background: #f0f7ff; font-weight: 700; }
+        .loading-step.done { color: #3a9e72; }
+        .step-icon { font-size: 16px; width: 20px; text-align: center; }
+        .loading-bar-wrap { display: none; width: calc(100% - 48px); height: 4px; background: #e8f0fe; border-radius: 2px; overflow: hidden; margin-top: 4px; }
+        .loading-bar-fill { height: 100%; background: #4a7fd4; border-radius: 2px; transition: width 0.8s ease; width: 0%; }
+
+        .right-panel { flex: 0.85; display: flex; flex-direction: column; padding: 28px 28px 24px; background: #f0f6ff; border-left: 1px solid #e2eeff; gap: 16px; overflow: hidden; }
+        .right-charbar-mirror { min-height: calc(10px + 28px + 56px); }
+        .panel-label { font-size: 9px; font-weight: 900; color: #4a7fd4; letter-spacing: 0.4em; text-transform: uppercase; text-align: center; }
+        .result-card { flex: 1; background: white; border: 2px solid #e8f0fe; border-radius: 24px; box-shadow: inset 0 2px 10px rgba(74,127,212,0.05); display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
+        .empty-state { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+        .empty-circle { width: 64px; height: 64px; border-radius: 50%; border: 2px dashed #c8d9ee; display: flex; align-items: center; justify-content: center; color: #c8d9ee; font-size: 26px; font-weight: 700; font-family: 'Gowun Dodum', sans-serif; }
+        .empty-text { font-size: 12px; color: #94a3b8; text-align: center; line-height: 1.8; }
+        .result-view { display: none; width: 100%; padding: 16px 20px; }
+        .result-view.on { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .grade-display { text-align: center; }
+        .grade-letter { font-size: 52px; font-weight: 900; line-height: 1; font-family: 'DM Mono', monospace; }
+        .grade-letter.A { color: #4a7fd4; }
+        .grade-letter.B { color: #3a9e72; }
+        .grade-letter.C { color: #f0a500; }
+        .grade-letter.D { color: #e05555; }
+        .score-num { font-family: 'DM Mono', monospace; font-size: 14px; color: #94a3b8; margin-top: 4px; }
+        .rubric-list { width: 100%; display: flex; flex-direction: column; gap: 7px; }
+        .rubric-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .rubric-name { font-size: 11px; font-weight: 700; color: #475569; }
+        .rubric-val { font-family: 'DM Mono', monospace; font-size: 10px; color: #94a3b8; }
+        .bar-bg { height: 5px; background: #e8f0fe; border-radius: 3px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+        .feedback-section { width: 100%; }
+        .feedback-label { font-size: 9px; font-weight: 900; color: #4a7fd4; letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 7px; }
+        .feedback-card { background: #f8fbff; border-left: 3px solid #4a7fd4; border-radius: 0 12px 12px 0; padding: 10px 12px; font-size: 12px; line-height: 1.6; color: #475569; }
+        .right-btnrow-mirror { display: flex; align-items: center; justify-content: center; min-height: calc(16px * 2 + 21px); }
+        .error-log { font-size: 11px; color: #e05555; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <section class="left-panel">
+        <div id="char-bar" class="char-bar"></div>
+        <div class="board-label">Practice Board</div>
+        <div class="canvas-wrap">
+            <canvas id="guide-canvas"></canvas>
+            <canvas id="drawing-canvas"></canvas>
+        </div>
+        <div id="model-status" class="model-status">🔄 AI 모델 로딩 중...</div>
+        <div class="btn-row">
+            <button class="btn-clear" id="clear-btn">다시 쓰기</button>
+            <button class="btn-score" id="score-btn" disabled>
+                <span id="btn-text">채점하기</span>
+                <div class="spinner" id="spinner"></div>
+            </button>
+        </div>
+    </section>
+
+    <section class="right-panel">
+        <div class="right-charbar-mirror"></div>
+        <div class="panel-label">AI Analysis Result</div>
+        <div class="result-card">
+            <div class="empty-state" id="empty-state">
+                <div class="empty-circle" id="empty-icon">?</div>
+                <div class="empty-text" id="empty-text">모음을 작성한 후<br>채점 버튼을 눌러주세요.</div>
+                <div class="loading-steps" id="loading-steps">
+                    <div class="loading-step" id="step-1"><span class="step-icon">✏️</span> 획 구조 분석 중...</div>
+                    <div class="loading-step" id="step-2"><span class="step-icon">🔍</span> 필순·방향 검토 중...</div>
+                    <div class="loading-step" id="step-3"><span class="step-icon">⚖️</span> 균형·비율 측정 중...</div>
+                    <div class="loading-step" id="step-4"><span class="step-icon">📊</span> 최종 점수 계산 중...</div>
+                </div>
+                <div class="loading-bar-wrap" id="loading-bar-wrap">
+                    <div class="loading-bar-fill" id="loading-bar-fill"></div>
+                </div>
+            </div>
+            <div class="result-view" id="result-view">
+                <div class="grade-display">
+                    <div class="grade-letter" id="grade-el">A</div>
+                    <div class="score-num" id="score-el">92 / 100</div>
+                </div>
+                <div class="rubric-list" id="rubric-el"></div>
+                <div class="feedback-section">
+                    <div class="feedback-label">AI Feedback</div>
+                    <div class="feedback-card" id="feedback-el"></div>
+                </div>
+            </div>
+        </div>
+        <div class="right-btnrow-mirror">
+            <div class="error-log" id="error-log"></div>
+        </div>
+    </section>
+</div>
+
+<script>
+// ── 모음 데이터 ──────────────────────────────────────────────────────
+const CHARS = [
+    { char: "ㅏ", romaji: "a",   strokes: 2 },
+    { char: "ㅑ", romaji: "ya",  strokes: 3 },
+    { char: "ㅓ", romaji: "eo",  strokes: 2 },
+    { char: "ㅕ", romaji: "yeo", strokes: 3 },
+    { char: "ㅗ", romaji: "o",   strokes: 2 },
+    { char: "ㅛ", romaji: "yo",  strokes: 3 },
+    { char: "ㅜ", romaji: "u",   strokes: 2 },
+    { char: "ㅠ", romaji: "yu",  strokes: 3 },
+    { char: "ㅡ", romaji: "eu",  strokes: 1 },
+    { char: "ㅣ", romaji: "i",   strokes: 1 },
+];
+
+// ── 획순 규칙 ────────────────────────────────────────────────────────
+const STROKE_RULES = {
+    "ㅏ": [
+        { label: "1획(세로)", xDir: 0,  yDir: 1,  startSide: "top-center"    },
+        { label: "2획(가로)", xDir: 1,  yDir: 0,  startSide: "middle-center" },
+    ],
+    "ㅑ": [
+        { label: "1획(세로)", xDir: 0,  yDir: 1,  startSide: "top-center"    },
+        { label: "2획(가로)", xDir: 1,  yDir: 0,  startSide: "middle-center" },
+        { label: "3획(가로)", xDir: 1,  yDir: 0,  startSide: "middle-center" },
+    ],
+    "ㅓ": [
+        { label: "1획(세로)", xDir: 0,  yDir: 1,  startSide: "top-center"    },
+        { label: "2획(가로)", xDir: -1, yDir: 0,  startSide: "middle-center" },
+    ],
+    "ㅕ": [
+        { label: "1획(세로)", xDir: 0,  yDir: 1,  startSide: "top-center"    },
+        { label: "2획(가로)", xDir: -1, yDir: 0,  startSide: "middle-center" },
+        { label: "3획(가로)", xDir: -1, yDir: 0,  startSide: "middle-center" },
+    ],
+    "ㅗ": [
+        { label: "1획(가로)", xDir: 1,  yDir: 0,  startSide: "middle-left"   },
+        { label: "2획(세로)", xDir: 0,  yDir: -1, startSide: "middle-center" },
+    ],
+    "ㅛ": [
+        { label: "1획(가로)", xDir: 1,  yDir: 0,  startSide: "middle-left"   },
+        { label: "2획(세로)", xDir: 0,  yDir: -1, startSide: "middle-center" },
+        { label: "3획(세로)", xDir: 0,  yDir: -1, startSide: "middle-center" },
+    ],
+    "ㅜ": [
+        { label: "1획(가로)", xDir: 1,  yDir: 0,  startSide: "top-left"      },
+        { label: "2획(세로)", xDir: 0,  yDir: 1,  startSide: "top-center"    },
+    ],
+    "ㅠ": [
+        { label: "1획(가로)", xDir: 1,  yDir: 0,  startSide: "top-left"      },
+        { label: "2획(세로)", xDir: 0,  yDir: 1,  startSide: "top-center"    },
+        { label: "3획(세로)", xDir: 0,  yDir: 1,  startSide: "top-center"    },
+    ],
+    "ㅡ": [
+        { label: "1획(가로)", xDir: 1,  yDir: 0,  startSide: "middle-left"   },
+    ],
+    "ㅣ": [
+        { label: "1획(세로)", xDir: 0,  yDir: 1,  startSide: "top-center"    },
+    ],
+};
+
+// ── 루브릭 ───────────────────────────────────────────────────────────
+const RUBRIC_CONFIG = [
+    { name: '형태 정확성', key: '형태정확성', max: 40, color: '#2b5aad' },
+    { name: '필순',        key: '필순',       max: 25, color: '#c9a84c' },
+    { name: '균형·비율',   key: '균형비율',   max: 20, color: '#4a7fd4' },
+    { name: '획 간격',     key: '획간격',     max: 15, color: '#3a9e72' },
+];
+
+function getGrade(total) {
+    if (total >= 90) return 'A';
+    if (total >= 80) return 'B';
+    if (total >= 70) return 'C';
+    return 'D';
+}
+
+// ── Teachable Machine 모델 URL ────────────────────────────────────────
+const MODEL_URL = "https://teachablemachine.withgoogle.com/models/nq7b8T6an/";
+
+// ── 피드백 ───────────────────────────────────────────────────────────
+const FEEDBACK = {
+    "ㅏ": { A: "훌륭해요! 세로선과 오른쪽 짧은 획의 비율이 완벽해요.", B: "잘 썼어요! 짧은 가로획을 세로선 중간에 맞추면 더 좋아요.", C: "세로선을 더 곧게, 짧은 획을 중간 높이에 써보세요.", D: "ㅏ는 긴 세로선 먼저, 그 다음 오른쪽으로 짧은 획을 써요." },
+    "ㅑ": { A: "완벽해요! 두 개의 짧은 가로획이 균형 잡혀 있어요.", B: "잘 썼어요! 두 가로획의 간격을 일정하게 유지해보세요.", C: "짧은 획 두 개의 위치와 간격에 신경 써보세요.", D: "ㅑ는 세로선 먼저, 오른쪽으로 짧은 획을 두 번 써요." },
+    "ㅓ": { A: "훌륭해요! 세로선과 왼쪽 짧은 획의 위치가 정확해요.", B: "잘 썼어요! 짧은 획을 세로선 중간 높이에 써보세요.", C: "세로선 먼저 쓰고, 왼쪽으로 짧은 획을 중간에 써보세요.", D: "ㅓ는 ㅏ와 반대예요. 짧은 획이 왼쪽으로 나와야 해요." },
+    "ㅕ": { A: "완벽해요! 두 짧은 획이 균등하게 배치됐어요.", B: "잘 썼어요! 두 가로획의 간격을 더 균일하게 해보세요.", C: "짧은 획 두 개의 위치에 더 신경 써보세요.", D: "ㅕ는 세로선 먼저, 왼쪽으로 짧은 획을 두 번 써요." },
+    "ㅗ": { A: "훌륭해요! 가로선 위에 세로선이 정중앙에 위치해요.", B: "잘 썼어요! 세로선이 가로선의 정중앙에 오도록 해보세요.", C: "가로선을 먼저 쓰고, 가로선 중앙에서 위로 짧게 올려써요.", D: "ㅗ는 가로선 먼저, 그 중간에서 위로 짧은 세로선을 써요." },
+    "ㅛ": { A: "완벽해요! 두 세로획이 가로선에 균형 있게 위치해요.", B: "잘 썼어요! 두 세로획의 간격을 균등하게 해보세요.", C: "가로선 위의 두 짧은 획 위치를 균등하게 해보세요.", D: "ㅛ는 가로선 먼저, 위로 짧은 세로선을 두 번 써요." },
+    "ㅜ": { A: "훌륭해요! 가로선 아래 세로선이 정중앙에 위치해요.", B: "잘 썼어요! 세로선이 가로선의 정중앙 아래에 오도록 해보세요.", C: "가로선 먼저, 가로선 중앙에서 아래로 내려써요.", D: "ㅜ는 가로선 먼저, 그 중간에서 아래로 짧은 세로선을 써요." },
+    "ㅠ": { A: "완벽해요! 두 세로획이 가로선 아래 균형 잡혀 있어요.", B: "잘 썼어요! 두 세로획의 간격을 균등하게 해보세요.", C: "가로선 아래 두 짧은 획의 위치를 균등하게 해보세요.", D: "ㅠ는 가로선 먼저, 아래로 짧은 세로선을 두 번 써요." },
+    "ㅡ": { A: "훌륭해요! 깔끔하고 수평한 가로선이에요.", B: "잘 썼어요! 선이 살짝 기울었어요. 더 수평하게 써보세요.", C: "왼쪽에서 오른쪽으로 수평하게 그어야 해요.", D: "ㅡ는 왼쪽에서 오른쪽으로 수평선 하나예요." },
+    "ㅣ": { A: "훌륭해요! 곧고 수직한 세로선이에요.", B: "잘 썼어요! 선이 살짝 기울었어요. 더 수직하게 써보세요.", C: "위에서 아래로 수직하게 내려야 해요.", D: "ㅣ는 위에서 아래로 수직선 하나예요." },
+};
+
+// ── 상태 변수 ─────────────────────────────────────────────────────────
+let current = CHARS[0], strokes = [], curStroke = [];
+let isDrawing = false, isProcessing = false, hasDrawn = false;
+let charScores = {}, tmModel = null;
+
+// ── 모델 로딩 ────────────────────────────────────────────────────────
+async function loadModel() {
+    const statusEl = document.getElementById('model-status');
+    try {
+        statusEl.textContent = '🔄 AI 모델 로딩 중...';
+        tmModel = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
+        statusEl.textContent = '✅ AI 모델 준비 완료';
+        statusEl.className = 'model-status ready';
+        document.getElementById('score-btn').disabled = false;
+    } catch (e) {
+        statusEl.textContent = '❌ 모델 로딩 실패. 새로고침해주세요.';
+        statusEl.className = 'model-status error';
+    }
+}
+
+// ── 초기화 ────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+    buildTabs(); initCanvas(); selectChar(CHARS[0]); loadModel();
+});
+
+function buildTabs() {
+    const bar = document.getElementById('char-bar');
+    bar.innerHTML = '';
+    CHARS.forEach(cd => {
+        const item = document.createElement('div');
+        item.className = 'char-item';
+        const badge = document.createElement('div');
+        badge.className = 'score-badge';
+        badge.id = 'badge-' + cd.char;
+        const btn = document.createElement('button');
+        btn.className = 'char-btn' + (cd.char === current.char ? ' active' : '');
+        btn.id = 'cbtn-' + cd.char;
+        btn.textContent = cd.char;
+        btn.onclick = () => { if (!isProcessing) selectChar(cd); };
+        item.append(badge, btn);
+        bar.appendChild(item);
+    });
+}
+
+function selectChar(cd) {
+    current = cd;
+    document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('cbtn-' + cd.char);
+    if (btn) btn.classList.add('active');
+    clearCanvas(); resetResult(); drawGuide();
+    if (charScores[cd.char]) showResult(charScores[cd.char]);
+}
+
+// ── 캔버스 ───────────────────────────────────────────────────────────
+function initCanvas() {
+    const dc = document.getElementById('drawing-canvas');
+    const wrap = dc.parentElement;
+    function resize() {
+        const w = wrap.clientWidth, h = wrap.clientHeight;
+        const gc = document.getElementById('guide-canvas');
+        dc.width = w; dc.height = h; gc.width = w; gc.height = h;
+        clearDraw(); drawGuide();
+    }
+    resize();
+    new ResizeObserver(resize).observe(wrap);
+    dc.addEventListener('mousedown',  e => startDraw(e));
+    dc.addEventListener('mousemove',  e => contDraw(e));
+    dc.addEventListener('mouseup',    () => endDraw());
+    dc.addEventListener('mouseleave', () => endDraw());
+    dc.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, { passive: false });
+    dc.addEventListener('touchmove',  e => { e.preventDefault(); contDraw(e.touches[0]); },  { passive: false });
+    dc.addEventListener('touchend',   e => { e.preventDefault(); endDraw(); },                { passive: false });
+}
+
+function getXY(e) {
+    const dc = document.getElementById('drawing-canvas');
+    const r = dc.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * (dc.width / r.width), y: (e.clientY - r.top) * (dc.height / r.height) };
+}
+function startDraw(e) { if (isProcessing) return; isDrawing = true; hasDrawn = true; curStroke = [getXY(e)]; }
+function endDraw() { if (!isDrawing) return; isDrawing = false; if (curStroke.length > 1) strokes.push([...curStroke]); curStroke = []; }
+function contDraw(e) {
+    if (!isDrawing || isProcessing) return;
+    const pos = getXY(e);
+    const dc = document.getElementById('drawing-canvas');
+    const ctx = dc.getContext('2d');
+    if (curStroke.length) {
+        const prev = curStroke[curStroke.length - 1];
+        ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(pos.x, pos.y);
+        ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+    }
+    curStroke.push(pos);
+}
+function clearDraw() { const dc = document.getElementById('drawing-canvas'); dc.getContext('2d').clearRect(0, 0, dc.width, dc.height); }
+function clearCanvas() { clearDraw(); strokes = []; curStroke = []; hasDrawn = false; document.getElementById('error-log').textContent = ''; }
+function drawGuide() {
+    const gc = document.getElementById('guide-canvas');
+    const ctx = gc.getContext('2d');
+    ctx.clearRect(0, 0, gc.width, gc.height);
+    ctx.setLineDash([6, 5]); ctx.strokeStyle = 'rgba(74,127,212,0.2)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(0, gc.height/2); ctx.lineTo(gc.width, gc.height/2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gc.width/2, 0);  ctx.lineTo(gc.width/2, gc.height); ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+// ── 점수 계산 ────────────────────────────────────────────────────────
+function analyzeStroke(pts) {
+    if (pts.length < 2) return null;
+    const dx = pts[pts.length-1].x - pts[0].x, dy = pts[pts.length-1].y - pts[0].y;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    return { nx: dx/len, ny: dy/len };
+}
+
+function scoreStrokeOrder() {
+    const rules = STROKE_RULES[current.char];
+    const expected = rules ? rules.length : current.strokes;
+    if (strokes.length !== expected) return Math.max(0, 25 - Math.abs(strokes.length - expected) * 8);
+    if (!rules) return 25;
+    let score = 25;
+    strokes.forEach((pts, i) => {
+        const rule = rules[i], vec = analyzeStroke(pts);
+        if (!vec) return;
+        const rLen = Math.sqrt(rule.xDir**2 + rule.yDir**2);
+        if (rLen === 0) return;
+        const dot = (vec.nx * rule.xDir / rLen) + (vec.ny * rule.yDir / rLen);
+        if (dot < 0.3) score -= 6;
+    });
+    return Math.max(0, score);
+}
+
+function scoreBalance() {
+    if (strokes.length === 0) return 10;
+    const allPts = strokes.flat();
+    const xs = allPts.map(p => p.x), ys = allPts.map(p => p.y);
+    const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
+    let score = 20;
+    if (['ㅏ','ㅑ','ㅓ','ㅕ','ㅣ'].includes(current.char)) {
+        if (h < w) score -= 8;
+        if (w / (h || 1) > 0.7) score -= 5;
+    } else {
+        if (w < h) score -= 8;
+        if (h / (w || 1) > 0.7) score -= 5;
+    }
+    return Math.max(0, score);
+}
+
+function scoreSpacing() {
+    if (strokes.length < 2) return 15;
+    let score = 15;
+    const dc = document.getElementById('drawing-canvas');
+    const refSize = Math.min(dc.width, dc.height);
+    for (let i = 1; i < strokes.length; i++) {
+        const prev = strokes[i-1], curr = strokes[i];
+        const prevEnd = prev[prev.length-1], currStart = curr[0];
+        const dist = Math.sqrt((prevEnd.x-currStart.x)**2 + (prevEnd.y-currStart.y)**2);
+        if (dist < refSize * 0.05) score -= 4;
+        if (dist > refSize * 0.4)  score -= 4;
+    }
+    return Math.max(0, score);
+}
+
+// ── 채점 버튼 ────────────────────────────────────────────────────────
+document.getElementById('score-btn').onclick = async () => {
+    if (!hasDrawn) { document.getElementById('error-log').textContent = '모음을 먼저 써주세요.'; return; }
+    if (isProcessing || !tmModel) return;
+
+    isProcessing = true;
+    const btn = document.getElementById('score-btn');
+    btn.disabled = true;
+    document.getElementById('btn-text').textContent = '채점 중...';
+    document.getElementById('spinner').classList.add('on');
+    document.getElementById('error-log').textContent = '';
+
+    const steps = ['step-1','step-2','step-3','step-4'];
+    const barFill = document.getElementById('loading-bar-fill');
+    const barWrap = document.getElementById('loading-bar-wrap');
+    const stepsEl = document.getElementById('loading-steps');
+    const emptyIcon = document.getElementById('empty-icon');
+    const emptyText = document.getElementById('empty-text');
+    emptyIcon.style.display = 'none'; emptyText.style.display = 'none';
+    stepsEl.style.display = 'flex'; barWrap.style.display = 'block';
+    barFill.style.width = '0%';
+    const barTargets = [20, 45, 70, 95];
+    const stepDurations = [600, 800, 600, 400];
+    steps.forEach(id => document.getElementById(id).className = 'loading-step');
+    document.getElementById('step-1').className = 'loading-step active';
+    barFill.style.width = barTargets[0] + '%';
+    const stepTimers = [];
+    let elapsed = 0;
+    for (let i = 1; i < steps.length; i++) {
+        elapsed += stepDurations[i-1];
+        const idx = i;
+        stepTimers.push(setTimeout(() => {
+            document.getElementById(steps[idx-1]).className = 'loading-step done';
+            document.getElementById(steps[idx-1]).querySelector('.step-icon').textContent = '✅';
+            document.getElementById(steps[idx]).className = 'loading-step active';
+            barFill.style.width = barTargets[idx] + '%';
+        }, elapsed));
+    }
+
+    try {
+        const tmp = document.createElement('canvas');
+        tmp.width = 224; tmp.height = 224;
+        const tCtx = tmp.getContext('2d');
+        tCtx.fillStyle = 'white'; tCtx.fillRect(0, 0, 224, 224);
+        tCtx.drawImage(document.getElementById('drawing-canvas'), 0, 0, 224, 224);
+
+        const predictions = await tmModel.predict(tmp);
+        const targetPred = predictions.find(p => p.className === current.char);
+        const targetProb = targetPred ? targetPred.probability : 0;
+
+        const 형태정확성 = Math.round(targetProb * 40);
+        const 필순       = scoreStrokeOrder();
+        const 균형비율   = scoreBalance();
+        const 획간격     = scoreSpacing();
+        const total      = 형태정확성 + 필순 + 균형비율 + 획간격;
+        const grade      = getGrade(total);
+        const fb         = FEEDBACK[current.char] || {};
+        const feedback   = fb[grade] || '계속 연습해보세요!';
+
+        const r = { total, grade, scores: { 형태정확성, 필순, 균형비율, 획간격 }, overall: feedback };
+        charScores[current.char] = r;
+        showResult(r);
+    } catch (err) {
+        document.getElementById('error-log').textContent = '채점 중 오류가 발생했습니다. 다시 시도해주세요.';
+    } finally {
+        stepTimers.forEach(t => clearTimeout(t));
+        stepsEl.style.display = 'none'; barWrap.style.display = 'none';
+        emptyIcon.style.display = ''; emptyText.style.display = '';
+        isProcessing = false; btn.disabled = false;
+        document.getElementById('btn-text').textContent = '채점하기';
+        document.getElementById('spinner').classList.remove('on');
+    }
+};
+
+document.getElementById('clear-btn').onclick = () => { clearCanvas(); resetResult(); };
+
+// ── 결과 표시 ────────────────────────────────────────────────────────
+function showResult(r) {
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('result-view').classList.add('on');
+    const gradeEl = document.getElementById('grade-el');
+    gradeEl.textContent = r.grade; gradeEl.className = 'grade-letter ' + r.grade;
+    document.getElementById('score-el').textContent = r.total + ' / 100';
+    const badge = document.getElementById('badge-' + current.char);
+    if (badge) { badge.textContent = r.total + '점'; badge.className = 'score-badge visible grade-' + r.grade.toLowerCase(); }
+    document.getElementById('rubric-el').innerHTML = RUBRIC_CONFIG.map(rb => {
+        const sc = r.scores?.[rb.key] ?? 0;
+        const pct = Math.min(100, Math.round((sc / rb.max) * 100));
+        return `<div class="rubric-item"><div class="rubric-row"><span class="rubric-name">${rb.name}</span><span class="rubric-val">${sc} / ${rb.max}</span></div><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${rb.color}"></div></div></div>`;
+    }).join('');
+    document.getElementById('feedback-el').textContent = r.overall || '';
+}
+
+function resetResult() {
+    document.getElementById('empty-state').style.display = 'flex';
+    document.getElementById('result-view').classList.remove('on');
+}
+</script>
+</body>
+</html>

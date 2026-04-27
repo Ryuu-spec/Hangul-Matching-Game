@@ -272,8 +272,8 @@ body{display:flex;align-items:center;justify-content:center;font-family:'Noto Se
       <div style="width:36px;height:1px;background:rgba(225,85,69,.25);"></div>
       <div style="font-family:'Work Sans',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);">Assembling Identity</div>
     </div>
-    <p style="font-family:'Work Sans','Noto Serif KR',serif;font-size:12px;line-height:1.9;color:rgba(28,28,24,.45);text-align:center;margin-top:24px;max-width:240px;">
-      Sky, earth, and human —<br/>하늘, 땅, 그리고 사람.
+    <p style="font-family:'Noto Serif KR',serif;font-size:12px;line-height:1.9;color:rgba(28,28,24,.45);text-align:center;margin-top:24px;max-width:240px;">
+      한글의 구조적 결합은<br/>정신의 조화를 상징합니다.
     </p>
   </div>
   <div style="padding:16px 24px 36px;width:100%;display:flex;justify-content:space-between;align-items:flex-end;flex-shrink:0;">
@@ -291,7 +291,6 @@ body{display:flex;align-items:center;justify-content:center;font-family:'Noto Se
     <span class="material-symbols-outlined" style="font-size:22px;">arrow_back</span>
   </button>
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-    <p id="result-eng" style="font-family:'Playfair Display',serif;font-size:21px;font-style:italic;color:rgba(18,18,17,.35);letter-spacing:.05em;margin-bottom:12px;"></p>
     <div style="display:inline-flex;align-items:flex-end;position:relative;">
       <div id="result-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:clamp(72px,18vw,110px);line-height:1;letter-spacing:-.03em;color:#121211;"></div>
       <div class="heritage-seal">印</div>
@@ -299,7 +298,7 @@ body{display:flex;align-items:center;justify-content:center;font-family:'Noto Se
     <!-- 언어 버전 뱃지 -->
     <p id="result-lang-badge" style="display:none;"></p>
     <!-- 개인화 카피 -->
-    <p id="result-poem" style="font-family:'Noto Serif KR',serif;font-size:13px;line-height:1.85;color:rgba(18,18,17,.5);text-align:center;margin-top:14px;min-height:42px;letter-spacing:.02em;max-width:88%;word-break:keep-all;opacity:0;transition:opacity .8s ease;"></p>
+    <p id="result-poem" style="font-family:'Noto Serif KR',serif;font-size:13px;line-height:1.85;color:rgba(18,18,17,.5);text-align:center;margin-top:14px;min-height:42px;letter-spacing:.02em;max-width:280px;opacity:0;transition:opacity .8s ease;"></p>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:8px;">
     <div>
@@ -321,13 +320,14 @@ body{display:flex;align-items:center;justify-content:center;font-family:'Noto Se
   <div style="position:absolute;bottom:48px;left:48px;width:24px;height:24px;border-bottom:1px solid rgba(200,169,126,.4);border-left:1px solid rgba(200,169,126,.4);"></div>
   <div style="position:absolute;bottom:48px;right:48px;width:24px;height:24px;border-bottom:1px solid rgba(200,169,126,.4);border-right:1px solid rgba(200,169,126,.4);"></div>
   <!-- 중앙 콘텐츠 블록 -->
-  <div id="cap-content" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-46%);text-align:center;width:900px;">
-    <!-- 이름 -->
-    <div style="text-align:center;margin-bottom:24px;">
-      <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:180px;line-height:1;letter-spacing:-.03em;color:#121211;white-space:nowrap;display:inline-block;"></div>
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;width:900px;">
+    <!-- 이름 + 도장 -->
+    <div style="display:inline-block;position:relative;margin-bottom:36px;padding-right:72px;">
+      <div id="cap-name" style="font-family:'Noto Serif KR',serif;font-weight:700;font-size:180px;line-height:1;letter-spacing:-.03em;color:#121211;white-space:nowrap;display:inline-block;vertical-align:bottom;"></div>
+      <div id="cap-seal" style="position:absolute;bottom:14px;right:0;background:#A72B20;color:#F9F6F0;border-radius:4px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;transform:rotate(1deg);">印</div>
     </div>
     <!-- 구분선 -->
-    <div style="width:40px;height:1px;background:rgba(200,169,126,.5);margin:28px auto 28px;"></div>
+    <div style="width:40px;height:1px;background:rgba(200,169,126,.5);margin:0 auto 28px;"></div>
     <!-- 개인화 카피 -->
     <div id="cap-poem" style="font-family:'Noto Serif KR',serif;font-size:30px;line-height:1.8;color:rgba(18,18,17,.45);letter-spacing:.04em;"></div>
   </div>
@@ -483,7 +483,7 @@ async function detectLanguages(){
   if(!name)return;
   curName=name;
 
-  // A안: 항상 pg-detect(점 세개)로 시작 — AI 응답 후 분기
+  // 항상 pg-detect(점 세개)로 시작 — API 응답 후 분기
   const detectName=document.getElementById('detect-name');
   if(detectName) detectName.textContent=name;
   show('pg-detect');
@@ -570,7 +570,6 @@ async function runProcess(opt){
   curKor=opt.korean;
 
   // 결과 화면 준비
-  document.getElementById('result-eng').textContent=curName;
   document.getElementById('result-name').textContent=curKor;
   const rLen=curKor.length;
   const rSize=rLen<=2?'clamp(72px,18vw,110px)':rLen<=4?'clamp(52px,13vw,80px)':'clamp(36px,9vw,56px)';
@@ -578,6 +577,9 @@ async function runProcess(opt){
   const capFontSize=(rLen<=2?180:rLen<=4?130:rLen<=6?100:80);
   document.getElementById('cap-name').style.fontSize=capFontSize+'px';
   document.getElementById('cap-name').textContent=curKor;
+  // 도장 위치: 폰트 크기에 비례해서 마지막 글자 아래쪽에 오도록
+  const capSeal=document.getElementById('cap-seal');
+  if(capSeal) capSeal.style.bottom=Math.round(capFontSize*0.08)+'px';
   document.getElementById('result-lang-badge').textContent=(opt.nativeLabel||opt.lang||'')+ ' version';
   document.getElementById('result-poem').style.opacity='0';
   document.getElementById('result-poem').textContent='';
@@ -590,15 +592,37 @@ async function runProcess(opt){
   const mt=setInterval(()=>{const e=document.getElementById('lt');if(e)e.textContent=msgs[++mi%msgs.length];},900);
 
   try{
-    // poem 생성 완료될 때까지 자모 깜박임 유지
+    // poem 생성 — 실패시 1회 재시도, 그래도 실패시 폴백
+    const FALLBACK_POEMS={
+      '영어':'이름에 깃든 기운이 한글의 결을 따라 흐릅니다.',
+      '프랑스어':'우아한 정신이 한글 획 속에 조용히 새겨집니다.',
+      '독일어':'굳건한 기운이 한글의 선 속에 깊이 머뭅니다.',
+      '스페인어':'열정의 기운이 한글 곡선을 타고 번집니다.',
+      '이탈리아어':'아름다운 울림이 한글의 여백 속에 피어납니다.',
+      '러시아어':'깊은 혼이 한글 획 속에 고요히 깃듭니다.',
+      '포르투갈어':'따뜻한 기운이 한글의 결을 따라 흐릅니다.',
+      '일본어':'이름의 빛이 한글 선을 타고 조용히 번집니다.',
+    };
     let poemRes;
     try{
       poemRes=await callPoem(curName, curLang, curKor);
       curPoem=poemRes.poem||'';
+      // 빈값이면 1회 재시도
+      if(!curPoem){
+        poemRes=await callPoem(curName, curLang, curKor);
+        curPoem=poemRes.poem||'';
+      }
     }catch(pe){
-      console.warn('카피 생성 실패:',pe);
-      curPoem='';
+      console.warn('카피 생성 실패, 재시도:',pe);
+      try{
+        poemRes=await callPoem(curName, curLang, curKor);
+        curPoem=poemRes.poem||'';
+      }catch(pe2){
+        curPoem='';
+      }
     }
+    // 그래도 빈값이면 폴백 사용
+    if(!curPoem) curPoem=FALLBACK_POEMS[curLang]||'이름에 깃든 기운이 한글의 결을 따라 흐릅니다.';
 
     clearInterval(ct); clearInterval(mt);
     show('pg-anim');
@@ -611,14 +635,12 @@ async function runProcess(opt){
     show('pg-result');
     fl.classList.remove('on');
 
-    // poem 표시
-    if(curPoem){
-      const pEl=document.getElementById('result-poem');
-      pEl.textContent=curPoem;
-      document.getElementById('cap-poem').textContent=curPoem;
-      await sleep(300);
-      pEl.style.opacity='1';
-    }
+    // poem 항상 표시
+    const pEl=document.getElementById('result-poem');
+    pEl.textContent=curPoem;
+    document.getElementById('cap-poem').textContent=curPoem;
+    await sleep(300);
+    pEl.style.opacity='1';
 
   }catch(e){
     clearInterval(ct); clearInterval(mt);
@@ -705,98 +727,16 @@ async function saveCard(){
   const btn=document.getElementById('sb');
   btn.textContent='저장 중…'; btn.disabled=true;
   try{
-    const W=1080;
-    const canvas=document.createElement('canvas');
-    canvas.width=W; canvas.height=W;
-    const ctx=canvas.getContext('2d');
-    const fontSize=curKor.length<=2?180:curKor.length<=4?130:curKor.length<=6?100:80;
-
-    // ① 배경
-    ctx.fillStyle='#F9F6F0';
-    ctx.fillRect(0,0,W,W);
-
-    // ② 코너 장식
-    ctx.strokeStyle='rgba(200,169,126,0.4)';
-    ctx.lineWidth=1;
-    [[48,48,1,1],[W-72,48,-1,1],[48,W-72,1,-1],[W-72,W-72,-1,-1]].forEach(([x,y,dx,dy])=>{
-      ctx.beginPath();
-      ctx.moveTo(x,y); ctx.lineTo(x+24*dx,y);
-      ctx.moveTo(x,y); ctx.lineTo(x,y+24*dy);
-      ctx.stroke();
-    });
-
-    // ③-a 영어 이름 (한글 위에 작게)
-    const engSize=Math.round(fontSize*0.22);
-    ctx.fillStyle='rgba(18,18,17,0.38)';
-    ctx.font=`italic 400 ${engSize}px "Playfair Display", serif`;
-    ctx.textAlign='center';
-    ctx.textBaseline='bottom';
-    const nameY=W*0.44;
-    ctx.fillText(curName, W/2, nameY-fontSize*0.58);
-
-    // ③-b 한글 이름
-    ctx.fillStyle='#121211';
-    ctx.font=`700 ${fontSize}px "Noto Serif KR", serif`;
-    ctx.textAlign='center';
-    ctx.textBaseline='middle';
-    ctx.fillText(curKor, W/2, nameY);
-
-    // ④ 도장 — 이름 오른쪽 하단에 정확히 배치
-    const tm=ctx.measureText(curKor);
-    const nameRight=W/2+tm.width/2;
-    const ss=Math.round(fontSize*0.20);
-    const sealX=nameRight+8;
-    const sealY=nameY+fontSize*0.35;
-    ctx.save();
-    ctx.translate(sealX+ss/2, sealY-ss/2);
-    ctx.rotate(2*Math.PI/180);
-    ctx.fillStyle='#A72B20';
-    const r=3;
-    ctx.beginPath();
-    ctx.moveTo(-ss/2+r,-ss/2);
-    ctx.arcTo(ss/2,-ss/2,ss/2,ss/2,r);
-    ctx.arcTo(ss/2,ss/2,-ss/2,ss/2,r);
-    ctx.arcTo(-ss/2,ss/2,-ss/2,-ss/2,r);
-    ctx.arcTo(-ss/2,-ss/2,ss/2,-ss/2,r);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle='#F9F6F0';
-    ctx.font=`500 ${Math.round(ss*0.5)}px serif`;
-    ctx.textAlign='center';
-    ctx.textBaseline='middle';
-    ctx.fillText('印',0,1);
-    ctx.restore();
-
-    // ⑤ 구분선
-    const divY=nameY+fontSize*0.5+48;
-    ctx.fillStyle='rgba(200,169,126,0.5)';
-    ctx.fillRect(W/2-20, divY, 40, 1);
-
-    // ⑥ 개인화 카피
-    if(curPoem){
-      ctx.fillStyle='rgba(18,18,17,0.45)';
-      ctx.font='400 30px "Noto Serif KR", serif';
-      ctx.textAlign='center';
-      ctx.textBaseline='top';
-      ctx.fillText(curPoem, W/2, divY+32);
-    }
-
-    // ⑦ 하단 메타
-    ctx.textBaseline='bottom';
-    ctx.fillStyle='rgba(18,18,17,0.4)';
-    ctx.font='400 20px "Work Sans", sans-serif';
-    ctx.textAlign='left';
-    ctx.fillText('SEOUL, KOREA / '+new Date().getFullYear(), 80, W-72);
-    ctx.fillStyle='rgba(18,18,17,0.25)';
-    ctx.textAlign='right';
-    ctx.fillText('HELLOEDU', W-80, W-72);
-
-    // 다운로드
+    const card=document.getElementById('cap');
+    card.style.cssText='position:absolute;top:0;left:0;width:1080px;height:1080px;background:#F9F6F0;font-family:Noto Serif KR,serif;';
+    await sleep(250);
+    const canvas=await html2canvas(card,{backgroundColor:'#F9F6F0',scale:1,useCORS:true,width:1080,height:1080});
+    card.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1080px;height:1080px;background:#F9F6F0;font-family:Noto Serif KR,serif;';
     const a=document.createElement('a');
     a.download=`${curKor}-한글코드-1080x1080.png`;
     a.href=canvas.toDataURL('image/png');
     a.click();
-  }catch(e){console.error(e);alert('저장 중 오류가 발생했습니다.');}
+  }catch{alert('저장 중 오류가 발생했습니다.');}
   btn.textContent='저장하기'; btn.disabled=false;
 }
 
@@ -806,7 +746,6 @@ function startOver(){
   document.getElementById('nf').value='';
   document.getElementById('result-poem').textContent='';
   document.getElementById('result-poem').style.opacity='0';
-  document.getElementById('result-eng').textContent='';
   document.getElementById('cap-poem').textContent='';
   document.getElementById('pick-cards').innerHTML='';
   resetAnimElements();

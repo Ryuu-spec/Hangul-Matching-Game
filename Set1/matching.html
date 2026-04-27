@@ -1099,13 +1099,10 @@ Object.keys(audioMap).forEach(k => {
     audioCache[k].preload = 'auto';
 });
 
-// Smart audio: HTML Audio in iframe (Genially), AudioContext standalone
-const isInIframe = window.self !== window.top;
-
+// AudioContext-based playback — works on iPad standalone AND Genially iframe
 let audioCtx = null;
 let decodedBuffers = {};
 let currentSource = null;
-let currentAudio = null;
 
 function getAudioCtx() {
     if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1113,8 +1110,11 @@ function getAudioCtx() {
     return audioCtx;
 }
 
+// Pre-decode MP3s on first user interaction (iOS requires gesture)
+let decoded = false;
 async function preDecodeAudio() {
-    if(isInIframe) return; // Skip decode when in Genially iframe
+    if(decoded) return;
+    decoded = true;
     const ctx = getAudioCtx();
     for(const [vowel, url] of Object.entries(audioMap)) {
         try {
@@ -1126,25 +1126,19 @@ async function preDecodeAudio() {
         }
     }
 }
-preDecodeAudio();
+
+// Trigger decode on first tap anywhere
+document.addEventListener('touchstart', preDecodeAudio, { once: true });
+document.addEventListener('click', preDecodeAudio, { once: true });
+preDecodeAudio(); // also try immediately
 
 function speakKorean(text) {
-    // In Genially iframe: use plain HTML Audio (no AudioContext conflict)
-    if(isInIframe) {
-        if(currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
-        if(audioCache[text]) {
-            const clone = audioCache[text].cloneNode();
-            clone.volume = 1.0;
-            currentAudio = clone;
-            clone.play().catch(()=>{});
-        }
-        return;
-    }
-    // Standalone (iPad direct link): use AudioContext for clean playback
+    preDecodeAudio(); // ensure decoded
     if(!decodedBuffers[text]) {
+        // Fallback: plain HTML Audio
         if(audioCache[text]) {
-            audioCache[text].currentTime = 0;
-            audioCache[text].play().catch(()=>{});
+            const cl = audioCache[text].cloneNode();
+            cl.play().catch(()=>{});
         }
         return;
     }

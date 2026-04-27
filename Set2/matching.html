@@ -1104,10 +1104,13 @@ Object.keys(audioMap).forEach(k => {
     audioCache[k].preload = 'auto';
 });
 
-// AudioContext-based playback for iOS compatibility
+// Smart audio: HTML Audio in iframe (Genially), AudioContext standalone
+const isInIframe = window.self !== window.top;
+
 let audioCtx = null;
 let decodedBuffers = {};
 let currentSource = null;
+let currentAudio = null;
 
 function getAudioCtx() {
     if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1115,8 +1118,8 @@ function getAudioCtx() {
     return audioCtx;
 }
 
-// Pre-decode all MP3s via fetch + decodeAudioData
 async function preDecodeAudio() {
+    if(isInIframe) return; // Skip decode when in Genially iframe
     const ctx = getAudioCtx();
     for(const [vowel, url] of Object.entries(audioMap)) {
         try {
@@ -1131,17 +1134,27 @@ async function preDecodeAudio() {
 preDecodeAudio();
 
 function speakKorean(text) {
-    const ctx = getAudioCtx();
+    // In Genially iframe: use plain HTML Audio (no AudioContext conflict)
+    if(isInIframe) {
+        if(currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+        if(audioCache[text]) {
+            const clone = audioCache[text].cloneNode();
+            clone.volume = 1.0;
+            currentAudio = clone;
+            clone.play().catch(()=>{});
+        }
+        return;
+    }
+    // Standalone (iPad direct link): use AudioContext for clean playback
     if(!decodedBuffers[text]) {
-        // Fallback to HTML Audio if not yet decoded
         if(audioCache[text]) {
             audioCache[text].currentTime = 0;
             audioCache[text].play().catch(()=>{});
         }
         return;
     }
-    // Stop previous
     if(currentSource) { try { currentSource.stop(); } catch(e){} currentSource = null; }
+    const ctx = getAudioCtx();
     const source = ctx.createBufferSource();
     source.buffer = decodedBuffers[text];
     source.connect(ctx.destination);

@@ -1104,21 +1104,49 @@ Object.keys(audioMap).forEach(k => {
     audioCache[k].preload = 'auto';
 });
 
-let currentAudio = null;
-function speakKorean(text) {
-    if(!audioCache[text]) return;
-    // Stop and fully reset previous audio first
-    if(currentAudio) {
-        currentAudio.pause();
-        currentAudio.src = '';   // release iOS audio buffer
-        currentAudio = null;
+// AudioContext-based playback for iOS compatibility
+let audioCtx = null;
+let decodedBuffers = {};
+let currentSource = null;
+
+function getAudioCtx() {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+
+// Pre-decode all MP3s via fetch + decodeAudioData
+async function preDecodeAudio() {
+    const ctx = getAudioCtx();
+    for(const [vowel, url] of Object.entries(audioMap)) {
+        try {
+            const res = await fetch(url);
+            const buf = await res.arrayBuffer();
+            decodedBuffers[vowel] = await ctx.decodeAudioData(buf);
+        } catch(e) {
+            console.warn('Audio decode failed:', vowel, e);
+        }
     }
-    // Clone to avoid iOS buffer reuse issue
-    const clone = audioCache[text].cloneNode();
-    clone.volume = 1.0;
-    currentAudio = clone;
-    const p = clone.play();
-    if(p) p.catch(()=>{});
+}
+preDecodeAudio();
+
+function speakKorean(text) {
+    const ctx = getAudioCtx();
+    if(!decodedBuffers[text]) {
+        // Fallback to HTML Audio if not yet decoded
+        if(audioCache[text]) {
+            audioCache[text].currentTime = 0;
+            audioCache[text].play().catch(()=>{});
+        }
+        return;
+    }
+    // Stop previous
+    if(currentSource) { try { currentSource.stop(); } catch(e){} currentSource = null; }
+    const source = ctx.createBufferSource();
+    source.buffer = decodedBuffers[text];
+    source.connect(ctx.destination);
+    source.start(0);
+    currentSource = source;
 }
 
 // ============================================================

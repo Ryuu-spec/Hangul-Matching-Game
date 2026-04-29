@@ -513,30 +513,34 @@ function shuffleLC(){
 // ── 시 줄바꿈 포맷터 ──────────────────
 function formatPoem(text){
   if(!text)return'';
-  // 18자 이하 한 줄
   if(text.length<=18)return text;
-  // 자연스러운 분절 우선순위: 쉼표, 이름 뒤 대시, 조사+공백
-  const patterns=[
-    /,\s*/,           // 쉼표
-    /(?<=이)\s+/,     // '이 '
-    /(?<=의)\s+/,     // '의 '
-    /(?<=을)\s+/,     // '을 '
-    /(?<=이름)\s+/,   // '이름 '
-    /(?<=기운)\s+/,   // '기운 '
-    /(?<=속에)\s+/,   // '속에 '
-    /\s+(?=한글)/,    // '한글' 앞
-  ];
-  const mid=Math.floor(text.length/2);
-  for(const pat of patterns){
-    const m=text.search(pat);
-    if(m>4&&m<text.length-4){
-      // 중간에서 가장 가까운 분절점 사용
-      const pre=text.slice(0,m+text.match(pat)[0].length).trimEnd();
-      const post=text.slice(m+text.match(pat)[0].length).trimStart();
-      if(pre&&post)return`${pre}<br>${post}`;
-    }
+
+  // 1순위: 주격조사 이/가 다음 공백 (예: "현명한 지혜가 한글의..." → "현명한 지혜가<br>한글의...")
+  const igaMatch=text.match(/^(.+?[이가])\s+(.+)$/);
+  if(igaMatch&&igaMatch[1].length>=4&&igaMatch[2].length>=4){
+    return`${igaMatch[1]}<br>${igaMatch[2]}`;
   }
-  // 패턴 없으면 중간 공백에서 분절
+
+  // 2순위: 쉼표
+  const commaM=text.match(/^(.+?[,，])\s*(.+)$/);
+  if(commaM&&commaM[1].length>=4&&commaM[2].length>=4){
+    return`${commaM[1]}<br>${commaM[2]}`;
+  }
+
+  // 3순위: '한글' 앞 공백
+  const hangulM=text.match(/^(.+?)\s+(한글.+)$/);
+  if(hangulM&&hangulM[1].length>=4&&hangulM[2].length>=4){
+    return`${hangulM[1]}<br>${hangulM[2]}`;
+  }
+
+  // 4순위: 목적격/처소격 조사 다음
+  const josM=text.match(/^(.+?[을를속에의])\s+(.+)$/);
+  if(josM&&josM[1].length>=4&&josM[2].length>=4){
+    return`${josM[1]}<br>${josM[2]}`;
+  }
+
+  // 최후: 중간 공백
+  const mid=Math.floor(text.length/2);
   const spaces=[...text.matchAll(/\s+/g)].map(m=>({i:m.index,len:m[0].length}));
   if(spaces.length){
     const best=spaces.reduce((a,b)=>Math.abs(a.i-mid)<Math.abs(b.i-mid)?a:b);

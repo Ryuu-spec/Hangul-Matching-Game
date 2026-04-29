@@ -510,6 +510,41 @@ function shuffleLC(){
   if(el)el.innerHTML=Array.from({length:6},()=>`<span>${LC[Math.floor(Math.random()*LC.length)]}</span>`).join('');
 }
 
+// ── 시 줄바꿈 포맷터 ──────────────────
+function formatPoem(text){
+  if(!text)return'';
+  // 18자 이하 한 줄
+  if(text.length<=18)return text;
+  // 자연스러운 분절 우선순위: 쉼표, 이름 뒤 대시, 조사+공백
+  const patterns=[
+    /,\s*/,           // 쉼표
+    /(?<=이)\s+/,     // '이 '
+    /(?<=의)\s+/,     // '의 '
+    /(?<=을)\s+/,     // '을 '
+    /(?<=이름)\s+/,   // '이름 '
+    /(?<=기운)\s+/,   // '기운 '
+    /(?<=속에)\s+/,   // '속에 '
+    /\s+(?=한글)/,    // '한글' 앞
+  ];
+  const mid=Math.floor(text.length/2);
+  for(const pat of patterns){
+    const m=text.search(pat);
+    if(m>4&&m<text.length-4){
+      // 중간에서 가장 가까운 분절점 사용
+      const pre=text.slice(0,m+text.match(pat)[0].length).trimEnd();
+      const post=text.slice(m+text.match(pat)[0].length).trimStart();
+      if(pre&&post)return`${pre}<br>${post}`;
+    }
+  }
+  // 패턴 없으면 중간 공백에서 분절
+  const spaces=[...text.matchAll(/\s+/g)].map(m=>({i:m.index,len:m[0].length}));
+  if(spaces.length){
+    const best=spaces.reduce((a,b)=>Math.abs(a.i-mid)<Math.abs(b.i-mid)?a:b);
+    return text.slice(0,best.i)+'<br>'+text.slice(best.i+best.len);
+  }
+  return text;
+}
+
 // ── STEP 1: 언어 감지 ─────────────────
 async function detectLanguages(){
   const name=document.getElementById('nf').value.trim();
@@ -670,7 +705,7 @@ async function runProcess(opt){
 
     // poem 항상 표시
     const pEl=document.getElementById('result-poem');
-    pEl.textContent=curPoem;
+    pEl.innerHTML=formatPoem(curPoem);
     document.getElementById('cap-poem').textContent=curPoem;
     await sleep(300);
     pEl.style.opacity='1';

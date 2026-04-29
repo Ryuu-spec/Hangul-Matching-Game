@@ -571,8 +571,22 @@ async function detectLanguages(){
       show('pg-pick');
     }
   }catch(e){
-    show('pg-name');
-    alert('이름을 인식하지 못했습니다.\n'+e.message);
+    // 1회 자동 재시도
+    try{
+      const res2=await callDetect(name);
+      curOptions=res2.options||[];
+      if(!curOptions.length)throw new Error('옵션 없음');
+      if(curOptions.length===1){
+        selectedIdx=0;
+        await runProcess(curOptions[0]);
+      } else {
+        buildPickScreen();
+        show('pg-pick');
+      }
+    }catch(e2){
+      show('pg-name');
+      alert('잠시 후 다시 시도해 주세요.');
+    }
   }
 }
 

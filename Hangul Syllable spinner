@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Korean Syllable Spinner</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .card {
+    background: #fff;
+    border: 3px solid #1e6fe9;
+    border-radius: 20px;
+    padding: 1.5rem 1rem 1.2rem;
+    width: 92%;
+    max-width: 360px;
+    text-align: center;
+  }
+  .title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 1.2rem;
+  }
+  .parts {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.6rem;
+  }
+  .part-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .part-label {
+    font-size: 10px;
+    color: #aaa;
+  }
+  .part-char {
+    font-size: 48px;
+    font-weight: 900;
+    color: #ddd;
+    width: 70px;
+    height: 70px;
+    border: 1.5px solid #eee;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.1s;
+  }
+  .part-char.spinning { color: #333; border-color: #ccc; }
+  .part-char.done { color: #1e6fe9; border-color: #c0d8fc; }
+  .operator {
+    font-size: 22px;
+    color: #ccc;
+    margin-top: 18px;
+  }
+  .hint {
+    font-size: 12px;
+    color: #bbb;
+    margin: 0.8rem 0 1rem;
+    line-height: 1.5;
+  }
+  .spin-btn {
+    background: #1e6fe9;
+    color: white;
+    border: none;
+    padding: 12px 48px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .spin-btn:hover { transform: translateY(-1px); }
+  .spin-btn:active { transform: scale(0.97); }
+  .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="title">Korean Syllable Spinner</div>
+  <div class="parts">
+    <div class="part-box">
+      <div class="part-label">초성</div>
+      <div class="part-char" id="cho">？</div>
+    </div>
+    <div class="operator">+</div>
+    <div class="part-box">
+      <div class="part-label">중성</div>
+      <div class="part-char" id="jung">？</div>
+    </div>
+    <div class="operator">+</div>
+    <div class="part-box">
+      <div class="part-label">종성</div>
+      <div class="part-char" id="jong">？</div>
+    </div>
+  </div>
+  <p class="hint">Combine and read it aloud!</p>
+  <button class="spin-btn" id="btn" onclick="spin()">🎲 SPIN</button>
+</div>
+
+<script>
+// 실제 존재하는 음절 목록
+const syllables = [
+  '가','각','간','갈','감','강','개','거','건','걸','검','게','겨','격','견','결','경','계',
+  '고','곡','곤','골','곰','공','과','관','광','교','구','국','군','굴','궁','귀','그','근','글','금','기','길','김',
+  '나','낙','난','날','남','낭','내','너','넌','넘','네','녀','년','녕','노','녹','논','놀','농','누','눈','눌','느','늘',
+  '다','닥','단','달','담','답','당','대','더','덕','던','덜','덤','데','도','독','돈','돌','동','두','둔','둘','듣','등','디',
+  '라','란','랄','람','랑','래','러','럭','런','럼','레','로','록','론','롤','롬','롱','루','룩','룰','룸','르','리','린','릴','림',
+  '마','막','만','말','맘','망','매','맥','머','먹','먼','멀','멈','며','면','명','모','목','몰','몸','못','무','묵','문','물',
+  '바','박','반','발','밥','방','배','백','버','번','벌','범','벽','보','복','본','볼','봄','부','북','분','불','비','빌','빔',
+  '사','삭','산','살','삼','삽','상','새','색','서','석','선','설','섬','성','세','소','속','손','솔','송','수','숙','순','술','숨','스','슬','승','시','식','신','실','심',
+  '아','악','안','알','암','압','앙','애','야','약','얌','양','어','억','언','얼','엄','업','에','여','역','연','열','염','영','예','오','옥','온','올','옴','옹','와','완','왕','외','요','욕','용','우','운','울','움','이','익','인','일','임','입',
+  '자','작','잔','잘','잠','잡','장','재','저','전','절','점','접','정','제','조','족','존','졸','종','주','죽','준','줄','중','지','직','진','질','짐','집',
+  '차','착','찬','찰','참','창','채','척','천','철','청','체','초','촉','촌','총','추','축','춘','춤','치','칙','친','칠','침',
+  '카','칸','칼','캐','커','컨','컬','코','콕','콘','콜','콩','쿠','쿨','쿵','크','킬',
+  '타','탁','탄','탈','탐','탕','태','터','털','통','투','툭','트','틸',
+  '파','판','팔','팡','패','퍼','편','평','포','폭','풀','품','풍','프','필',
+  '하','학','한','할','함','합','항','해','허','헌','험','형','혜','호','혹','혼','홀','홍','화','확','환','활','황','후','훈','훌','휴','흑','흔','흘','흡','히','힘',
+  '까','깐','깔','깜','깡','깨','꺼','껌','꼬','꼭','꼼','꽤','꾸','꿈','끄','끈','끌',
+  '따','딱','딸','땀','떡','뚝','뜨',
+  '빠','빡','빨','뻐','뽀','뿌',
+  '싸','싹','쌀','쌍','써','썩','쏘','쑤','쓰','씩',
+  '짜','짝','찌','쪼',
+];
+
+const CHO_LIST  = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const JUNG_LIST = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+const JONG_LIST = ['∅','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+
+function decompose(syllable) {
+  const code = syllable.charCodeAt(0) - 0xAC00;
+  const cho  = Math.floor(code / (21 * 28));
+  const jung = Math.floor((code % (21 * 28)) / 28);
+  const jong = code % 28;
+  return {
+    cho:  CHO_LIST[cho],
+    jung: JUNG_LIST[jung],
+    jong: JONG_LIST[jong],
+  };
+}
+
+// 종성 있는 음절만 필터링
+const unique = [...new Set(syllables)].filter(s => {
+  const code = s.charCodeAt(0) - 0xAC00;
+  return code % 28 !== 0; // 종성 인덱스가 0이면 받침 없음
+});
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+let spinning = false;
+
+function spin() {
+  if (spinning) return;
+  spinning = true;
+  const btn = document.getElementById('btn');
+  const choEl  = document.getElementById('cho');
+  const jungEl = document.getElementById('jung');
+  const jongEl = document.getElementById('jong');
+  btn.disabled = true;
+  choEl.className = jungEl.className = jongEl.className = 'part-char';
+
+  let count = 0;
+  const total = 22;
+
+  const interval = setInterval(() => {
+    const { cho, jung, jong } = decompose(rand(unique));
+    choEl.innerText  = cho;
+    jungEl.innerText = jung;
+    jongEl.innerText = jong;
+    choEl.className = jungEl.className = jongEl.className = 'part-char spinning';
+    count++;
+
+    if (count >= total) {
+      clearInterval(interval);
+      const final = decompose(rand(unique));
+      choEl.innerText  = final.cho;
+      jungEl.innerText = final.jung;
+      jongEl.innerText = final.jong;
+      choEl.className = jungEl.className = jongEl.className = 'part-char done';
+      btn.disabled = false;
+      spinning = false;
+    }
+  }, 65);
+}
+</script>
+</body>
+</html>

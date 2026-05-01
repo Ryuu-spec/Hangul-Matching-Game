@@ -92,7 +92,7 @@
 </head>
 <body>
 <div class="card">
-  <div class="title">Korean Syllable Spinner</div>
+  <div class="title">Hangul Syllable Spinner</div>
   <div class="parts">
     <div class="part-box">
       <div class="part-label">초성</div>
